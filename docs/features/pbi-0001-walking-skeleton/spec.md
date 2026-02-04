@@ -3,8 +3,11 @@
 - [ ] Purpose / value: 最小のChrome拡張として起動し、YAML定義の単純ルールで手動整理できる状態を作る。
 - [ ] Scope:
   - MV3拡張の土台（manifest/service worker/最小UI）
-  - YAMLの最小スキーマ（rules: pattern -> group）
-  - パターン評価（正規表現 or 部分一致の単純評価）
+  - YAMLの最小スキーマ（version/applyMode/rules）
+    - version: 1
+    - applyMode: manual（省略時はmanual）
+    - rules: [{ pattern, group, color? }]
+  - パターン評価（ECMAScript regex、対象はtab.url全文、先頭一致は正規表現で表現）
   - planner（pure）→ plan → executor の流れ
   - 手動実行UI（Popupの「今すぐ整理」など）
   - ユニットテスト（TDD）
@@ -16,7 +19,8 @@
   - Options UIの高度機能
   - 診断API/CLI/E2E
 - [ ] Assumptions:
-  - 対象は既定で現在ウィンドウのタブ
+  - 対象は既定で現在ウィンドウの全タブ（tab.urlがあるもの）
+  - ルールは上から評価し、最初にマッチしたものを採用
   - YAMLは `chrome.storage.local` に保存
 - [ ] Risks:
   - MV3のservice workerライフサイクルでUI/実行が切れる可能性
@@ -28,7 +32,8 @@
 - [ ] AC2: YAMLが無効な場合は実行せず、エラーを表示/ログする。
 - [ ] AC3: plannerが純粋関数でplanを返し、ユニットテスト（TDD）が追加されている。
 - [ ] AC4: executorが最小操作（create/move）を実行できる。
+- [ ] AC5: パターンはtab.url全文に対する正規表現で評価される。
 
 # Notes
 
-- 
+- 初期スキーマは最小限に留め、以降のPBIで拡張する。

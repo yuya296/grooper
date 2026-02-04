@@ -8,6 +8,7 @@
   - ユニットテスト（TDD）
 - [ ] Out of scope:
   - Options UIの高度機能
+  - Options UIでのショートカット設定
   - 診断API/CLI/E2E
 - [ ] Assumptions:
   - 実際のキー割り当ては chrome://extensions/shortcuts で行う

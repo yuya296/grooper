@@ -4,7 +4,7 @@
 - [ ] Scope:
   - 親子追従（openerTabIdなど）
   - 親なしタブのフォールバックグループ
-  - 優先度/競合解決（priority or first-match）
+  - 優先度/競合解決（priority: number, default 0）
   - 変数展開（例: ${env}）
   - ユニットテスト（TDD）
 - [ ] Out of scope:
@@ -15,6 +15,8 @@
 - [ ] Assumptions:
   - 変数はYAML内のvarsや環境値に限定
   - 親子判定はChromeが提供する関係のみ
+  - 評価順: 親子追従 → パターン → フォールバック
+  - パターン同士の競合は priority 降順、同順位はYAML定義順で決定
 - [ ] Risks:
   - 競合解決の仕様が不明確だと運用で混乱する
 
@@ -28,4 +30,4 @@
 
 # Notes
 
-- 
+- 競合解決は「priority降順→YAML定義順」を固定ルールとする。
