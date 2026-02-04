@@ -2,7 +2,15 @@ import { parseConfigYaml } from '../core/config.js';
 import { createPlan } from '../core/planner.js';
 import type { CompiledConfig, StateSnapshot } from '../core/types.js';
 import { executePlan } from './executor.js';
-import { appendLog, DEFAULT_CONFIG_YAML, getConfigYaml, setConfigYaml } from './storage.js';
+import {
+  appendLog,
+  DEFAULT_CONFIG_YAML,
+  getConfigYaml,
+  getLastActiveMap,
+  removeLastActive,
+  setConfigYaml,
+  setLastActiveAt
+} from './storage.js';
 
 let isApplying = false;
 const RESCAN_ALARM = 'tabgrouper-rescan';
@@ -16,6 +24,7 @@ async function ensureDefaultConfig() {
 }
 
 async function getWindowState(windowId: number): Promise<StateSnapshot> {
+  const lastActive = await getLastActiveMap();
   const tabs = await chrome.tabs.query({ windowId });
   const groups = await chrome.tabGroups.query({ windowId });
   return {
@@ -26,7 +35,9 @@ async function getWindowState(windowId: number): Promise<StateSnapshot> {
       windowId: tab.windowId,
       openerTabId: tab.openerTabId,
       active: tab.active,
-      pinned: tab.pinned
+      pinned: tab.pinned,
+      lastAccessed: tab.lastAccessed,
+      lastActiveAt: lastActive[String(tab.id!)]
     })),
     groups: groups.map((group) => ({
       id: group.id,
@@ -48,7 +59,12 @@ async function loadConfig(): Promise<{ config?: CompiledConfig; errors?: unknown
   return { config };
 }
 
-async function runWithScope(options: { windowId: number; tabIds?: number[]; reason: string }) {
+async function runWithScope(options: {
+  windowId: number;
+  tabIds?: number[];
+  reason: string;
+  includeCleanup?: boolean;
+}) {
   if (isApplying) return;
   const { config, errors } = await loadConfig();
   if (!config || errors) return;
@@ -56,7 +72,7 @@ async function runWithScope(options: { windowId: number; tabIds?: number[]; reas
   try {
     const state = await getWindowState(options.windowId);
     const scope = options.tabIds ? new Set(options.tabIds) : undefined;
-    const plan = createPlan(state, config, { scopeTabIds: scope });
+    const plan = createPlan(state, config, { scopeTabIds: scope, includeCleanup: options.includeCleanup });
     await executePlan(plan);
     await appendLog(`${options.reason}: ${plan.actions.length} actions`);
   } finally {
@@ -67,7 +83,7 @@ async function runWithScope(options: { windowId: number; tabIds?: number[]; reas
 async function runManual() {
   const window = await chrome.windows.getLastFocused({ populate: false });
   const windowId = window.id ?? chrome.windows.WINDOW_ID_CURRENT;
-  await runWithScope({ windowId, reason: 'manual run' });
+  await runWithScope({ windowId, reason: 'manual run', includeCleanup: true });
   return { ok: true };
 }
 
@@ -103,7 +119,7 @@ chrome.tabs.onCreated.addListener((tab) => {
     const { config } = await loadConfig();
     if (!config || !shouldApply(config, 'newTabs')) return;
     if (!tab.id) return;
-    await runWithScope({ windowId: tab.windowId, tabIds: [tab.id], reason: 'onCreated' });
+    await runWithScope({ windowId: tab.windowId, tabIds: [tab.id], reason: 'onCreated', includeCleanup: false });
   })();
 });
 
@@ -112,16 +128,21 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   void (async () => {
     const { config } = await loadConfig();
     if (!config || !shouldApply(config, 'always')) return;
-    await runWithScope({ windowId: tab.windowId, tabIds: [tabId], reason: 'onUpdated' });
+    await runWithScope({ windowId: tab.windowId, tabIds: [tabId], reason: 'onUpdated', includeCleanup: false });
   })();
 });
 
 chrome.tabs.onActivated.addListener((info) => {
   void (async () => {
+    await setLastActiveAt(info.tabId, Date.now());
     const { config } = await loadConfig();
     if (!config || !shouldApply(config, 'always')) return;
-    await runWithScope({ windowId: info.windowId, tabIds: [info.tabId], reason: 'onActivated' });
+    await runWithScope({ windowId: info.windowId, tabIds: [info.tabId], reason: 'onActivated', includeCleanup: false });
   })();
+});
+
+chrome.tabs.onRemoved.addListener((tabId) => {
+  void removeLastActive(tabId);
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
@@ -132,7 +153,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     const windows = await chrome.windows.getAll();
     for (const window of windows) {
       if (window.id == null) continue;
-      await runWithScope({ windowId: window.id, reason: 'rescan' });
+      await runWithScope({ windowId: window.id, reason: 'rescan', includeCleanup: true });
     }
   })();
 });

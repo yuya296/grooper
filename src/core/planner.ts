@@ -1,4 +1,7 @@
 import type { CompiledConfig, Plan, StateSnapshot, TabState } from './types.js';
+import type { Clock } from './clock.js';
+import { systemClock } from './clock.js';
+import { buildCleanupActions } from './cleanup.js';
 
 function matchRule(config: CompiledConfig, tab: TabState): { group: string; color?: string } | null {
   if (!tab.url) return null;
@@ -22,7 +25,7 @@ function resolveParentGroup(state: StateSnapshot, tab: TabState) {
 export function createPlan(
   state: StateSnapshot,
   config: CompiledConfig,
-  options?: { scopeTabIds?: Set<number> }
+  options?: { scopeTabIds?: Set<number>; includeCleanup?: boolean; clock?: Clock }
 ): Plan {
   const actions: Plan['actions'] = [];
   const groupAssignments = new Map<number, { group: string; color?: string; windowId: number }>();
@@ -74,6 +77,11 @@ export function createPlan(
       group: assignment.group,
       windowId: assignment.windowId
     });
+  }
+
+  if (options?.includeCleanup ?? !scope) {
+    const clock = options?.clock ?? systemClock;
+    actions.push(...buildCleanupActions(state, config, clock));
   }
 
   return { actions };

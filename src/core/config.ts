@@ -23,6 +23,24 @@ const configSchema = z
     vars: z.record(z.string()).optional(),
     fallbackGroup: z.string().optional(),
     parentFollow: z.boolean().optional(),
+    groups: z
+      .record(
+        z
+          .object({
+            color: z.string().optional(),
+            ttlMinutes: z.number().positive().optional(),
+            maxTabs: z.number().int().positive().optional(),
+            lru: z.boolean().optional()
+          })
+          .strict()
+      )
+      .optional(),
+    shortcuts: z
+      .object({
+        slots: z.array(z.string().min(1)).optional()
+      })
+      .strict()
+      .optional(),
     rules: z.array(ruleSchema)
   })
   .strict();
@@ -99,6 +117,8 @@ export function parseConfigYaml(yamlText: string): { config?: CompiledConfig; er
       vars,
       fallbackGroup: config.fallbackGroup,
       parentFollow: config.parentFollow ?? true,
+      groups: config.groups ?? {},
+      shortcuts: config.shortcuts,
       rules: sortedRules
     },
     errors: []

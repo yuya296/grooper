@@ -8,6 +8,7 @@ const config: CompiledConfig = {
   vars: {},
   fallbackGroup: undefined,
   parentFollow: true,
+  groups: {},
   rules: [
     { pattern: 'example\\.com', group: 'Example', regex: /example\.com/, index: 0, priority: 0 }
   ]

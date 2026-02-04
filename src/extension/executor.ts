@@ -41,6 +41,9 @@ async function executeAction(action: PlanAction) {
     case 'moveTab':
       await moveTabToGroup(action.tabId, action.windowId, action.group, action.color);
       return;
+    case 'closeTab':
+      await chrome.tabs.remove(action.tabId);
+      return;
     case 'log':
       console.log(`[tabgrouper] ${action.level}: ${action.message}`);
       return;

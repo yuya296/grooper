@@ -7,12 +7,25 @@ export interface Rule {
   priority?: number;
 }
 
+export interface GroupPolicy {
+  color?: string;
+  ttlMinutes?: number;
+  maxTabs?: number;
+  lru?: boolean;
+}
+
+export interface ShortcutsConfig {
+  slots?: string[];
+}
+
 export interface Config {
   version: 1;
   applyMode?: ApplyMode;
   vars?: Record<string, string>;
   fallbackGroup?: string;
   parentFollow?: boolean;
+  groups?: Record<string, GroupPolicy>;
+  shortcuts?: ShortcutsConfig;
   rules: Rule[];
 }
 
@@ -28,6 +41,8 @@ export interface CompiledConfig {
   vars: Record<string, string>;
   fallbackGroup?: string;
   parentFollow: boolean;
+  groups: Record<string, GroupPolicy>;
+  shortcuts?: ShortcutsConfig;
   rules: CompiledRule[];
 }
 
@@ -39,6 +54,8 @@ export interface TabState {
   openerTabId?: number;
   active?: boolean;
   pinned?: boolean;
+  lastAccessed?: number;
+  lastActiveAt?: number;
 }
 
 export interface GroupState {
@@ -56,6 +73,7 @@ export interface StateSnapshot {
 export type PlanAction =
   | { type: 'ensureGroup'; group: string; color?: string; windowId: number }
   | { type: 'moveTab'; tabId: number; group: string; windowId: number }
+  | { type: 'closeTab'; tabId: number; reason: string }
   | { type: 'log'; level: 'info' | 'warn' | 'error'; message: string };
 
 export interface Plan {
