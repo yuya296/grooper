@@ -10,12 +10,30 @@ function matchRule(config: CompiledConfig, tab: TabState): { group: string; colo
   return null;
 }
 
+function resolveParentGroup(state: StateSnapshot, tab: TabState) {
+  if (!tab.openerTabId) return null;
+  const parent = state.tabs.find((candidate) => candidate.id === tab.openerTabId);
+  if (!parent || parent.groupId == null) return null;
+  const group = state.groups.find((g) => g.id === parent.groupId);
+  if (!group) return null;
+  return { group: group.title, color: group.color };
+}
+
 export function createPlan(state: StateSnapshot, config: CompiledConfig): Plan {
   const actions: Plan['actions'] = [];
   const groupAssignments = new Map<number, { group: string; color?: string; windowId: number }>();
 
   for (const tab of state.tabs) {
-    const matched = matchRule(config, tab);
+    let matched = null;
+    if (config.parentFollow) {
+      matched = resolveParentGroup(state, tab);
+    }
+    if (!matched) {
+      matched = matchRule(config, tab);
+    }
+    if (!matched && config.fallbackGroup) {
+      matched = { group: config.fallbackGroup };
+    }
     if (!matched) continue;
     groupAssignments.set(tab.id, { ...matched, windowId: tab.windowId });
   }

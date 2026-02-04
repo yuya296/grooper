@@ -11,7 +11,8 @@ const ruleSchema = z
   .object({
     pattern: z.string().min(1),
     group: z.string().min(1),
-    color: z.string().optional()
+    color: z.string().optional(),
+    priority: z.number().int().optional()
   })
   .strict();
 
@@ -19,6 +20,9 @@ const configSchema = z
   .object({
     version: z.literal(1),
     applyMode: z.enum(['manual', 'newTabs', 'always']).optional(),
+    vars: z.record(z.string()).optional(),
+    fallbackGroup: z.string().optional(),
+    parentFollow: z.boolean().optional(),
     rules: z.array(ruleSchema)
   })
   .strict();
@@ -51,17 +55,31 @@ export function parseConfigYaml(yamlText: string): { config?: CompiledConfig; er
 
   const config: Config = result.data;
   const errors: ConfigError[] = [];
+  const vars = config.vars ?? {};
+
+  const expandVars = (template: string, path: string) => {
+    return template.replace(/\$\{([A-Za-z0-9_]+)\}/g, (match, name: string) => {
+      const value = vars[name];
+      if (value === undefined) {
+        errors.push({ path, message: `Unknown variable: ${name}` });
+        return match;
+      }
+      return value;
+    });
+  };
 
   const rules: CompiledRule[] = config.rules.map((rule, index) => {
     try {
-      const regex = new RegExp(rule.pattern);
-      return { ...rule, regex, index };
+      const pattern = expandVars(rule.pattern, `rules.${index}.pattern`);
+      const group = expandVars(rule.group, `rules.${index}.group`);
+      const regex = new RegExp(pattern);
+      return { ...rule, pattern, group, regex, index, priority: rule.priority ?? 0 };
     } catch (err) {
       errors.push({
         path: `rules.${index}.pattern`,
         message: err instanceof Error ? err.message : 'Invalid regex'
       });
-      return { ...rule, regex: /.^/, index };
+      return { ...rule, regex: /.^/, index, priority: rule.priority ?? 0 };
     }
   });
 
@@ -69,11 +87,19 @@ export function parseConfigYaml(yamlText: string): { config?: CompiledConfig; er
     return { errors };
   }
 
+  const sortedRules = [...rules].sort((a, b) => {
+    if (b.priority !== a.priority) return b.priority - a.priority;
+    return a.index - b.index;
+  });
+
   return {
     config: {
       version: 1,
       applyMode: config.applyMode ?? DEFAULT_APPLY_MODE,
-      rules
+      vars,
+      fallbackGroup: config.fallbackGroup,
+      parentFollow: config.parentFollow ?? true,
+      rules: sortedRules
     },
     errors: []
   };

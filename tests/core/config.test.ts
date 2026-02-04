@@ -13,6 +13,29 @@ rules:
   - pattern: "("
     group: "Bad"
 `;
+const varsYaml = `version: 1
+vars:
+  env: prod
+rules:
+  - pattern: "example\\\\.com/${env}"
+    group: "Example-${env}"
+`;
+
+const missingVarYaml = `version: 1
+rules:
+  - pattern: "example\\\\.com/${missing}"
+    group: "Example"
+`;
+
+const priorityYaml = `version: 1
+rules:
+  - pattern: "b"
+    group: "B"
+    priority: 1
+  - pattern: "a"
+    group: "A"
+    priority: 2
+`;
 
 describe('parseConfigYaml', () => {
   it('parses valid yaml', () => {
@@ -25,5 +48,24 @@ describe('parseConfigYaml', () => {
     const result = parseConfigYaml(invalidRegex);
     expect(result.config).toBeUndefined();
     expect(result.errors[0].path).toBe('rules.0.pattern');
+  });
+
+  it('expands variables', () => {
+    const result = parseConfigYaml(varsYaml);
+    expect(result.errors).toHaveLength(0);
+    expect(result.config?.rules[0].pattern).toBe('example\\\\.com/prod');
+    expect(result.config?.rules[0].group).toBe('Example-prod');
+  });
+
+  it('rejects missing variables', () => {
+    const result = parseConfigYaml(missingVarYaml);
+    expect(result.config).toBeUndefined();
+    expect(result.errors[0].message).toContain('Unknown variable');
+  });
+
+  it('sorts rules by priority then order', () => {
+    const result = parseConfigYaml(priorityYaml);
+    expect(result.errors).toHaveLength(0);
+    expect(result.config?.rules[0].group).toBe('A');
   });
 });

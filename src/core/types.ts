@@ -4,22 +4,30 @@ export interface Rule {
   pattern: string;
   group: string;
   color?: string;
+  priority?: number;
 }
 
 export interface Config {
   version: 1;
   applyMode?: ApplyMode;
+  vars?: Record<string, string>;
+  fallbackGroup?: string;
+  parentFollow?: boolean;
   rules: Rule[];
 }
 
 export interface CompiledRule extends Rule {
   regex: RegExp;
   index: number;
+  priority: number;
 }
 
 export interface CompiledConfig {
   version: 1;
   applyMode: ApplyMode;
+  vars: Record<string, string>;
+  fallbackGroup?: string;
+  parentFollow: boolean;
   rules: CompiledRule[];
 }
 
