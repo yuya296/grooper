@@ -54,6 +54,7 @@ export interface TabState {
   openerTabId?: number;
   active?: boolean;
   pinned?: boolean;
+  index?: number;
   lastAccessed?: number;
   lastActiveAt?: number;
 }

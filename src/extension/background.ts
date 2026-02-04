@@ -1,7 +1,8 @@
 import { parseConfigYaml } from '../core/config.js';
 import { createPlan } from '../core/planner.js';
 import type { CompiledConfig, StateSnapshot } from '../core/types.js';
-import { executePlan } from './executor.js';
+import { executePlan, moveTabToGroup } from './executor.js';
+import { getAdjacentGroup, orderGroupsByTabIndex } from '../core/shortcuts.js';
 import {
   appendLog,
   DEFAULT_CONFIG_YAML,
@@ -36,6 +37,7 @@ async function getWindowState(windowId: number): Promise<StateSnapshot> {
       openerTabId: tab.openerTabId,
       active: tab.active,
       pinned: tab.pinned,
+      index: tab.index,
       lastAccessed: tab.lastAccessed,
       lastActiveAt: lastActive[String(tab.id!)]
     })),
@@ -143,6 +145,60 @@ chrome.tabs.onActivated.addListener((info) => {
 
 chrome.tabs.onRemoved.addListener((tabId) => {
   void removeLastActive(tabId);
+});
+
+async function getActiveTab() {
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  return tabs[0];
+}
+
+async function getGroupOrder(windowId: number) {
+  const tabs = await chrome.tabs.query({ windowId });
+  const groups = await chrome.tabGroups.query({ windowId });
+  return orderGroupsByTabIndex({
+    tabs: tabs.map((tab) => ({
+      id: tab.id!,
+      windowId: tab.windowId,
+      groupId: tab.groupId,
+      index: tab.index
+    })),
+    groups: groups.map((group) => ({
+      id: group.id,
+      title: group.title ?? '',
+      windowId: group.windowId
+    }))
+  });
+}
+
+chrome.commands.onCommand.addListener((command) => {
+  void (async () => {
+    const activeTab = await getActiveTab();
+    if (!activeTab?.id) return;
+    const windowId = activeTab.windowId;
+
+    if (command === 'ungroup') {
+      await chrome.tabs.ungroup(activeTab.id);
+      return;
+    }
+
+    if (command === 'move-next-group' || command === 'move-prev-group') {
+      const orderedGroups = await getGroupOrder(windowId);
+      const target = getAdjacentGroup(orderedGroups, activeTab.groupId, command === 'move-next-group' ? 'next' : 'prev');
+      if (!target) return;
+      await chrome.tabs.group({ tabIds: [activeTab.id], groupId: target.id });
+      return;
+    }
+
+    if (command.startsWith('move-to-group-')) {
+      const { config } = await loadConfig();
+      if (!config) return;
+      const slotIndex = Number(command.replace('move-to-group-', '')) - 1;
+      const groupName = config.shortcuts?.slots?.[slotIndex];
+      if (!groupName) return;
+      const color = config.groups[groupName]?.color;
+      await moveTabToGroup(activeTab.id, windowId, groupName, color);
+    }
+  })();
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {

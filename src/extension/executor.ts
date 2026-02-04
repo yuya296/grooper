@@ -1,11 +1,11 @@
 import type { Plan, PlanAction } from '../core/types.js';
 
-async function findGroupByTitle(windowId: number, title: string) {
+export async function findGroupByTitle(windowId: number, title: string) {
   const groups = await chrome.tabGroups.query({ windowId });
   return groups.find((g) => g.title === title);
 }
 
-async function ensureGroup(windowId: number, title: string, color?: string) {
+export async function ensureGroup(windowId: number, title: string, color?: string) {
   const group = await findGroupByTitle(windowId, title);
   if (!group) return undefined;
   if (group.title !== title || (color && group.color !== color)) {
@@ -14,7 +14,7 @@ async function ensureGroup(windowId: number, title: string, color?: string) {
   return group.id;
 }
 
-async function moveTabToGroup(tabId: number, windowId: number, title: string, color?: string) {
+export async function moveTabToGroup(tabId: number, windowId: number, title: string, color?: string) {
   let group = await findGroupByTitle(windowId, title);
   if (!group) {
     const groupId = await chrome.tabs.group({ tabIds: [tabId], createProperties: { windowId } });
