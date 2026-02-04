@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tab Grouper Options</title>
+    <style>
+      body { font-family: system-ui, -apple-system, sans-serif; padding: 16px; max-width: 900px; margin: 0 auto; }
+      textarea { width: 100%; min-height: 320px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .row { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+      button { padding: 8px 10px; }
+      .error { color: #b00020; font-size: 12px; }
+      .preview { background: #f6f7f9; padding: 8px; white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .history { margin-top: 12px; }
+      .history-item { font-size: 12px; color: #555; margin: 4px 0; }
+    </style>
+  </head>
+  <body>
+    <h1>Tab Grouper Options</h1>
+    <p>YAMLがSSOTです。ここで編集・検証し、保存してください。</p>
+
+    <label for="yaml">設定（YAML）</label>
+    <textarea id="yaml"></textarea>
+    <div id="errors" class="error"></div>
+
+    <div class="row">
+      <button id="validate">検証</button>
+      <button id="save">保存</button>
+      <button id="export">エクスポート</button>
+      <button id="import">インポート</button>
+      <button id="preview">プレビュー</button>
+      <button id="rollback">ロールバック</button>
+    </div>
+
+    <h2>プレビュー</h2>
+    <div id="previewOutput" class="preview"></div>
+
+    <h2>履歴</h2>
+    <div id="history" class="history"></div>
+
+    <script src="options.js"></script>
+  </body>
+</html>

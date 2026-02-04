@@ -1,0 +1,6 @@
+version: 1
+applyMode: manual
+rules:
+  - pattern: "example\\.com"
+    group: "Example"
+    color: "blue"
