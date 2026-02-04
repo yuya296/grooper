@@ -55,4 +55,10 @@ describe('createPlan', () => {
     const move = plan.actions.find((a) => a.type === 'moveTab' && a.tabId === 3);
     expect(move).toMatchObject({ group: 'Fallback' });
   });
+
+  it('respects scope tab ids', () => {
+    const scoped = createPlan(state, config, { scopeTabIds: new Set([2]) });
+    const move = scoped.actions.find((a) => a.type === 'moveTab');
+    expect(move).toBeUndefined();
+  });
 });

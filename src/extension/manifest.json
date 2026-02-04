@@ -3,7 +3,7 @@
   "name": "Tab Grouper",
   "version": "0.1.0",
   "description": "Group and organize tabs with YAML-based rules.",
-  "permissions": ["tabs", "tabGroups", "storage"],
+  "permissions": ["tabs", "tabGroups", "storage", "alarms"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"

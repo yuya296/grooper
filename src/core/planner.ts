@@ -19,11 +19,17 @@ function resolveParentGroup(state: StateSnapshot, tab: TabState) {
   return { group: group.title, color: group.color };
 }
 
-export function createPlan(state: StateSnapshot, config: CompiledConfig): Plan {
+export function createPlan(
+  state: StateSnapshot,
+  config: CompiledConfig,
+  options?: { scopeTabIds?: Set<number> }
+): Plan {
   const actions: Plan['actions'] = [];
   const groupAssignments = new Map<number, { group: string; color?: string; windowId: number }>();
+  const scope = options?.scopeTabIds;
+  const targetTabs = scope ? state.tabs.filter((tab) => scope.has(tab.id)) : state.tabs;
 
-  for (const tab of state.tabs) {
+  for (const tab of targetTabs) {
     let matched = null;
     if (config.parentFollow) {
       matched = resolveParentGroup(state, tab);
