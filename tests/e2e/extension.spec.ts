@@ -1,5 +1,6 @@
 import { test, expect, chromium } from '@playwright/test';
 import path from 'node:path';
+import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -22,8 +23,17 @@ async function launchExtension(testInfo: { outputPath: (name?: string) => string
   }
   const context = await chromium.launchPersistentContext(userDataDir, launchOptions);
 
-  const serviceWorker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
-  const extensionId = new URL(serviceWorker.url()).host;
+  let extensionId: string | undefined;
+  try {
+    const idPath = path.resolve(extensionPath, 'extension-id.txt');
+    extensionId = (await readFile(idPath, 'utf8')).trim();
+  } catch {
+    // fallback for non-diagnostics builds
+  }
+  if (!extensionId) {
+    const serviceWorker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+    extensionId = new URL(serviceWorker.url()).host;
+  }
   const page = await context.newPage();
   await page.goto(`chrome-extension://${extensionId}/options.html`);
 
