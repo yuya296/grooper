@@ -8,8 +8,9 @@ const extensionPath = path.resolve(__dirname, '../../dist/extension');
 
 async function launchExtension(testInfo: { outputPath: (name?: string) => string }) {
   const userDataDir = testInfo.outputPath('user-data');
+  const headless = process.env.PW_HEADLESS === '1';
   const context = await chromium.launchPersistentContext(userDataDir, {
-    headless: true,
+    headless,
     args: [
       `--disable-extensions-except=${extensionPath}`,
       `--load-extension=${extensionPath}`
