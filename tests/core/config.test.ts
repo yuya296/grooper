@@ -37,6 +37,11 @@ rules:
     priority: 2
 `;
 
+const unknownKeyYaml = `version: 1
+rules: []
+unknownKey: true
+`;
+
 describe('parseConfigYaml', () => {
   it('parses valid yaml', () => {
     const result = parseConfigYaml(validYaml);
@@ -67,5 +72,10 @@ describe('parseConfigYaml', () => {
     const result = parseConfigYaml(priorityYaml);
     expect(result.errors).toHaveLength(0);
     expect(result.config?.rules[0].group).toBe('A');
+  });
+
+  it('rejects unknown keys', () => {
+    const result = parseConfigYaml(unknownKeyYaml);
+    expect(result.config).toBeUndefined();
   });
 });
