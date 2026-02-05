@@ -1,6 +1,7 @@
 import { test, expect, chromium } from '@playwright/test';
 import path from 'node:path';
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -10,6 +11,7 @@ const extensionPath = path.resolve(__dirname, '../../dist/extension');
 async function launchExtension(testInfo: { outputPath: (name?: string) => string }) {
   const userDataDir = testInfo.outputPath('user-data');
   const headless = process.env.PW_HEADLESS === '1';
+  const executablePath = await resolveChromiumExecutable();
   const launchOptions: Parameters<typeof chromium.launchPersistentContext>[1] = {
     headless,
     ignoreDefaultArgs: ['--disable-extensions'],
@@ -18,7 +20,9 @@ async function launchExtension(testInfo: { outputPath: (name?: string) => string
       `--load-extension=${extensionPath}`
     ]
   };
-  if (process.platform === 'darwin') {
+  if (executablePath) {
+    launchOptions.executablePath = executablePath;
+  } else if (process.platform === 'darwin') {
     launchOptions.channel = 'chrome';
   }
   const context = await chromium.launchPersistentContext(userDataDir, launchOptions);
@@ -38,6 +42,29 @@ async function launchExtension(testInfo: { outputPath: (name?: string) => string
   await page.goto(`chrome-extension://${extensionId}/options.html`);
 
   return { context, page, extensionId };
+}
+
+async function resolveChromiumExecutable() {
+  if (process.platform !== 'darwin') return undefined;
+  const home = process.env.HOME;
+  if (!home) return undefined;
+  const base = path.join(home, 'Library', 'Caches', 'ms-playwright');
+  try {
+    const entries = await readdir(base, { withFileTypes: true });
+    const candidates = entries
+      .filter((entry) => entry.isDirectory() && entry.name.startsWith('chromium-'))
+      .map((entry) => entry.name)
+      .sort((a, b) => b.localeCompare(a));
+    for (const candidate of candidates) {
+      const armPath = path.join(base, candidate, 'chrome-mac-arm64', 'Chromium.app', 'Contents', 'MacOS', 'Chromium');
+      if (existsSync(armPath)) return armPath;
+      const x64Path = path.join(base, candidate, 'chrome-mac-x64', 'Chromium.app', 'Contents', 'MacOS', 'Chromium');
+      if (existsSync(x64Path)) return x64Path;
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
 }
 
 async function diag<T>(page: import('@playwright/test').Page, request: any): Promise<T> {
