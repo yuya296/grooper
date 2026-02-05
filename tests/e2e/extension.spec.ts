@@ -9,13 +9,17 @@ const extensionPath = path.resolve(__dirname, '../../dist/extension');
 async function launchExtension(testInfo: { outputPath: (name?: string) => string }) {
   const userDataDir = testInfo.outputPath('user-data');
   const headless = process.env.PW_HEADLESS === '1';
-  const context = await chromium.launchPersistentContext(userDataDir, {
+  const launchOptions: Parameters<typeof chromium.launchPersistentContext>[1] = {
     headless,
     args: [
       `--disable-extensions-except=${extensionPath}`,
       `--load-extension=${extensionPath}`
     ]
-  });
+  };
+  if (process.platform === 'darwin') {
+    launchOptions.channel = 'chrome';
+  }
+  const context = await chromium.launchPersistentContext(userDataDir, launchOptions);
 
   const serviceWorker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
   const extensionId = new URL(serviceWorker.url()).host;
