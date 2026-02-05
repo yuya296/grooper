@@ -1,6 +1,9 @@
 import { test, expect, chromium } from '@playwright/test';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const extensionPath = path.resolve(__dirname, '../../dist/extension');
 
 async function launchExtension(testInfo: { outputPath: (name?: string) => string }) {
