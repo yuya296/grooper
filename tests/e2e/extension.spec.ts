@@ -11,6 +11,7 @@ async function launchExtension(testInfo: { outputPath: (name?: string) => string
   const headless = process.env.PW_HEADLESS === '1';
   const launchOptions: Parameters<typeof chromium.launchPersistentContext>[1] = {
     headless,
+    ignoreDefaultArgs: ['--disable-extensions'],
     args: [
       `--disable-extensions-except=${extensionPath}`,
       `--load-extension=${extensionPath}`
