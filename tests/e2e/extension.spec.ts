@@ -38,7 +38,7 @@ async function setConfig(page: import('@playwright/test').Page, yaml: string) {
 
 test('pattern match and fallback', async ({}, testInfo) => {
   const { context, page } = await launchExtension(testInfo);
-  const yaml = `version: 1\napplyMode: manual\nparentFollow: true\nfallbackGroup: "Fallback"\nrules:\n  - pattern: "example\\.com"\n    group: "Example"\n`;
+  const yaml = `version: 1\napplyMode: manual\nparentFollow: true\nfallbackGroup: "Fallback"\nrules:\n  - pattern: 'example\\.com'\n    group: "Example"\n`;
   await setConfig(page, yaml);
 
   const tab1 = await context.newPage();
@@ -60,7 +60,7 @@ test('pattern match and fallback', async ({}, testInfo) => {
 
 test('parent follow', async ({}, testInfo) => {
   const { context, page } = await launchExtension(testInfo);
-  const yaml = `version: 1\napplyMode: manual\nparentFollow: true\nfallbackGroup: "Fallback"\nrules:\n  - pattern: "example\\.com/parent"\n    group: "ParentGroup"\n`;
+  const yaml = `version: 1\napplyMode: manual\nparentFollow: true\nfallbackGroup: "Fallback"\nrules:\n  - pattern: 'example\\.com/parent'\n    group: "ParentGroup"\n`;
   await setConfig(page, yaml);
 
   const parent = await context.newPage();
@@ -79,7 +79,7 @@ test('parent follow', async ({}, testInfo) => {
 
 test('apply modes', async ({}, testInfo) => {
   const { context, page } = await launchExtension(testInfo);
-  const yaml = `version: 1\napplyMode: newTabs\nrules:\n  - pattern: "example\\.com"\n    group: "Example"\n`;
+  const yaml = `version: 1\napplyMode: newTabs\nrules:\n  - pattern: 'example\\.com'\n    group: "Example"\n`;
   await setConfig(page, yaml);
 
   const tab = await context.newPage();
@@ -90,7 +90,7 @@ test('apply modes', async ({}, testInfo) => {
   let exampleGrouped = state.state.tabs.some((t: any) => t.url?.includes('example.com') && state.state.groups.find((g: any) => g.id === t.groupId)?.title === 'Example');
   expect(exampleGrouped).toBe(true);
 
-  const yamlAlways = `version: 1\napplyMode: always\nrules:\n  - pattern: "example\\.com"\n    group: "Example"\n`;
+  const yamlAlways = `version: 1\napplyMode: always\nrules:\n  - pattern: 'example\\.com'\n    group: "Example"\n`;
   await setConfig(page, yamlAlways);
 
   const tab2 = await context.newPage();
@@ -107,7 +107,7 @@ test('apply modes', async ({}, testInfo) => {
 
 test('auto cleanup TTL and maxTabs', async ({}, testInfo) => {
   const { context, page } = await launchExtension(testInfo);
-  const yaml = `version: 1\napplyMode: manual\nrules:\n  - pattern: "example\\.com"\n    group: "Example"\n    color: "blue"\ngroups:\n  Example:\n    ttlMinutes: 1\n    maxTabs: 1\n    lru: true\n`;
+  const yaml = `version: 1\napplyMode: manual\nrules:\n  - pattern: 'example\\.com'\n    group: "Example"\n    color: "blue"\ngroups:\n  Example:\n    ttlMinutes: 1\n    maxTabs: 1\n    lru: true\n`;
   await setConfig(page, yaml);
 
   const tab1 = await context.newPage();
