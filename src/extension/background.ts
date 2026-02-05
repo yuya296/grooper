@@ -3,6 +3,7 @@ import { createPlan } from '../core/planner.js';
 import type { CompiledConfig, StateSnapshot } from '../core/types.js';
 import { executePlan, moveTabToGroup } from './executor.js';
 import { getAdjacentGroup, orderGroupsByTabIndex } from '../core/shortcuts.js';
+import { handleDiag } from './diagnostics.js';
 import {
   appendLog,
   DEFAULT_CONFIG_YAML,
@@ -111,6 +112,16 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     runManual()
       .then((result) => sendResponse(result))
       .catch((err) => sendResponse({ ok: false, errors: [{ path: 'runtime', message: String(err) }] }));
+    return true;
+  }
+  if (message?.__diag__) {
+    if (!__DIAGNOSTICS__) {
+      sendResponse({ ok: false, error: 'diagnostics disabled' });
+      return true;
+    }
+    handleDiag(message.__diag__)
+      .then((result) => sendResponse(result))
+      .catch((err) => sendResponse({ ok: false, error: String(err) }));
     return true;
   }
   return false;
