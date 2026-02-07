@@ -4,12 +4,13 @@
     "lib": ["ES2022", "DOM"],
     "module": "ES2022",
     "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "types": ["chrome"],
+    "types": ["chrome", "react", "react-dom"],
     "baseUrl": ".",
     "paths": {
       "@core/*": ["src/core/*"]

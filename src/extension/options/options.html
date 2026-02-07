@@ -6,137 +6,138 @@
     <title>Tab Grouper Options</title>
     <style>
       :root {
-        --bg: #ffffff;
-        --panel: #f6f7f9;
-        --text: #111;
-        --muted: #666;
-        --border: #ddd;
-        --accent: #0a66ff;
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --text: #0f172a;
+        --muted: #64748b;
+        --border: #e2e8f0;
+        --accent: #111827;
+        --soft: #f1f5f9;
       }
+      * { box-sizing: border-box; }
       body {
-        font-family: system-ui, -apple-system, sans-serif;
-        padding: 16px;
-        max-width: 960px;
-        margin: 0 auto;
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
         color: var(--text);
-        background: var(--bg);
+        background: radial-gradient(circle at top right, #e2e8f0 0%, var(--bg) 40%);
       }
-      textarea {
-        width: 100%;
-        min-height: 320px;
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      button, input, select, textarea { font: inherit; }
+      #root { max-width: 1200px; margin: 18px auto; padding: 0 14px 20px; }
+      .card {
+        border: 1px solid var(--border);
+        background: var(--card);
+        border-radius: 14px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
       }
-      .row { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
-      button { padding: 8px 10px; }
-      .error { color: #b00020; font-size: 12px; white-space: pre-wrap; }
-      .preview { background: var(--panel); padding: 8px; white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-      .history { margin-top: 12px; }
-      .history-item { font-size: 12px; color: #555; margin: 4px 0; }
-
-      .tabs { display: flex; gap: 8px; margin: 12px 0; }
-      .tab-button {
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 18px;
+        margin-bottom: 12px;
+      }
+      .title { margin: 0; font-size: 18px; }
+      .subtitle { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+      .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+      .btn {
         border: 1px solid var(--border);
         background: #fff;
-        padding: 6px 10px;
+        border-radius: 10px;
+        padding: 8px 12px;
         cursor: pointer;
       }
-      .tab-button.active {
-        border-color: var(--accent);
-        color: var(--accent);
-        font-weight: 600;
-      }
-      .tab-panel { display: none; }
-      .tab-panel.active { display: block; }
-
-      .field { margin: 12px 0; }
-      .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-      .field select, .field input { padding: 6px 8px; width: 100%; max-width: 360px; }
-      .inline-field { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-      .inline-field select, .inline-field input { width: auto; max-width: 360px; }
-
-      .rules-header { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
-      .rules-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
-      .rule-item {
-        display: grid;
-        grid-template-columns: 24px 1.5fr 1fr 120px 90px 64px;
-        gap: 8px;
-        align-items: center;
+      .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+      .btn-ghost { background: transparent; }
+      .tabs { display: flex; gap: 8px; padding: 0 18px 12px; }
+      .tab {
         border: 1px solid var(--border);
-        padding: 8px;
+        background: #fff;
+        border-radius: 999px;
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+      .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+      .panel { padding: 0 18px 18px; }
+      .stack { display: flex; flex-direction: column; gap: 12px; }
+      .label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+      .input, .select, .textarea {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 8px 10px;
         background: #fff;
       }
-      .rule-item.drag-over { border-color: var(--accent); background: #eef4ff; }
-      .drag-handle {
-        cursor: grab;
-        font-size: 16px;
-        user-select: none;
-        color: var(--muted);
+      .textarea { min-height: 320px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      .grid { display: grid; grid-template-columns: 1fr 300px; gap: 12px; align-items: start; }
+      .table-wrap {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
       }
-      .rule-item input { width: 100%; padding: 6px 6px; }
-      .rule-item .remove { background: #fff; border: 1px solid var(--border); }
-      .hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td {
+        padding: 10px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        font-size: 14px;
+      }
+      th { background: var(--soft); font-weight: 600; color: #334155; font-size: 12px; }
+      .row-title {
+        border: 0;
+        background: transparent;
+        padding: 0;
+        color: #0f172a;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .badge {
+        display: inline-flex;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 2px 8px;
+        color: #475569;
+        background: #f8fafc;
+        font-size: 12px;
+      }
+      .handle {
+        width: 24px;
+        height: 24px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: grab;
+        color: #64748b;
+        background: #fff;
+      }
+      .side {
+        position: sticky;
+        top: 12px;
+        padding: 14px;
+      }
+      .side-title { margin: 0 0 12px; font-size: 15px; }
+      .error { color: #b91c1c; white-space: pre-wrap; font-size: 12px; padding: 0 18px 10px; }
+      .preview {
+        background: #0b1220;
+        color: #e2e8f0;
+        border-radius: 10px;
+        padding: 12px;
+        white-space: pre-wrap;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        min-height: 62px;
+      }
+      .history-item { font-size: 12px; color: #475569; margin: 4px 0; }
+      .muted { color: var(--muted); font-size: 12px; }
+      @media (max-width: 980px) {
+        .grid { grid-template-columns: 1fr; }
+      }
     </style>
   </head>
   <body>
-    <h1>Tab Grouper Options</h1>
-    <p>YAMLがSSOTです。Source / UI を切り替えて編集できます。</p>
-
-    <div class="tabs">
-      <button class="tab-button active" data-tab="source">Source</button>
-      <button class="tab-button" data-tab="ui">UI</button>
-    </div>
-
-    <div id="tab-source" class="tab-panel active">
-      <label for="yaml">設定（YAML）</label>
-      <textarea id="yaml"></textarea>
-    </div>
-
-    <div id="tab-ui" class="tab-panel">
-      <div class="field">
-        <label for="applyMode">applyMode</label>
-        <select id="applyMode">
-          <option value="manual">manual</option>
-          <option value="newTabs">newTabs</option>
-          <option value="always">always</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="fallbackMode">fallbackGroup</label>
-        <div class="inline-field">
-          <select id="fallbackMode">
-            <option value="none">none</option>
-            <option value="custom">custom</option>
-          </select>
-          <input id="fallbackGroup" placeholder="Group name" />
-        </div>
-        <div class="hint">noneなら未設定として扱います。</div>
-      </div>
-
-      <div class="rules-header">
-        <h2>rules</h2>
-        <button id="addRule">ルール追加</button>
-      </div>
-      <div id="rulesList" class="rules-list"></div>
-      <div class="hint">ハンドルをドラッグして並び替えできます。</div>
-    </div>
-
-    <div id="errors" class="error"></div>
-
-    <div class="row">
-      <button id="validate">検証</button>
-      <button id="save">保存</button>
-      <button id="export">エクスポート</button>
-      <button id="import">インポート</button>
-      <button id="preview">プレビュー</button>
-      <button id="rollback">ロールバック</button>
-    </div>
-
-    <h2>プレビュー</h2>
-    <div id="previewOutput" class="preview"></div>
-
-    <h2>履歴</h2>
-    <div id="history" class="history"></div>
-
+    <div id="root"></div>
     <script src="options.js"></script>
   </body>
 </html>

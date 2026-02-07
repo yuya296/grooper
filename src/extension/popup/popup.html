@@ -5,14 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Tab Grouper</title>
     <style>
-      body { font-family: system-ui, -apple-system, sans-serif; padding: 12px; width: 260px; }
-      button { width: 100%; padding: 8px 10px; }
-      #status { margin-top: 8px; font-size: 12px; color: #444; }
+      body {
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        padding: 12px;
+        width: 280px;
+        background: #f8fafc;
+        color: #0f172a;
+      }
+      .panel {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .title {
+        margin: 0 0 10px;
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      button {
+        width: 100%;
+        padding: 9px 10px;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        cursor: pointer;
+      }
+      #run {
+        background: #0f172a;
+        color: #fff;
+        border-color: #0f172a;
+      }
+      #status { margin-top: 8px; font-size: 12px; color: #475569; min-height: 18px; }
     </style>
   </head>
   <body>
-    <button id="run">今すぐ整理</button>
-    <div id="status"></div>
+    <div class="panel">
+      <p class="title">Tab Grouper</p>
+      <div class="actions">
+        <button id="run">今すぐ整理</button>
+        <button id="openOptions">設定を開く</button>
+      </div>
+      <div id="status"></div>
+    </div>
     <script src="popup.js"></script>
   </body>
 </html>

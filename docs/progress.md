@@ -14,10 +14,10 @@
 | 0007 | Options UI v2 | 完了 | プレビュー/履歴/ロールバック実装に加え、運用手順の文書化と補強テストを追加済み |
 | 0008 | Diag + CLI | 完了 | `__diag__` API と CLI(plan/apply/snapshot/verify) を実装済み |
 | 0009 | E2E + CI | 完了 | 失敗時diag(state/plan/log)保存・artifact収集・テストユーティリティ単体テストを追加済み |
-| 0010 | Popup + Settings UI modernize | 進行中 | shadcnテーブル + D&D + サイドパネル詳細編集まで設計/合意済み（実装未着手） |
+| 0010 | Popup + Settings UI modernize | 要確認 | Popup導線追加とOptionsのReact/TanStack/D&D移行を実装済み。`pnpm test`/`pnpm build`通過、最終UI確認待ち |
 
 ## 現在のフォーカス
-- PBI-0010実装準備: Popup導線追加とRulesテーブルUI刷新を段階的に着手する。
+- PBI-0010の最終確認: 実拡張でUI導線・D&D・サイドパネル操作を手動確認する。
 
 ## 進捗更新ルール
 - 1コミットごとに、該当PBIの状態変化をこのファイルに反映する。

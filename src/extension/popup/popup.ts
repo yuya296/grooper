@@ -1,4 +1,5 @@
 const button = document.getElementById('run') as HTMLButtonElement;
+const openOptionsButton = document.getElementById('openOptions') as HTMLButtonElement;
 const status = document.getElementById('status') as HTMLDivElement;
 
 function setStatus(message: string) {
@@ -19,4 +20,8 @@ button.addEventListener('click', () => {
     }
     setStatus('完了');
   });
+});
+
+openOptionsButton.addEventListener('click', () => {
+  chrome.runtime.openOptionsPage();
 });

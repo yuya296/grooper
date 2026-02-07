@@ -17,7 +17,7 @@ await build({
   entryPoints: {
     background: 'src/extension/background.ts',
     popup: 'src/extension/popup/popup.ts',
-    options: 'src/extension/options/options.ts'
+    options: 'src/extension/options/options.tsx'
   },
   bundle: true,
   format: 'iife',
