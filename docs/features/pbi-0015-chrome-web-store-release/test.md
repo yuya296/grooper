@@ -2,18 +2,18 @@
 
 ## Goal
 
-- [ ] 公開準備手順がドキュメント通りに実行でき、申請に必要な入力・成果物が揃うことを確認する
+- [ ] 公開準備手順がドキュメント通りに実行でき、申請に必要な入力・成果物が揃うことを確認する（Dashboard入力確認が残）
 
 ## Preconditions
 
-- [ ] 公開対象バージョンのビルドが作成可能であること
+- [x] 公開対象バージョンのビルドが作成可能であること
 - [ ] Chrome Web Store Developer Dashboardへアクセス可能であること
 
 ## CLI Checks
 
-- [ ] Command: `pnpm build`
+- [x] Command: `pnpm build`
   - Expected: 拡張の配布対象ビルドが生成される
-- [ ] Command: `pnpm test`
+- [x] Command: `pnpm test`
   - Expected: 公開前の回帰がない（既存テストが通過）
 
 ## Browser / Store Checks

@@ -1,14 +1,19 @@
 {
   "manifest_version": 3,
   "name": "Grooper",
+  "short_name": "Grooper",
   "version": "0.1.0",
-  "description": "Rule-based tab grouping.",
+  "version_name": "0.1.0",
+  "description": "Rule-based tab grouping for Chrome.",
+  "homepage_url": "https://github.com/yuya296/grooper",
   "permissions": ["tabs", "tabGroups", "storage", "alarms"],
   "host_permissions": ["<all_urls>"],
+  "minimum_chrome_version": "120",
   "background": {
     "service_worker": "background.js"
   },
   "action": {
+    "default_title": "Grooper — Rule-based tab grouping",
     "default_popup": "popup.html"
   },
   "options_page": "options.html",
