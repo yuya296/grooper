@@ -9,6 +9,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const extensionPath = path.resolve(__dirname, '../../dist/extension');
 
+// Service worker initialization constants
+const SERVICE_WORKER_TIMEOUT_MS = 10000; // Max time to wait for service worker to appear
+const SERVICE_WORKER_INIT_DELAY_MS = 1000; // Additional delay for service worker to initialize handlers
+
 async function launchExtension(testInfo: { outputPath: (name?: string) => string }) {
   const userDataDir = testInfo.outputPath('user-data');
   // Chrome extensions don't work properly in new headless mode
@@ -38,12 +42,12 @@ async function launchExtension(testInfo: { outputPath: (name?: string) => string
     const page = await context.newPage();
     await page.goto('about:blank');
     // Wait for service worker event with timeout
-    worker = await context.waitForEvent('serviceworker', { timeout: 10000 });
+    worker = await context.waitForEvent('serviceworker', { timeout: SERVICE_WORKER_TIMEOUT_MS });
     await page.close();
   }
   
   // Give the service worker time to fully initialize and register message listeners
-  await worker.evaluate(() => new Promise(resolve => setTimeout(resolve, 1000)));
+  await worker.evaluate((delay) => new Promise(resolve => setTimeout(resolve, delay)), SERVICE_WORKER_INIT_DELAY_MS);
   
   return { context, worker };
 }
