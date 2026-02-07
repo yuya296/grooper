@@ -509,7 +509,6 @@ function App() {
                 </button>
               </div>
             </div>
-            <div className="muted">Groupクリックで詳細編集。左端ハンドルで並び替えできます。</div>
             <div className="grid">
               <div className="table-wrap">
                 <DndContext
