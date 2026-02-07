@@ -19,3 +19,4 @@
 - 2026-02-07: `docs/config-examples.md` を追加し、regexキャプチャ/ glob の設定例を利用者向けに整理。
 - 2026-02-07: docs内のregexサンプル記法を修正（`example\\.com` -> `example\.com`）。
 - 2026-02-07: サンプル設定をURLルール優先の形へ調整（`parentFollow: false`、fallback未設定）。
+- 2026-02-07: PBI-0014をクローズ（進捗台帳を完了へ更新）。

@@ -15,3 +15,4 @@
 - 2026-02-07: デフォルト設定（`DEFAULT_CONFIG_YAML` / `docs/config.sample.yml`）を glob ベースへ更新。
 - 2026-02-07: `applyMode=newTabs` で新規タブ初期URL（about:blank/newtab）から実URLへ遷移した際にも適用されるようイベント追跡を修正。
 - 2026-02-07: `onUpdated:newTab` で一時URL（newtab/about:blank）を消費しないよう修正し、最初の実URLでのみ1回適用する挙動へ調整。
+- 2026-02-07: PBI-0011をクローズ（進捗台帳を完了へ更新）。
