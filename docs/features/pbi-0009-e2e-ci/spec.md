@@ -22,4 +22,8 @@
 
 # Notes
 
-- 
+- E2E/CI運用メモ:
+  1. `pnpm test` はVitestユニットテストのみを実行し、`tests/e2e`は対象外にする。
+  2. `pnpm e2e` はPlaywrightで実行し、失敗時に`trace/screenshot/video`を`test-results`へ保存する。
+  3. E2Eシナリオ失敗時は診断API経由で`state/plan/log`をJSON保存し、Playwright attachmentとして紐づける。
+  4. CIの`e2e`ジョブ失敗時は`test-results/**`と`playwright-report/**`をartifactとして収集する。

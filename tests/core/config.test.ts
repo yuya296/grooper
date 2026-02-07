@@ -4,35 +4,35 @@ import { parseConfigYaml } from '../../src/core/config.js';
 const validYaml = `version: 1
 applyMode: manual
 rules:
-  - pattern: "example\\.com"
+  - pattern: 'example\\.com'
     group: "Example"
 `;
 
 const invalidRegex = `version: 1
 rules:
-  - pattern: "("
+  - pattern: '('
     group: "Bad"
 `;
 const varsYaml = `version: 1
 vars:
   env: prod
 rules:
-  - pattern: "example\\\\.com/${env}"
-    group: "Example-${env}"
+  - pattern: 'example\\.com/\${env}'
+    group: "Example-\${env}"
 `;
 
 const missingVarYaml = `version: 1
 rules:
-  - pattern: "example\\\\.com/${missing}"
+  - pattern: 'example\\.com/\${missing}'
     group: "Example"
 `;
 
 const priorityYaml = `version: 1
 rules:
-  - pattern: "b"
+  - pattern: 'b'
     group: "B"
     priority: 1
-  - pattern: "a"
+  - pattern: 'a'
     group: "A"
     priority: 2
 `;
@@ -63,7 +63,7 @@ describe('parseConfigYaml', () => {
   it('expands variables', () => {
     const result = parseConfigYaml(varsYaml);
     expect(result.errors).toHaveLength(0);
-    expect(result.config?.rules[0].pattern).toBe('example\\\\.com/prod');
+    expect(result.config?.rules[0].pattern).toBe('example\\.com/prod');
     expect(result.config?.rules[0].group).toBe('Example-prod');
   });
 
