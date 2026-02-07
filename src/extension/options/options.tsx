@@ -445,7 +445,7 @@ function App() {
         cell: (ctx) => <span className="badge">{ctx.getValue() || 'Unset'}</span>
       }),
       columnHelper.accessor('color', {
-        header: 'ステータス',
+        header: 'カラー',
         cell: (ctx) => {
           const color = ctx.getValue();
           const hex = findColorHex(color);
@@ -720,7 +720,7 @@ function App() {
                 {drawerPatternRegexError && <div className="field-error">{drawerPatternRegexError}</div>}
               </div>
               <div>
-                <label className="label">ステータス（色）</label>
+                <label className="label">カラー</label>
                 <ColorSelect value={drawerDraft.color} onChange={(next) => setDrawerDraft({ ...drawerDraft, color: next })} />
                 <div className="muted">Chrome タブグループの色を選択</div>
               </div>
