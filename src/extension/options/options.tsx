@@ -266,6 +266,16 @@ function App() {
   });
 
   const selectedRule = selectedRuleIndex != null ? uiState.rules[selectedRuleIndex] : undefined;
+  const isDrawerOpen = selectedRuleIndex != null;
+
+  useEffect(() => {
+    if (!isDrawerOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSelectedRuleIndex(null);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isDrawerOpen]);
 
   return (
     <div className="card">
@@ -406,50 +416,6 @@ function App() {
                 </table>
               </DndContext>
             </div>
-            <aside className="card side">
-              <h3 className="side-title">詳細編集</h3>
-              {!selectedRule && <div className="muted">ルールタイトルをクリックして選択してください。</div>}
-              {selectedRule && (
-                <div className="stack">
-                  <div>
-                    <label className="label">Header (pattern)</label>
-                    <input
-                      className="input"
-                      value={selectedRule.pattern}
-                      onChange={(e) => updateRule(selectedRuleIndex!, { pattern: e.currentTarget.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="label">Section Type (group)</label>
-                    <input
-                      className="input"
-                      value={selectedRule.group}
-                      onChange={(e) => updateRule(selectedRuleIndex!, { group: e.currentTarget.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="label">Status (color)</label>
-                    <input
-                      className="input"
-                      value={selectedRule.color ?? ''}
-                      onChange={(e) => updateRule(selectedRuleIndex!, { color: e.currentTarget.value || undefined })}
-                    />
-                  </div>
-                  <div>
-                    <label className="label">Target (priority)</label>
-                    <input
-                      className="input"
-                      type="number"
-                      value={selectedRule.priority ?? ''}
-                      onChange={(e) => {
-                        const value = e.currentTarget.value;
-                        updateRule(selectedRuleIndex!, { priority: value ? Number(value) : undefined });
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </aside>
           </div>
         </div>
       )}
@@ -469,6 +435,63 @@ function App() {
           ))}
         </div>
       </div>
+
+      <div
+        className={`drawer-backdrop ${isDrawerOpen ? 'open' : ''}`}
+        onClick={() => setSelectedRuleIndex(null)}
+        aria-hidden={!isDrawerOpen}
+      />
+      <aside className={`drawer ${isDrawerOpen ? 'open' : ''}`} aria-hidden={!isDrawerOpen}>
+        <div className="drawer-head">
+          <h3 className="side-title">詳細編集</h3>
+          <button type="button" className="btn btn-ghost" onClick={() => setSelectedRuleIndex(null)}>
+            閉じる
+          </button>
+        </div>
+        <div className="drawer-body">
+          {!selectedRule && <div className="muted">ルールタイトルをクリックして選択してください。</div>}
+          {selectedRule && (
+            <div className="stack">
+              <div>
+                <label className="label">Header (pattern)</label>
+                <input
+                  className="input"
+                  value={selectedRule.pattern}
+                  onChange={(e) => updateRule(selectedRuleIndex!, { pattern: e.currentTarget.value })}
+                />
+              </div>
+              <div>
+                <label className="label">Section Type (group)</label>
+                <input
+                  className="input"
+                  value={selectedRule.group}
+                  onChange={(e) => updateRule(selectedRuleIndex!, { group: e.currentTarget.value })}
+                />
+              </div>
+              <div>
+                <label className="label">Status (color)</label>
+                <input
+                  className="input"
+                  value={selectedRule.color ?? ''}
+                  onChange={(e) => updateRule(selectedRuleIndex!, { color: e.currentTarget.value || undefined })}
+                />
+              </div>
+              <div>
+                <label className="label">Target (priority)</label>
+                <input
+                  className="input"
+                  type="number"
+                  value={selectedRule.priority ?? ''}
+                  onChange={(e) => {
+                    const value = e.currentTarget.value;
+                    updateRule(selectedRuleIndex!, { priority: value ? Number(value) : undefined });
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </aside>
     </div>
   );
 }

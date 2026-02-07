@@ -20,3 +20,4 @@
 - 2026-02-07: ライブラリ方針を確定（shadcnテーブル + D&D + タイトルクリックで右サイドパネル詳細編集）。
 - 2026-02-07: ADR-1を追加し、Rules UIの技術選定（shadcn + TanStack + dnd-kit）を記録。
 - 2026-02-07: Popupへ設定導線を追加し、OptionsをReact/TanStack/D&D構成へ移行。`pnpm test`/`pnpm build`通過。
+- 2026-02-07: 詳細編集を常設サイド領域から、タイトルクリックで右から開くスライドパネルUIへ更新。
