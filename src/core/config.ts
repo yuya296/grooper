@@ -110,12 +110,20 @@ export function parseConfigYaml(yamlText: string): { config?: CompiledConfig; er
     return a.index - b.index;
   });
 
+  const normalizedFallback = (() => {
+    if (config.fallbackGroup == null) return undefined;
+    const trimmed = config.fallbackGroup.trim();
+    if (trimmed.length === 0) return undefined;
+    if (trimmed.toLowerCase() === 'none') return undefined;
+    return trimmed;
+  })();
+
   return {
     config: {
       version: 1,
       applyMode: config.applyMode ?? DEFAULT_APPLY_MODE,
       vars,
-      fallbackGroup: config.fallbackGroup,
+      fallbackGroup: normalizedFallback,
       parentFollow: config.parentFollow ?? true,
       groups: config.groups ?? {},
       shortcuts: config.shortcuts,

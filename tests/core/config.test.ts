@@ -42,6 +42,11 @@ rules: []
 unknownKey: true
 `;
 
+const fallbackNoneYaml = `version: 1
+fallbackGroup: none
+rules: []
+`;
+
 describe('parseConfigYaml', () => {
   it('parses valid yaml', () => {
     const result = parseConfigYaml(validYaml);
@@ -77,5 +82,11 @@ describe('parseConfigYaml', () => {
   it('rejects unknown keys', () => {
     const result = parseConfigYaml(unknownKeyYaml);
     expect(result.config).toBeUndefined();
+  });
+
+  it('treats fallbackGroup none as unset', () => {
+    const result = parseConfigYaml(fallbackNoneYaml);
+    expect(result.errors).toHaveLength(0);
+    expect(result.config?.fallbackGroup).toBeUndefined();
   });
 });
