@@ -17,7 +17,7 @@
 | 0010 | Popup + Settings UI modernize | 完了 | Popup導線、Optionsのshadcn系UI統一、Rules D&D+右ドロワー編集、保存フロー/regexバリデーション改善まで実装済み。`pnpm test`/`pnpm build`通過 |
 | 0011 | Rule matching mode (regex/glob) | 完了 | `rules[].matchMode` の追加、glob評価、newTabs適用修正、Options UIの選択・バリデーションまで実装済み。`pnpm test`/`pnpm build`通過 |
 | 0012 | Dark mode | 要確認 | themeMode（system/light/dark）の永続化、Optionsテーマ選択UI、Popup/Optionsのダーク配色対応を実装済み。`pnpm test`/`pnpm build`通過、手動確認待ち |
-| 0013 | i18n (ja/en) | 未着手 | Popup/Optionsの多言語対応（ja/en）導入計画を作成済み |
+| 0013 | i18n (ja/en) | 要確認 | `language`（ja/en）設定、Popup/Options文言キー化、初回言語解決ロジックを実装済み。`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0014 | Regex capture group expansion | 完了 | regexキャプチャ（`$1`, `$<name>`, `$$`）のgroup展開、globモード禁止バリデーション、設定例整備まで実装済み。`pnpm test`/`pnpm build`通過 |
 
 ## 現在のフォーカス

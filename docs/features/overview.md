@@ -23,4 +23,4 @@
 | 0007 Options UI v2 | P2 | 0006 | 完了 | プレビュー/履歴/ロールバック実装と運用文書化・補強テストまで完了 |
 | 0009 E2E + CI | P2 | 0008 | 完了 | 失敗時artifact収集、テストユーティリティ単体テスト、運用文書化まで完了 |
 | 0012 Dark mode | P2 | 0010 | 要確認 | themeMode（system/light/dark）導入とPopup/Optionsのダーク配色対応を実装済み。最終手動確認待ち |
-| 0013 i18n (ja/en) | P2 | 0010 | 未着手 | Popup/Optionsの多言語対応（ja/en）と言語設定保存を導入する |
+| 0013 i18n (ja/en) | P2 | 0010 | 要確認 | Popup/Optionsの多言語対応（ja/en）と言語設定保存を実装済み。実拡張での表示確認待ち |

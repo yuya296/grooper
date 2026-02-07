@@ -25,6 +25,7 @@ import { parseConfigYaml } from '../../core/config.js';
 import { validateGroupTemplateForMatchMode } from '../../core/rule-template.js';
 import type { MatchMode } from '../../core/types.js';
 import { buildYamlFromUi, parseYamlForUi, type RuleForm, type UiState } from './uiState.js';
+import { LANGUAGE_KEY, loadLocale, saveLocale, t, type Locale } from '../i18n.js';
 import {
   DEFAULT_THEME_MODE,
   THEME_MODE_KEY,
@@ -52,9 +53,11 @@ function findColorHex(color?: string) {
 }
 
 function ColorSelect({
+  locale,
   value,
   onChange
 }: {
+  locale: Locale;
   value?: string;
   onChange: (next: string | undefined) => void;
 }) {
@@ -66,7 +69,7 @@ function ColorSelect({
       <Select.Trigger className="select-trigger" aria-label="Color">
         <span className="inline">
           <span className="color-dot" style={{ backgroundColor: findColorHex(value) ?? '#cbd5e1' }} />
-          <Select.Value placeholder="none" />
+          <Select.Value placeholder={t(locale, 'options.color.none')} />
         </span>
         <Select.Icon className="select-icon">▾</Select.Icon>
       </Select.Trigger>
@@ -74,7 +77,7 @@ function ColorSelect({
         <Select.Content className="select-content" position="popper" sideOffset={6}>
           <Select.Viewport className="select-viewport">
             <Select.Item className="select-item" value={NONE_COLOR}>
-              <Select.ItemText>none</Select.ItemText>
+              <Select.ItemText>{t(locale, 'options.color.none')}</Select.ItemText>
             </Select.Item>
             {GROUP_COLORS.map((color) => (
               <Select.Item key={color.value} className="select-item" value={color.value}>
@@ -92,16 +95,18 @@ function ColorSelect({
 }
 
 function AppModeSelect({
+  locale,
   value,
   onChange
 }: {
+  locale: Locale;
   value: UiState['applyMode'];
   onChange: (next: UiState['applyMode']) => void;
 }) {
   const modeLabels: Record<UiState['applyMode'], string> = {
-    always: 'always apply',
-    newTabs: 'only new tab',
-    manual: 'none'
+    always: t(locale, 'options.applyMode.always'),
+    newTabs: t(locale, 'options.applyMode.newTabs'),
+    manual: t(locale, 'options.applyMode.manual')
   };
   return (
     <Select.Root value={value} onValueChange={(next) => onChange(next as UiState['applyMode'])}>
@@ -125,15 +130,17 @@ function AppModeSelect({
 }
 
 function MatchModeSelect({
+  locale,
   value,
   onChange
 }: {
+  locale: Locale;
   value: MatchMode;
   onChange: (next: MatchMode) => void;
 }) {
   const modeLabels: Record<MatchMode, string> = {
-    regex: 'regex',
-    glob: 'wildcard (glob)'
+    regex: t(locale, 'options.matchMode.regex'),
+    glob: t(locale, 'options.matchMode.glob')
   };
   return (
     <Select.Root value={value} onValueChange={(next) => onChange(next as MatchMode)}>
@@ -157,6 +164,37 @@ function MatchModeSelect({
   );
 }
 
+function LanguageSelect({
+  locale,
+  onChange
+}: {
+  locale: Locale;
+  onChange: (next: Locale) => void;
+}) {
+  return (
+    <Select.Root value={locale} onValueChange={(next) => onChange(next as Locale)}>
+      <Select.Trigger className="select-trigger language-trigger" aria-label={t(locale, 'language.label')}>
+        <Select.Value>
+          {locale === 'ja' ? t(locale, 'language.ja') : t(locale, 'language.en')}
+        </Select.Value>
+        <Select.Icon className="select-icon">▾</Select.Icon>
+      </Select.Trigger>
+      <Select.Portal>
+        <Select.Content className="select-content" position="popper" sideOffset={6}>
+          <Select.Viewport className="select-viewport">
+            <Select.Item className="select-item" value="ja">
+              <Select.ItemText>{t(locale, 'language.ja')}</Select.ItemText>
+            </Select.Item>
+            <Select.Item className="select-item" value="en">
+              <Select.ItemText>{t(locale, 'language.en')}</Select.ItemText>
+            </Select.Item>
+          </Select.Viewport>
+        </Select.Content>
+      </Select.Portal>
+    </Select.Root>
+  );
+}
+
 interface RuleRow extends RuleForm {
   rowId: string;
 }
@@ -169,10 +207,10 @@ function applyPriorityFromOrder(rules: RuleForm[]): RuleForm[] {
   }));
 }
 
-function SortHandle({ rowId }: { rowId: string }) {
+function SortHandle({ rowId, ariaLabel }: { rowId: string; ariaLabel: string }) {
   const { attributes, listeners, setNodeRef } = useSortable({ id: rowId });
   return (
-    <button ref={setNodeRef} type="button" className="handle" {...attributes} {...listeners} aria-label="並び替え">
+    <button ref={setNodeRef} type="button" className="handle" {...attributes} {...listeners} aria-label={ariaLabel}>
       ⋮⋮
     </button>
   );
@@ -240,6 +278,7 @@ function App() {
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [themeMode, setThemeMode] = useState<ThemeMode>(DEFAULT_THEME_MODE);
+  const [locale, setLocale] = useState<Locale>('ja');
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
@@ -252,6 +291,9 @@ function App() {
       const loadedTheme = await loadThemeMode();
       setThemeMode(loadedTheme);
       applyTheme(loadedTheme, document, window.matchMedia('(prefers-color-scheme: dark)').matches);
+      const loadedLocale = await loadLocale();
+      setLocale(loadedLocale);
+      document.documentElement.lang = loadedLocale;
     })();
   }, []);
 
@@ -263,9 +305,32 @@ function App() {
     return () => media.removeEventListener('change', apply);
   }, [themeMode]);
 
+  useEffect(() => {
+    document.documentElement.lang = locale;
+    document.title = t(locale, 'options.title');
+  }, [locale]);
+
+  useEffect(() => {
+    const onStorageChanged = (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => {
+      if (areaName !== 'local' || !changes[LANGUAGE_KEY]) return;
+      const next = changes[LANGUAGE_KEY].newValue;
+      if (next === 'ja' || next === 'en') {
+        setLocale(next);
+      }
+    };
+    chrome.storage.onChanged.addListener(onStorageChanged);
+    return () => chrome.storage.onChanged.removeListener(onStorageChanged);
+  }, []);
+
   async function updateThemeMode(next: ThemeMode) {
     setThemeMode(next);
     await chrome.storage.local.set({ [THEME_MODE_KEY]: next });
+  }
+
+  async function updateLocale(next: Locale) {
+    setLocale(next);
+    document.documentElement.lang = next;
+    await saveLocale(next);
   }
 
   const isDarkResolved =
@@ -345,10 +410,10 @@ function App() {
 
   function validateRuleDraft(rule: RuleForm) {
     const nextErrors: string[] = [];
-    if (!rule.group.trim()) nextErrors.push('グループ名は必須です');
+    if (!rule.group.trim()) nextErrors.push(t(locale, 'options.validation.groupRequired'));
     const groupTemplateError = validateGroupTemplateForMatchMode(rule.group, rule.matchMode);
     if (groupTemplateError) nextErrors.push(groupTemplateError);
-    if (!rule.pattern.trim()) nextErrors.push('パターンは必須です');
+    if (!rule.pattern.trim()) nextErrors.push(t(locale, 'options.validation.patternRequired'));
     const patternRegexError = getPatternRegexError(rule.pattern, rule.matchMode);
     if (patternRegexError) nextErrors.push(patternRegexError);
     return nextErrors;
@@ -363,7 +428,9 @@ function App() {
       new RegExp(trimmed);
       return null;
     } catch (err) {
-      return `正規表現が不正です: ${err instanceof Error ? err.message : 'Invalid regex'}`;
+      return t(locale, 'options.validation.regexInvalid', {
+        message: err instanceof Error ? err.message : 'Invalid regex'
+      });
     }
   }
 
@@ -418,7 +485,7 @@ function App() {
     await chrome.storage.local.set({ configYaml: yamlText });
     setSavedYamlText(yamlText);
     setErrors([]);
-    setToastMessage('設定を保存しました');
+    setToastMessage(t(locale, 'options.toast.saved'));
     setToastOpen(true);
   }
 
@@ -464,33 +531,33 @@ function App() {
         id: 'drag',
         header: '',
         size: 50,
-        cell: ({ row }) => <SortHandle rowId={row.original.rowId} />
+        cell: ({ row }) => <SortHandle rowId={row.original.rowId} ariaLabel={t(locale, 'options.sort')} />
       }),
       columnHelper.accessor('group', {
-        header: 'グループ',
+        header: t(locale, 'options.table.group'),
         cell: ({ row }) => (
           <button type="button" className="row-title" onClick={() => openEditRuleDrawer(row.index)}>
-            {row.original.group || `Group ${row.index + 1}`}
+            {row.original.group || t(locale, 'options.table.groupFallback', { index: row.index + 1 })}
           </button>
         )
       }),
       columnHelper.accessor('matchMode', {
-        header: 'マッチ方式',
-        cell: (ctx) => <span className="badge">{ctx.getValue() === 'glob' ? 'glob' : 'regex'}</span>
+        header: t(locale, 'options.table.matchMode'),
+        cell: (ctx) => <span className="badge">{ctx.getValue() === 'glob' ? t(locale, 'options.matchMode.glob') : t(locale, 'options.matchMode.regex')}</span>
       }),
       columnHelper.accessor('pattern', {
-        header: 'パターン',
-        cell: (ctx) => <span className="badge">{ctx.getValue() || 'Unset'}</span>
+        header: t(locale, 'options.table.pattern'),
+        cell: (ctx) => <span className="badge">{ctx.getValue() || t(locale, 'options.table.empty')}</span>
       }),
       columnHelper.accessor('color', {
-        header: 'カラー',
+        header: t(locale, 'options.table.color'),
         cell: (ctx) => {
           const color = ctx.getValue();
           const hex = findColorHex(color);
           return (
             <span className="badge">
               <span className="color-dot" style={{ backgroundColor: hex ?? '#cbd5e1' }} />
-              {color || 'none'}
+              {color || t(locale, 'options.color.none')}
             </span>
           );
         }
@@ -502,7 +569,7 @@ function App() {
           <button
             type="button"
             className="row-action-btn"
-            aria-label="ルールを削除"
+            aria-label={t(locale, 'options.drawer.deleteRule')}
             onClick={() => removeRule(row.index)}
           >
             🗑
@@ -510,7 +577,7 @@ function App() {
         )
       })
     ],
-    [columnHelper]
+    [columnHelper, locale]
   );
 
   const table = useReactTable({
@@ -526,7 +593,7 @@ function App() {
     drawerDraft.group.trim().length === 0 ||
     drawerDraft.pattern.trim().length === 0 ||
     drawerPatternRegexError != null;
-  const drawerTitle = drawerRuleIndex == null ? 'ルール追加' : 'ルール編集';
+  const drawerTitle = drawerRuleIndex == null ? t(locale, 'options.drawer.add') : t(locale, 'options.drawer.edit');
   const activeDragRow = activeDragId != null ? ruleRows.find((row) => row.rowId === activeDragId) : undefined;
 
   useEffect(() => {
@@ -543,14 +610,15 @@ function App() {
       <div className="card">
       <div className="header">
         <div className="title-wrap">
-          <h1 className="title">設定</h1>
+          <h1 className="title">{t(locale, 'options.title')}</h1>
         </div>
         <div className="actions">
+          <LanguageSelect locale={locale} onChange={(next) => void updateLocale(next)} />
           <button
             className="btn btn-ghost theme-toggle"
             type="button"
             onClick={() => void toggleThemeMode()}
-            aria-label="テーマ切替"
+            aria-label={t(locale, 'options.themeToggle')}
             title={isDarkResolved ? 'dark' : 'light'}
           >
             <span className={`theme-icon ${!isDarkResolved ? 'active' : ''}`} aria-hidden>
@@ -561,10 +629,10 @@ function App() {
             </span>
           </button>
           <span className={`save-hint ${hasUnsavedChanges ? 'dirty' : 'clean'}`}>
-            {hasUnsavedChanges ? '未保存の変更があります（保存するまで設定は反映されません）' : '保存済み'}
+            {hasUnsavedChanges ? t(locale, 'options.saveHintDirty') : t(locale, 'options.saveHintClean')}
           </span>
           <button className="btn" type="button" onClick={() => validateYaml()}>
-            検証
+            {t(locale, 'common.validate')}
           </button>
           <button
             className="btn btn-primary"
@@ -572,7 +640,7 @@ function App() {
             onClick={() => void saveYaml()}
             disabled={!hasUnsavedChanges}
           >
-            保存
+            {t(locale, 'common.save')}
           </button>
         </div>
       </div>
@@ -580,10 +648,10 @@ function App() {
       <Tabs.Root value={activeTab} onValueChange={(next) => switchTab(next as 'source' | 'ui')}>
         <Tabs.List className="tabs">
           <Tabs.Trigger className="tab-trigger" value="source">
-            Source
+            {t(locale, 'common.source')}
           </Tabs.Trigger>
           <Tabs.Trigger className="tab-trigger" value="ui">
-            UI
+            {t(locale, 'common.ui')}
           </Tabs.Trigger>
         </Tabs.List>
 
@@ -592,7 +660,7 @@ function App() {
         <Tabs.Content value="source">
           <div className="panel">
             <label className="label" htmlFor="yaml">
-              設定（YAML）
+              {t(locale, 'options.yamlLabel')}
             </label>
             <SourceEditor value={yamlText} onChange={setYamlText} />
           </div>
@@ -600,13 +668,14 @@ function App() {
 
         <Tabs.Content value="ui">
           <div className="panel stack">
-            <h3 className="section-title">基本設定</h3>
+            <h3 className="section-title">{t(locale, 'options.basicSettings')}</h3>
             <div className="settings-row">
               <div className="field-block">
                 <label className="label" htmlFor="applyMode">
-                  適用モード
+                  {t(locale, 'options.applyMode')}
                 </label>
                 <AppModeSelect
+                  locale={locale}
                   value={uiState.applyMode}
                   onChange={(next) => syncFromUi({ ...uiState, applyMode: next })}
                 />
@@ -614,11 +683,11 @@ function App() {
               <div className="field-block">
                 <label className="label" htmlFor="fallbackEnabled">
                   <span className="label-inline">
-                    フォールバックグループ
-                    <span className="info-tip" aria-label="フォールバック説明">
+                    {t(locale, 'options.fallbackGroup')}
+                    <span className="info-tip" aria-label={t(locale, 'options.fallbackGroup')}>
                       ⓘ
                       <span className="tooltip">
-                        ルールに一致しないタブを移動する先です。無効時はフォールバックを適用しません。
+                        {t(locale, 'options.fallbackHelp')}
                       </span>
                     </span>
                   </span>
@@ -638,13 +707,13 @@ function App() {
                     >
                       <Switch.Thumb className="switch-thumb" />
                     </Switch.Root>
-                    <span className="muted">無効</span>
+                    <span className="muted">{t(locale, 'options.fallbackDisabled')}</span>
                   </label>
                   {uiState.fallbackGroup !== undefined && (
                     <input
                       id="fallbackGroup"
                       className="input fallback-input"
-                      placeholder="Fallback GroupName"
+                      placeholder={t(locale, 'options.fallbackPlaceholder')}
                       value={uiState.fallbackGroup}
                       onChange={(e) => syncFromUi({ ...uiState, fallbackGroup: e.currentTarget.value })}
                     />
@@ -653,14 +722,14 @@ function App() {
               </div>
             </div>
             <div className="rules-head">
-              <h3 className="section-title">ルール一覧</h3>
+              <h3 className="section-title">{t(locale, 'options.rules')}</h3>
               <div className="add-rule-wrap">
                 <button
                   type="button"
                   className="btn btn-primary"
                   onClick={openCreateRuleDrawer}
                 >
-                  ＋
+                  {t(locale, 'options.addRule')}
                 </button>
               </div>
             </div>
@@ -709,8 +778,13 @@ function App() {
                   <DragOverlay>
                     {activeDragRow ? (
                       <div className="drag-overlay">
-                        <div className="drag-overlay-title">{activeDragRow.group || 'Group'}</div>
-                        <div className="drag-overlay-sub">Pattern: {activeDragRow.pattern || '(empty)'}</div>
+                        <div className="drag-overlay-title">
+                          {activeDragRow.group ||
+                            t(locale, 'options.table.groupFallback', { index: Number(activeDragRow.rowId) + 1 })}
+                        </div>
+                        <div className="drag-overlay-sub">
+                          {t(locale, 'options.table.patternPrefix')}: {activeDragRow.pattern || t(locale, 'options.table.empty')}
+                        </div>
                       </div>
                     ) : null}
                   </DragOverlay>
@@ -729,7 +803,7 @@ function App() {
       <aside className={`drawer ${isDrawerOpen ? 'open' : ''}`} aria-hidden={!isDrawerOpen}>
         <div className="drawer-head">
           <h3 className="side-title">{drawerTitle}</h3>
-          <button type="button" className="icon-btn" onClick={closeDrawer} aria-label="閉じる">
+          <button type="button" className="icon-btn" onClick={closeDrawer} aria-label={t(locale, 'common.close')}>
             ×
           </button>
         </div>
@@ -739,10 +813,10 @@ function App() {
               <div>
                 <label className="label">
                   <span className="label-inline">
-                    グループ名
-                    <span className="info-tip" aria-label="グループ名の説明">
+                    {t(locale, 'options.drawer.group')}
+                    <span className="info-tip" aria-label={t(locale, 'options.drawer.group')}>
                       ⓘ
-                      <span className="tooltip">regexモードでは `$1` / `$&lt;name&gt;` でキャプチャ参照できます。</span>
+                      <span className="tooltip">{t(locale, 'options.drawer.groupHelp')}</span>
                     </span>
                   </span>
                 </label>
@@ -758,14 +832,15 @@ function App() {
               <div>
                 <label className="label">
                   <span className="label-inline">
-                    マッチ方式
-                    <span className="info-tip" aria-label="マッチ方式の説明">
+                    {t(locale, 'options.drawer.matchMode')}
+                    <span className="info-tip" aria-label={t(locale, 'options.drawer.matchMode')}>
                       ⓘ
-                      <span className="tooltip">`regex` または `wildcard (glob)` を選択します。</span>
+                      <span className="tooltip">{t(locale, 'options.drawer.matchModeHelp')}</span>
                     </span>
                   </span>
                 </label>
                 <MatchModeSelect
+                  locale={locale}
                   value={drawerDraft.matchMode}
                   onChange={(next) => {
                     setDrawerDraft({ ...drawerDraft, matchMode: next });
@@ -776,10 +851,10 @@ function App() {
               <div>
                 <label className="label">
                   <span className="label-inline">
-                    パターン
-                    <span className="info-tip" aria-label="パターンの説明">
+                    {t(locale, 'options.drawer.pattern')}
+                    <span className="info-tip" aria-label={t(locale, 'options.drawer.pattern')}>
                       ⓘ
-                      <span className="tooltip">regex か wildcard (glob) の書式でマッチ対象を指定します。</span>
+                      <span className="tooltip">{t(locale, 'options.drawer.patternHelp')}</span>
                     </span>
                   </span>
                 </label>
@@ -796,22 +871,26 @@ function App() {
               <div>
                 <label className="label">
                   <span className="label-inline">
-                    カラー
-                    <span className="info-tip" aria-label="カラーの説明">
+                    {t(locale, 'options.drawer.color')}
+                    <span className="info-tip" aria-label={t(locale, 'options.drawer.color')}>
                       ⓘ
-                      <span className="tooltip">Chromeタブグループで選択可能な色を指定します。</span>
+                      <span className="tooltip">{t(locale, 'options.drawer.colorHelp')}</span>
                     </span>
                   </span>
                 </label>
-                <ColorSelect value={drawerDraft.color} onChange={(next) => setDrawerDraft({ ...drawerDraft, color: next })} />
+                <ColorSelect
+                  locale={locale}
+                  value={drawerDraft.color}
+                  onChange={(next) => setDrawerDraft({ ...drawerDraft, color: next })}
+                />
               </div>
               {drawerErrors.length > 0 && <div className="field-error">{drawerErrors.join('\n')}</div>}
               <div className="drawer-actions">
                 <button type="button" className="btn btn-primary" onClick={saveDrawerRule} disabled={isDrawerSaveDisabled}>
-                  保存
+                  {t(locale, 'common.save')}
                 </button>
                 <button type="button" className="btn" onClick={closeDrawer}>
-                  閉じる
+                  {t(locale, 'common.close')}
                 </button>
               </div>
             </div>

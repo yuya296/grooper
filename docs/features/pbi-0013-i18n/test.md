@@ -2,15 +2,15 @@
 
 ## Goal
 
-- [ ] 主要画面の言語切替が正しく動作し、既存機能の操作性が維持されることを確認する
+- [x] 主要画面の言語切替が正しく動作し、既存機能の操作性が維持されることを確認する
 
 ## Preconditions
 
-- [ ] `ja` / `en` の翻訳リソースが用意されていること
+- [x] `ja` / `en` の翻訳リソースが用意されていること
 
 ## CLI Checks
 
-- [ ] Command: `pnpm test`
+- [x] Command: `pnpm test`
   - Expected: i18n対応後も既存テストが通過し、必要な新規テストが追加されている
 
 ## Browser Checks
