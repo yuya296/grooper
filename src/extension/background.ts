@@ -161,6 +161,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       return;
     }
     if (shouldApply(config, 'newTabs') && pendingNewTabIds.has(tabId)) {
+      if (isTransientNewTabUrl(changeInfo.url)) return;
       await runWithScope({ windowId: tab.windowId, tabIds: [tabId], reason: 'onUpdated:newTab', includeCleanup: false });
       pendingNewTabIds.delete(tabId);
     }
