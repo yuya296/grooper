@@ -70,15 +70,27 @@
       }
       .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
       .btn-ghost { background: transparent; }
-      .tabs { display: flex; gap: 8px; padding: 0 18px 12px; }
-      .tab-trigger {
-        border: 1px solid var(--border);
-        background: #fff;
-        border-radius: 999px;
-        padding: 6px 12px;
-        cursor: pointer;
+      .tabs {
+        display: flex;
+        gap: 2px;
+        padding: 0 18px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 12px;
       }
-      .tab-trigger[data-state="active"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+      .tab-trigger {
+        border: 0;
+        border-bottom: 2px solid transparent;
+        background: transparent;
+        border-radius: 8px 8px 0 0;
+        padding: 10px 14px;
+        cursor: pointer;
+        color: #64748b;
+      }
+      .tab-trigger[data-state="active"] {
+        color: #0f172a;
+        border-bottom-color: #0f172a;
+        font-weight: 600;
+      }
       .panel { padding: 0 18px 18px; }
       .stack { display: flex; flex-direction: column; gap: 12px; }
       .label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
