@@ -17,3 +17,4 @@
 - 2026-02-07: `docs/config.sample.yml` に命名キャプチャ（`$<env>`）で `Example:hoge/fuga` を作る実例を追加。
 - 2026-02-07: `rule-template` 単体テストを追加し、`$<name>` / `$$` / 未一致キャプチャを検証。
 - 2026-02-07: `docs/config-examples.md` を追加し、regexキャプチャ/ glob の設定例を利用者向けに整理。
+- 2026-02-07: docs内のregexサンプル記法を修正（`example\\.com` -> `example\.com`）。

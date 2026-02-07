@@ -10,7 +10,7 @@ shortcuts:
 rules:
   # regexの命名キャプチャでURLの1階層目を抽出してグループ名へ反映
   # 例: https://example.com/hoge/foo -> Example:hoge
-  - pattern: '^https?://example\\.com/(?<env>[^/]+)(?:/.*)?$'
+  - pattern: '^https?://example\.com/(?<env>[^/]+)(?:/.*)?$'
     matchMode: regex
     group: 'Example:$<env>'
     color: "blue"

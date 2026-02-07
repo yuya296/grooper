@@ -11,7 +11,7 @@ applyMode: manual
 parentFollow: true
 fallbackGroup: "Fallback"
 rules:
-  - pattern: '^https?://example\\.com/(?<env>[^/]+)(?:/.*)?$'
+  - pattern: '^https?://example\.com/(?<env>[^/]+)(?:/.*)?$'
     matchMode: regex
     group: 'Example:$<env>'
     color: "blue"
