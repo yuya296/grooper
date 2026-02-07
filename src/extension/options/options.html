@@ -111,6 +111,7 @@
         position: relative;
         border: 1px solid #94a3b8;
         cursor: pointer;
+        display: inline-block;
       }
       .switch-root[data-state="checked"] {
         background: #111827;
@@ -121,12 +122,14 @@
         height: 16px;
         border-radius: 999px;
         background: #fff;
-        display: block;
-        transform: translateX(2px);
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        transform: translateX(0);
         transition: transform 0.18s ease;
       }
       .switch-root[data-state="checked"] .switch-thumb {
-        transform: translateX(20px);
+        transform: translateX(18px);
       }
       .textarea { min-height: 320px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
       .inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
