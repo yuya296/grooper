@@ -13,7 +13,6 @@ const HISTORY_KEY = 'configHistory';
 
 interface RuleRow extends RuleForm {
   rowId: string;
-  title: string;
 }
 
 function SortHandle({ rowId }: { rowId: string }) {
@@ -52,8 +51,7 @@ function App() {
     () =>
       uiState.rules.map((rule, index) => ({
         ...rule,
-        rowId: String(index),
-        title: rule.pattern || `Rule ${index + 1}`
+        rowId: String(index)
       })),
     [uiState.rules]
   );
@@ -226,16 +224,16 @@ function App() {
         size: 50,
         cell: ({ row }) => <SortHandle rowId={row.original.rowId} />
       }),
-      columnHelper.accessor('title', {
-        header: 'Header',
+      columnHelper.accessor('group', {
+        header: 'Group',
         cell: ({ row }) => (
           <button type="button" className="row-title" onClick={() => setSelectedRuleIndex(row.index)}>
-            {row.original.title}
+            {row.original.group || `Group ${row.index + 1}`}
           </button>
         )
       }),
-      columnHelper.accessor('group', {
-        header: 'Section Type',
+      columnHelper.accessor('pattern', {
+        header: 'Header',
         cell: (ctx) => <span className="badge">{ctx.getValue() || 'Unset'}</span>
       }),
       columnHelper.accessor('color', {
@@ -461,7 +459,7 @@ function App() {
                 />
               </div>
               <div>
-                <label className="label">Section Type (group)</label>
+                <label className="label">Group Name</label>
                 <input
                   className="input"
                   value={selectedRule.group}
