@@ -25,7 +25,7 @@
 ### Must
 
 - ヘッダアクション群:
-  - 検証 / 保存 / エクスポート / インポート / プレビュー / ロールバック
+  - 検証 / 保存 / エクスポート / インポート
 - タブ切替:
   - Source
   - UI
@@ -66,7 +66,6 @@
 - Group (クリックで詳細編集)
 - Pattern
 - Status (color)
-- Target (priority)
 - Row action (削除)
 
 ### Must (DnD behavior)
@@ -85,7 +84,6 @@
   - Chrome tab group 対応色のみ選択可能
   - 選択肢: `none, grey, blue, red, yellow, green, pink, purple, cyan, orange`
   - 項目内に色ドット表示
-- Target (priority)
 
 ### Must (open/close)
 
@@ -94,18 +92,7 @@
 - `Esc` で閉じる
 - `閉じる` ボタンで閉じる
 
-## 7. Preview / History
-
-### Must
-
-- Previewエリア
-  - プレビュー結果テキスト表示
-  - 未実行時のプレースホルダ表示
-- Historyエリア
-  - 履歴時刻一覧表示
-  - 空状態表示
-
-## 8. Component policy (Shadcn/Radix based)
+## 7. Component policy (Shadcn/Radix based)
 
 ### Must
 
@@ -117,7 +104,7 @@
 
 - dialog/toast/table等の見た目もshadcnトークンに寄せる
 
-## 9. Responsive and accessibility checkpoints
+## 8. Responsive and accessibility checkpoints
 
 ### Must
 
@@ -125,7 +112,7 @@
 - キーボード操作で主要機能に到達できる
 - コントラストを満たす（特に badge / muted text / overlay）
 
-## 10. Non-goals
+## 9. Non-goals
 
 - ルール評価ロジックの変更
 - 追加設定項目の導入

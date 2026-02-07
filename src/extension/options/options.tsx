@@ -17,12 +17,8 @@ import {
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { parseConfigYaml } from '../../core/config.js';
-import { createPlan } from '../../core/planner.js';
-import type { StateSnapshot } from '../../core/types.js';
-import { appendHistoryEntry, formatPreviewActions, popLatestHistory, type HistoryEntry } from './advanced.js';
 import { buildYamlFromUi, parseYamlForUi, type RuleForm, type UiState } from './uiState.js';
 
-const HISTORY_KEY = 'configHistory';
 const NONE_COLOR = '__none__';
 const GROUP_COLORS = [
   { value: 'grey', label: 'Grey', hex: '#9ca3af' },
@@ -139,8 +135,6 @@ function App() {
   const [activeTab, setActiveTab] = useState<'source' | 'ui'>('source');
   const [yamlText, setYamlText] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
-  const [previewText, setPreviewText] = useState('');
-  const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
   const [uiState, setUiState] = useState<UiState>({ applyMode: 'manual', fallbackGroup: undefined, rules: [] });
   const [rawConfig, setRawConfig] = useState<Record<string, unknown> | null>(null);
   const [selectedRuleIndex, setSelectedRuleIndex] = useState<number | null>(null);
@@ -151,12 +145,8 @@ function App() {
 
   useEffect(() => {
     void (async () => {
-      const [configResult, historyResult] = await Promise.all([
-        chrome.storage.local.get('configYaml'),
-        chrome.storage.local.get(HISTORY_KEY)
-      ]);
+      const configResult = await chrome.storage.local.get('configYaml');
       setYamlText((configResult.configYaml as string) ?? '');
-      setHistoryEntries((historyResult[HISTORY_KEY] as HistoryEntry[]) ?? []);
     })();
   }, []);
 
@@ -216,13 +206,6 @@ function App() {
   async function saveYaml() {
     const result = validateYaml();
     if (!result.ok) return;
-    const current = await chrome.storage.local.get('configYaml');
-    const existing = (current.configYaml as string) ?? '';
-    if (existing && existing !== yamlText) {
-      const nextHistory = appendHistoryEntry(historyEntries, existing, new Date().toISOString());
-      await chrome.storage.local.set({ [HISTORY_KEY]: nextHistory });
-      setHistoryEntries(nextHistory);
-    }
     await chrome.storage.local.set({ configYaml: yamlText });
     setErrors(['保存しました']);
   }
@@ -249,67 +232,6 @@ function App() {
     setErrors(['OK']);
     if (activeTab === 'ui') {
       const uiParse = parseYamlForUi(imported);
-      if (uiParse.ok) {
-        setUiState(uiParse.uiState);
-        setRawConfig(uiParse.rawConfig);
-      }
-    }
-  }
-
-  async function buildStateSnapshot(): Promise<StateSnapshot> {
-    const [tabs, groups, lastActive] = await Promise.all([
-      chrome.tabs.query({}),
-      chrome.tabGroups.query({}),
-      chrome.storage.local.get('lastActiveAt')
-    ]);
-    const lastActiveMap = (lastActive.lastActiveAt as Record<string, number>) ?? {};
-    return {
-      tabs: tabs.map((tab) => ({
-        id: tab.id!,
-        url: tab.url,
-        groupId: tab.groupId,
-        windowId: tab.windowId,
-        openerTabId: tab.openerTabId,
-        active: tab.active,
-        pinned: tab.pinned,
-        index: tab.index,
-        lastAccessed: tab.lastAccessed,
-        lastActiveAt: lastActiveMap[String(tab.id!)]
-      })),
-      groups: groups.map((group) => ({
-        id: group.id,
-        title: group.title ?? '',
-        color: group.color,
-        windowId: group.windowId
-      }))
-    };
-  }
-
-  async function previewPlan() {
-    const result = validateYaml();
-    if (!result.ok) return;
-    const state = await buildStateSnapshot();
-    const plan = createPlan(state, result.config, { includeCleanup: true });
-    if (plan.actions.length === 0) {
-      setPreviewText('変更はありません。');
-      return;
-    }
-    setPreviewText(formatPreviewActions(plan.actions));
-  }
-
-  async function rollback() {
-    const result = popLatestHistory(historyEntries);
-    if (!result) {
-      setErrors(['履歴がありません']);
-      return;
-    }
-    const { latest, remaining } = result;
-    await chrome.storage.local.set({ configYaml: latest.yaml, [HISTORY_KEY]: remaining });
-    setYamlText(latest.yaml);
-    setHistoryEntries(remaining);
-    setErrors(['直前の履歴へロールバックしました']);
-    if (activeTab === 'ui') {
-      const uiParse = parseYamlForUi(latest.yaml);
       if (uiParse.ok) {
         setUiState(uiParse.uiState);
         setRawConfig(uiParse.rawConfig);
@@ -435,12 +357,6 @@ function App() {
           </button>
           <button className="btn" type="button" onClick={() => importYaml()}>
             インポート
-          </button>
-          <button className="btn" type="button" onClick={() => void previewPlan()}>
-            プレビュー
-          </button>
-          <button className="btn" type="button" onClick={() => void rollback()}>
-            ロールバック
           </button>
         </div>
       </div>
@@ -593,22 +509,6 @@ function App() {
           </div>
         </Tabs.Content>
       </Tabs.Root>
-
-      <div className="panel stack">
-        <div>
-          <h3>プレビュー</h3>
-          <div className="preview">{previewText || 'まだ実行していません。'}</div>
-        </div>
-        <div>
-          <h3>履歴</h3>
-          {historyEntries.length === 0 && <div className="muted">履歴はまだありません。</div>}
-          {historyEntries.map((entry) => (
-            <div className="history-item" key={entry.timestamp}>
-              {entry.timestamp}
-            </div>
-          ))}
-        </div>
-      </div>
 
       <div
         className={`drawer-backdrop ${isDrawerOpen ? 'open' : ''}`}
