@@ -1,7 +1,5 @@
 version: 1
 applyMode: manual
-vars:
-  env: prod
 parentFollow: true
 fallbackGroup: "Fallback"
 shortcuts:
@@ -10,9 +8,11 @@ shortcuts:
     - "GroupB"
     - "GroupC"
 rules:
-  - pattern: '*example.com/${env}*'
-    matchMode: glob
-    group: 'Example-${env}'
+  # regexの命名キャプチャでURLの1階層目を抽出してグループ名へ反映
+  # 例: https://example.com/hoge/foo -> Example:hoge
+  - pattern: '^https?://example\\.com/(?<env>[^/]+)(?:/.*)?$'
+    matchMode: regex
+    group: 'Example:$<env>'
     color: "blue"
     priority: 10
   - pattern: '*google.com/search*'
@@ -26,10 +26,6 @@ rules:
     priority: 1
 
 groups:
-  Example-prod:
-    ttlMinutes: 60
-    maxTabs: 5
-    lru: true
   Search:
     ttlMinutes: 30
     maxTabs: 10

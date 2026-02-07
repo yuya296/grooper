@@ -87,4 +87,29 @@ describe('createPlan', () => {
     const move = plan.actions.find((a) => a.type === 'moveTab' && a.tabId === 11);
     expect(move).toMatchObject({ group: 'Team-dev' });
   });
+
+  it('expands named capture into group template', () => {
+    const namedCaptureConfig: CompiledConfig = {
+      ...config,
+      rules: [
+        {
+          pattern: '^https?://example\\.com/(?<env>[^/]+)(?:/.*)?$',
+          group: 'Example:$<env>',
+          matchMode: 'regex',
+          regex: /^https?:\/\/example\.com\/(?<env>[^/]+)(?:\/.*)?$/,
+          index: 0,
+          priority: 0
+        }
+      ]
+    };
+    const plan = createPlan(
+      {
+        tabs: [{ id: 12, url: 'https://example.com/fuga/aaa', windowId: 1 }],
+        groups: []
+      },
+      namedCaptureConfig
+    );
+    const move = plan.actions.find((a) => a.type === 'moveTab' && a.tabId === 12);
+    expect(move).toMatchObject({ group: 'Example:fuga' });
+  });
 });
