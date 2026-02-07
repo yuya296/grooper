@@ -147,6 +147,30 @@
         text-align: left;
         font-size: 14px;
       }
+      .drop-target td {
+        background: #e0f2fe;
+        box-shadow: inset 0 2px 0 #0ea5e9, inset 0 -2px 0 #0ea5e9;
+      }
+      .drag-source td {
+        opacity: 0.35;
+      }
+      .drag-overlay {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+        padding: 8px 10px;
+        min-width: 220px;
+      }
+      .drag-overlay-title {
+        font-weight: 600;
+        color: #0f172a;
+      }
+      .drag-overlay-sub {
+        color: #64748b;
+        font-size: 12px;
+        margin-top: 2px;
+      }
       th { background: var(--soft); font-weight: 600; color: #334155; font-size: 12px; }
       .row-title {
         border: 0;

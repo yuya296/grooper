@@ -28,3 +28,4 @@
 - 2026-02-07: applyModeをRadix Selectへ置換、fallback有効化をRadix Switchへ置換してネイティブUIを削減。
 - 2026-02-07: fallback Switchのthumb位置ずれを修正（Radix Switchの座標/移動量を調整）。
 - 2026-02-07: Source/UIタブ切替を手作りボタンからRadix Tabsへ置換し、タブUIをshadcn系に統一。
+- 2026-02-07: D&D体験を改善（挿入先ハイライトとドラッグ中カードのカーソル追従オーバーレイを追加）。

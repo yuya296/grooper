@@ -3,7 +3,17 @@ import { createRoot } from 'react-dom/client';
 import * as Select from '@radix-ui/react-select';
 import * as Switch from '@radix-ui/react-switch';
 import * as Tabs from '@radix-ui/react-tabs';
-import { DndContext, type DragEndEvent, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragOverlay,
+  type DragEndEvent,
+  type DragOverEvent,
+  type DragStartEvent,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors
+} from '@dnd-kit/core';
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { parseConfigYaml } from '../../core/config.js';
@@ -121,6 +131,8 @@ function App() {
   const [uiState, setUiState] = useState<UiState>({ applyMode: 'manual', fallbackGroup: undefined, rules: [] });
   const [rawConfig, setRawConfig] = useState<Record<string, unknown> | null>(null);
   const [selectedRuleIndex, setSelectedRuleIndex] = useState<number | null>(null);
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [overDragId, setOverDragId] = useState<string | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
@@ -290,8 +302,19 @@ function App() {
     }
   }
 
+  function onDragStart(event: DragStartEvent) {
+    setActiveDragId(String(event.active.id));
+    setOverDragId(String(event.active.id));
+  }
+
+  function onDragOver(event: DragOverEvent) {
+    setOverDragId(event.over ? String(event.over.id) : null);
+  }
+
   function onDragEnd(event: DragEndEvent) {
     const { active, over } = event;
+    setActiveDragId(null);
+    setOverDragId(null);
     if (!over || active.id === over.id) return;
     const fromIndex = Number(active.id);
     const toIndex = Number(over.id);
@@ -301,6 +324,11 @@ function App() {
     if (selectedRuleIndex != null) {
       if (selectedRuleIndex === fromIndex) setSelectedRuleIndex(toIndex);
     }
+  }
+
+  function onDragCancel() {
+    setActiveDragId(null);
+    setOverDragId(null);
   }
 
   const columnHelper = createColumnHelper<RuleRow>();
@@ -362,6 +390,7 @@ function App() {
 
   const selectedRule = selectedRuleIndex != null ? uiState.rules[selectedRuleIndex] : undefined;
   const isDrawerOpen = selectedRuleIndex != null;
+  const activeDragRow = activeDragId != null ? ruleRows.find((row) => row.rowId === activeDragId) : undefined;
 
   useEffect(() => {
     if (!isDrawerOpen) return;
@@ -481,7 +510,14 @@ function App() {
             <div className="muted">Groupクリックで詳細編集。左端ハンドルで並び替えできます。</div>
             <div className="grid">
               <div className="table-wrap">
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragStart={onDragStart}
+                  onDragOver={onDragOver}
+                  onDragEnd={onDragEnd}
+                  onDragCancel={onDragCancel}
+                >
                   <table>
                     <thead>
                       {table.getHeaderGroups().map((headerGroup) => (
@@ -497,7 +533,15 @@ function App() {
                     <tbody>
                       <SortableContext items={ruleRows.map((row) => row.rowId)} strategy={verticalListSortingStrategy}>
                         {table.getRowModel().rows.map((row) => (
-                          <tr key={row.id}>
+                          <tr
+                            key={row.id}
+                            className={[
+                              activeDragId === row.original.rowId ? 'drag-source' : '',
+                              overDragId === row.original.rowId && activeDragId !== row.original.rowId ? 'drop-target' : ''
+                            ]
+                              .join(' ')
+                              .trim()}
+                          >
                             {row.getVisibleCells().map((cell) => (
                               <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                             ))}
@@ -506,6 +550,14 @@ function App() {
                       </SortableContext>
                     </tbody>
                   </table>
+                  <DragOverlay>
+                    {activeDragRow ? (
+                      <div className="drag-overlay">
+                        <div className="drag-overlay-title">{activeDragRow.group || 'Group'}</div>
+                        <div className="drag-overlay-sub">Pattern: {activeDragRow.pattern || '(empty)'}</div>
+                      </div>
+                    ) : null}
+                  </DragOverlay>
                 </DndContext>
               </div>
             </div>
