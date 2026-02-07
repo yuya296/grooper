@@ -4,6 +4,10 @@
 - commitメッセージは `[XXXX] feat: ....` みたいな感じで。
   - XXXXはPBI番号
   - prefixは feat, fix, refactor, docs, chore など。
+- feature開発のtodoは `docs/features/pbi-xxxx-*/todo.md` 
+  - 対応することが増えた場合はチェックリストを都度追加する
+  - 対応が完了したタスクは都度チェックする
+  - なるべくソースコードの修正と同じコミットでtodo.mdを更新する
 
 ## ドキュメント配置
 - 全体設計: `docs/architecture.md`

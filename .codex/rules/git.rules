@@ -1,0 +1,90 @@
+# ~/.codex/rules/git_escalation.rules
+#
+# Goal:
+# - Read-only Git commands: allow (no prompt) when Codex needs to run them outside the sandbox
+# - Mutating Git commands: prompt (require user approval) when outside the sandbox
+
+# -------------------------
+# Read-only (ALLOW)
+# -------------------------
+prefix_rule(
+    pattern = ["git", [
+        "status",
+        "add",
+        "rm",
+        "mv",
+        "commit",
+        "diff",
+        "log",
+        "show",
+        "blame",
+        "grep",
+        "branch",      # listing is read-only; creation is handled by prompt rule below
+        "tag",         # listing is read-only; creation/deletion handled by prompt rule below
+        "remote",      # listing is read-only; set/add handled by prompt rule below
+        "rev-parse",
+        "ls-files",
+        "cat-file",
+        "describe",
+        "shortlog",
+        "name-rev",
+        "whatchanged",
+        "range-diff",
+        "help",
+        "version",
+    ]],
+    decision = "allow",
+    justification = "Read-only git inspection commands are allowed.",
+    match = [
+        "git status",
+        "git diff --stat",
+        "git log -n 20 --oneline",
+        "git show HEAD",
+        "git rev-parse HEAD",
+    ],
+)
+
+# -------------------------
+# Mutating (PROMPT)
+# -------------------------
+prefix_rule(
+    pattern = ["git", [
+        "push",
+        "pull",          # may merge/rebase + network
+        "fetch",         # network + updates refs
+        "merge",
+        "rebase",
+        "cherry-pick",
+        "reset",
+        "revert",
+        "checkout",
+        "switch",
+        "restore",
+        "clean",
+        "stash",         # includes save/apply/pop/drop
+        "apply",
+        "am",
+        "reflog",        # writes reflog
+        "gc",
+        "fsck",          # can be read-only but can also write/modify in some modes; keep prompt
+        "tag",           # create/delete tags
+        "branch",        # create/delete branches
+        "remote",        # add/remove/set-url
+        "submodule",     # mutating / network
+        "worktree",      # adds/removes worktrees
+        "config",        # changes config
+        "init",
+        "clone",
+    ]],
+    decision = "prompt",
+    justification = "Git commands that modify working tree, history, refs, or require network must be approved.",
+    match = [
+        "git add -A",
+        "git commit -m 'msg'",
+        "git push origin main",
+        "git rebase -i HEAD~3",
+        "git reset --hard HEAD~1",
+        "git clean -fd",
+    ],
+)
+
