@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Tab Grouper",
+  "name": "Grooper",
   "version": "0.1.0",
-  "description": "Group and organize tabs with YAML-based rules.",
+  "description": "Rule-based tab grouping.",
   "permissions": ["tabs", "tabGroups", "storage", "alarms"],
   "host_permissions": ["<all_urls>"],
   "background": {
