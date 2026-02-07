@@ -92,6 +92,9 @@
         padding: 8px 10px;
         cursor: pointer;
         user-select: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
       .select-item[data-highlighted] {
         outline: none;
@@ -99,6 +102,31 @@
       }
       .select-item[data-state="checked"] {
         background: #dbeafe;
+      }
+      .switch-root {
+        width: 40px;
+        height: 22px;
+        border-radius: 999px;
+        background: #cbd5e1;
+        position: relative;
+        border: 1px solid #94a3b8;
+        cursor: pointer;
+      }
+      .switch-root[data-state="checked"] {
+        background: #111827;
+        border-color: #111827;
+      }
+      .switch-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 999px;
+        background: #fff;
+        display: block;
+        transform: translateX(2px);
+        transition: transform 0.18s ease;
+      }
+      .switch-root[data-state="checked"] .switch-thumb {
+        transform: translateX(20px);
       }
       .textarea { min-height: 320px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
       .inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }

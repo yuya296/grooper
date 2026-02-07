@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as Select from '@radix-ui/react-select';
+import * as Switch from '@radix-ui/react-switch';
 import { DndContext, type DragEndEvent, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
@@ -60,6 +61,34 @@ function ColorSelect({
                   <span className="color-dot" style={{ backgroundColor: color.hex }} />
                   <Select.ItemText>{color.label}</Select.ItemText>
                 </span>
+              </Select.Item>
+            ))}
+          </Select.Viewport>
+        </Select.Content>
+      </Select.Portal>
+    </Select.Root>
+  );
+}
+
+function AppModeSelect({
+  value,
+  onChange
+}: {
+  value: UiState['applyMode'];
+  onChange: (next: UiState['applyMode']) => void;
+}) {
+  return (
+    <Select.Root value={value} onValueChange={(next) => onChange(next as UiState['applyMode'])}>
+      <Select.Trigger className="select-trigger" aria-label="applyMode">
+        <Select.Value />
+        <Select.Icon className="select-icon">▾</Select.Icon>
+      </Select.Trigger>
+      <Select.Portal>
+        <Select.Content className="select-content" position="popper" sideOffset={6}>
+          <Select.Viewport className="select-viewport">
+            {(['manual', 'newTabs', 'always'] as const).map((mode) => (
+              <Select.Item key={mode} className="select-item" value={mode}>
+                <Select.ItemText>{mode}</Select.ItemText>
               </Select.Item>
             ))}
           </Select.Viewport>
@@ -398,16 +427,10 @@ function App() {
               <label className="label" htmlFor="applyMode">
                 applyMode
               </label>
-              <select
-                id="applyMode"
-                className="select"
+              <AppModeSelect
                 value={uiState.applyMode}
-                onChange={(e) => syncFromUi({ ...uiState, applyMode: e.currentTarget.value as UiState['applyMode'] })}
-              >
-                <option value="manual">manual</option>
-                <option value="newTabs">newTabs</option>
-                <option value="always">always</option>
-              </select>
+                onChange={(next) => syncFromUi({ ...uiState, applyMode: next })}
+              />
             </div>
             <div>
               <label className="label" htmlFor="fallbackEnabled">
@@ -415,17 +438,19 @@ function App() {
               </label>
               <div className="inline">
                 <label className="inline" htmlFor="fallbackEnabled">
-                  <input
+                  <Switch.Root
                     id="fallbackEnabled"
-                    type="checkbox"
+                    className="switch-root"
                     checked={uiState.fallbackGroup !== undefined}
-                    onChange={(e) =>
+                    onCheckedChange={(checked) =>
                       syncFromUi({
                         ...uiState,
-                        fallbackGroup: e.currentTarget.checked ? uiState.fallbackGroup ?? '' : undefined
+                        fallbackGroup: checked ? uiState.fallbackGroup ?? '' : undefined
                       })
                     }
-                  />
+                  >
+                    <Switch.Thumb className="switch-thumb" />
+                  </Switch.Root>
                   <span className="muted">Fallbackを有効化</span>
                 </label>
                 <input

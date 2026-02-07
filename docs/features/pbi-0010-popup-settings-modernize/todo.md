@@ -25,3 +25,4 @@
 - 2026-02-07: テーブル列名をPatternへ変更し、サイドパネル項目順をテーブル順（Group→Pattern→Status→Target）に統一。
 - 2026-02-07: color入力をChromeタブグループ対応色のみのプルダウンへ変更し、テーブル/詳細で色ドット表示を追加。
 - 2026-02-07: colorプルダウンをネイティブselectからRadix Select（shadcn系UI）へ変更し、メニュー項目内の色ドット表示を追加。
+- 2026-02-07: applyModeをRadix Selectへ置換、fallback有効化をRadix Switchへ置換してネイティブUIを削減。
