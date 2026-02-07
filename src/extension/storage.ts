@@ -5,9 +5,9 @@ const LAST_ACTIVE_KEY = 'lastActiveAt';
 export const DEFAULT_CONFIG_YAML = `version: 1
 applyMode: manual
 rules:
-  - pattern: "example\\.com"
-    group: "Example"
-    color: "blue"
+  - pattern: 'example\\.com'
+    group: 'Example'
+    color: 'blue'
 `;
 
 export async function getConfigYaml(): Promise<string> {

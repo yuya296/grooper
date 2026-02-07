@@ -1,6 +1,7 @@
 import { parseConfigYaml } from '../../core/config.js';
 import { createPlan } from '../../core/planner.js';
 import type { StateSnapshot } from '../../core/types.js';
+import { buildYamlFromUi, parseYamlForUi, type RuleForm, type UiState } from './uiState.js';
 
 const yamlArea = document.getElementById('yaml') as HTMLTextAreaElement;
 const errors = document.getElementById('errors') as HTMLDivElement;
@@ -14,6 +15,14 @@ const importButton = document.getElementById('import') as HTMLButtonElement;
 const previewButton = document.getElementById('preview') as HTMLButtonElement;
 const rollbackButton = document.getElementById('rollback') as HTMLButtonElement;
 
+const applyModeSelect = document.getElementById('applyMode') as HTMLSelectElement;
+const rulesList = document.getElementById('rulesList') as HTMLDivElement;
+const addRuleButton = document.getElementById('addRule') as HTMLButtonElement;
+
+const tabButtons = Array.from(document.querySelectorAll('.tab-button')) as HTMLButtonElement[];
+const tabSource = document.getElementById('tab-source') as HTMLDivElement;
+const tabUi = document.getElementById('tab-ui') as HTMLDivElement;
+
 const HISTORY_KEY = 'configHistory';
 
 interface HistoryEntry {
@@ -21,11 +30,149 @@ interface HistoryEntry {
   yaml: string;
 }
 
+let activeTab: 'source' | 'ui' = 'source';
+let uiState: UiState = { applyMode: 'manual', rules: [] };
+let rawConfig: Record<string, unknown> | null = null;
+
 function renderErrors(messages: string[]) {
   errors.textContent = messages.length === 0 ? '' : messages.join('\n');
 }
 
+function setActiveTab(tab: 'source' | 'ui') {
+  if (tab === 'ui') {
+    const ok = syncUiFromYaml();
+    if (!ok) return;
+  } else {
+    syncYamlFromUi();
+  }
+  activeTab = tab;
+  tabButtons.forEach((button) => {
+    button.classList.toggle('active', button.dataset.tab === tab);
+  });
+  tabSource.classList.toggle('active', tab === 'source');
+  tabUi.classList.toggle('active', tab === 'ui');
+}
+
+function syncUiFromYaml(): boolean {
+  const result = parseYamlForUi(yamlArea.value);
+  if (!result.ok) {
+    renderErrors(result.errors);
+    return false;
+  }
+  rawConfig = result.rawConfig;
+  uiState = result.uiState;
+  renderUi();
+  renderErrors([]);
+  return true;
+}
+
+function syncYamlFromUi() {
+  const result = buildYamlFromUi(rawConfig, uiState);
+  rawConfig = result.rawConfig;
+  yamlArea.value = result.yaml;
+}
+
+function updateRule(index: number, patch: Partial<RuleForm>) {
+  const next = { ...uiState.rules[index], ...patch };
+  uiState.rules[index] = next;
+  syncYamlFromUi();
+}
+
+function moveRule(from: number, to: number) {
+  if (!Number.isFinite(from) || !Number.isFinite(to)) return;
+  if (from === to || from < 0 || to < 0) return;
+  const [entry] = uiState.rules.splice(from, 1);
+  uiState.rules.splice(to, 0, entry);
+  renderRules();
+  syncYamlFromUi();
+}
+
+function renderRules() {
+  rulesList.innerHTML = '';
+  uiState.rules.forEach((rule, index) => {
+    const item = document.createElement('div');
+    item.className = 'rule-item';
+    item.dataset.index = String(index);
+
+    const handle = document.createElement('div');
+    handle.className = 'drag-handle';
+    handle.textContent = '≡';
+    handle.draggable = true;
+
+    const patternInput = document.createElement('input');
+    patternInput.placeholder = 'pattern (regex)';
+    patternInput.value = rule.pattern;
+    patternInput.addEventListener('input', () => updateRule(index, { pattern: patternInput.value }));
+
+    const groupInput = document.createElement('input');
+    groupInput.placeholder = 'group';
+    groupInput.value = rule.group;
+    groupInput.addEventListener('input', () => updateRule(index, { group: groupInput.value }));
+
+    const colorInput = document.createElement('input');
+    colorInput.placeholder = 'color';
+    colorInput.value = rule.color ?? '';
+    colorInput.addEventListener('input', () => updateRule(index, { color: colorInput.value || undefined }));
+
+    const priorityInput = document.createElement('input');
+    priorityInput.type = 'number';
+    priorityInput.placeholder = 'priority';
+    priorityInput.value = rule.priority != null ? String(rule.priority) : '';
+    priorityInput.addEventListener('input', () => {
+      const value = priorityInput.value;
+      updateRule(index, { priority: value === '' ? undefined : Number(value) });
+    });
+
+    const removeButton = document.createElement('button');
+    removeButton.className = 'remove';
+    removeButton.textContent = '削除';
+    removeButton.addEventListener('click', () => {
+      uiState.rules.splice(index, 1);
+      renderRules();
+      syncYamlFromUi();
+    });
+
+    handle.addEventListener('dragstart', (event) => {
+      event.dataTransfer?.setData('text/plain', String(index));
+      event.dataTransfer?.setDragImage(item, 10, 10);
+      event.dataTransfer?.setData('text/index', String(index));
+    });
+
+    item.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      item.classList.add('drag-over');
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    });
+
+    item.addEventListener('dragleave', () => {
+      item.classList.remove('drag-over');
+    });
+
+    item.addEventListener('drop', (event) => {
+      event.preventDefault();
+      item.classList.remove('drag-over');
+      const from = Number(event.dataTransfer?.getData('text/plain'));
+      moveRule(from, index);
+    });
+
+    item.append(handle, patternInput, groupInput, colorInput, priorityInput, removeButton);
+    rulesList.appendChild(item);
+  });
+}
+
+function renderUi() {
+  applyModeSelect.value = uiState.applyMode;
+  renderRules();
+}
+
+function ensureYamlUpToDate() {
+  if (activeTab === 'ui') {
+    syncYamlFromUi();
+  }
+}
+
 function validateYaml() {
+  ensureYamlUpToDate();
   const result = parseConfigYaml(yamlArea.value);
   if (result.errors.length > 0) {
     renderErrors(result.errors.map((e) => `${e.path}: ${e.message}`));
@@ -76,6 +223,7 @@ async function saveYaml() {
 }
 
 async function exportYaml() {
+  ensureYamlUpToDate();
   try {
     await navigator.clipboard.writeText(yamlArea.value);
     renderErrors(['クリップボードにコピーしました']);
@@ -92,6 +240,7 @@ async function importYaml() {
   if (imported == null) return;
   yamlArea.value = imported;
   validateYaml();
+  if (activeTab === 'ui') syncUiFromYaml();
 }
 
 async function buildStateSnapshot(): Promise<StateSnapshot> {
@@ -153,7 +302,26 @@ async function rollback() {
   await chrome.storage.local.set({ configYaml: latest.yaml });
   renderErrors(['直前の履歴へロールバックしました']);
   renderHistory(entries.slice(1));
+  if (activeTab === 'ui') syncUiFromYaml();
 }
+
+applyModeSelect.addEventListener('change', () => {
+  uiState.applyMode = applyModeSelect.value as UiState['applyMode'];
+  syncYamlFromUi();
+});
+
+addRuleButton.addEventListener('click', () => {
+  uiState.rules.push({ pattern: '', group: '', color: undefined, priority: undefined });
+  renderRules();
+  syncYamlFromUi();
+});
+
+tabButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    const tab = button.dataset.tab as 'source' | 'ui';
+    setActiveTab(tab);
+  });
+});
 
 validateButton.addEventListener('click', () => {
   validateYaml();

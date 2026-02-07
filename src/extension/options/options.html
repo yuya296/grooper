@@ -5,22 +5,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Tab Grouper Options</title>
     <style>
-      body { font-family: system-ui, -apple-system, sans-serif; padding: 16px; max-width: 900px; margin: 0 auto; }
-      textarea { width: 100%; min-height: 320px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      :root {
+        --bg: #ffffff;
+        --panel: #f6f7f9;
+        --text: #111;
+        --muted: #666;
+        --border: #ddd;
+        --accent: #0a66ff;
+      }
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        padding: 16px;
+        max-width: 960px;
+        margin: 0 auto;
+        color: var(--text);
+        background: var(--bg);
+      }
+      textarea {
+        width: 100%;
+        min-height: 320px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
       .row { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
       button { padding: 8px 10px; }
-      .error { color: #b00020; font-size: 12px; }
-      .preview { background: #f6f7f9; padding: 8px; white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .error { color: #b00020; font-size: 12px; white-space: pre-wrap; }
+      .preview { background: var(--panel); padding: 8px; white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
       .history { margin-top: 12px; }
       .history-item { font-size: 12px; color: #555; margin: 4px 0; }
+
+      .tabs { display: flex; gap: 8px; margin: 12px 0; }
+      .tab-button {
+        border: 1px solid var(--border);
+        background: #fff;
+        padding: 6px 10px;
+        cursor: pointer;
+      }
+      .tab-button.active {
+        border-color: var(--accent);
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .tab-panel { display: none; }
+      .tab-panel.active { display: block; }
+
+      .field { margin: 12px 0; }
+      .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+      .field select, .field input { padding: 6px 8px; width: 100%; max-width: 360px; }
+
+      .rules-header { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+      .rules-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+      .rule-item {
+        display: grid;
+        grid-template-columns: 24px 1.5fr 1fr 120px 90px 64px;
+        gap: 8px;
+        align-items: center;
+        border: 1px solid var(--border);
+        padding: 8px;
+        background: #fff;
+      }
+      .rule-item.drag-over { border-color: var(--accent); background: #eef4ff; }
+      .drag-handle {
+        cursor: grab;
+        font-size: 16px;
+        user-select: none;
+        color: var(--muted);
+      }
+      .rule-item input { width: 100%; padding: 6px 6px; }
+      .rule-item .remove { background: #fff; border: 1px solid var(--border); }
+      .hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
     </style>
   </head>
   <body>
     <h1>Tab Grouper Options</h1>
-    <p>YAMLがSSOTです。ここで編集・検証し、保存してください。</p>
+    <p>YAMLがSSOTです。Source / UI を切り替えて編集できます。</p>
 
-    <label for="yaml">設定（YAML）</label>
-    <textarea id="yaml"></textarea>
+    <div class="tabs">
+      <button class="tab-button active" data-tab="source">Source</button>
+      <button class="tab-button" data-tab="ui">UI</button>
+    </div>
+
+    <div id="tab-source" class="tab-panel active">
+      <label for="yaml">設定（YAML）</label>
+      <textarea id="yaml"></textarea>
+    </div>
+
+    <div id="tab-ui" class="tab-panel">
+      <div class="field">
+        <label for="applyMode">applyMode</label>
+        <select id="applyMode">
+          <option value="manual">manual</option>
+          <option value="newTabs">newTabs</option>
+          <option value="always">always</option>
+        </select>
+      </div>
+
+      <div class="rules-header">
+        <h2>rules</h2>
+        <button id="addRule">ルール追加</button>
+      </div>
+      <div id="rulesList" class="rules-list"></div>
+      <div class="hint">ハンドルをドラッグして並び替えできます。</div>
+    </div>
+
     <div id="errors" class="error"></div>
 
     <div class="row">
