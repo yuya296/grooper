@@ -88,10 +88,15 @@ function AppModeSelect({
   value: UiState['applyMode'];
   onChange: (next: UiState['applyMode']) => void;
 }) {
+  const modeLabels: Record<UiState['applyMode'], string> = {
+    always: 'always apply',
+    newTabs: 'only new tab',
+    manual: 'none'
+  };
   return (
     <Select.Root value={value} onValueChange={(next) => onChange(next as UiState['applyMode'])}>
       <Select.Trigger className="select-trigger" aria-label="applyMode">
-        <Select.Value />
+        <Select.Value>{modeLabels[value]}</Select.Value>
         <Select.Icon className="select-icon">▾</Select.Icon>
       </Select.Trigger>
       <Select.Portal>
@@ -99,7 +104,7 @@ function AppModeSelect({
           <Select.Viewport className="select-viewport">
             {(['manual', 'newTabs', 'always'] as const).map((mode) => (
               <Select.Item key={mode} className="select-item" value={mode}>
-                <Select.ItemText>{mode}</Select.ItemText>
+                <Select.ItemText>{modeLabels[mode]}</Select.ItemText>
               </Select.Item>
             ))}
           </Select.Viewport>
