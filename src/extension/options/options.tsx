@@ -536,7 +536,7 @@ function App() {
                     })
                   }
                 >
-                  ルール追加
+                  ＋
                 </button>
               </div>
             </div>
