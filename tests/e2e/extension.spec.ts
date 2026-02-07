@@ -1,6 +1,6 @@
 import { test, expect, chromium } from '@playwright/test';
 import path from 'node:path';
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
@@ -28,21 +28,8 @@ async function launchExtension(testInfo: { outputPath: (name?: string) => string
   }
   const context = await chromium.launchPersistentContext(userDataDir, launchOptions);
 
-  let extensionId: string | undefined;
-  try {
-    const idPath = path.resolve(extensionPath, 'extension-id.txt');
-    extensionId = (await readFile(idPath, 'utf8')).trim();
-  } catch {
-    // fallback for non-diagnostics builds
-  }
-  if (!extensionId) {
-    const serviceWorker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
-    extensionId = new URL(serviceWorker.url()).host;
-  }
-  const page = await context.newPage();
-  await page.goto(`chrome-extension://${extensionId}/options.html`);
-
-  return { context, page, extensionId };
+  const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+  return { context, worker };
 }
 
 async function resolveChromiumExecutable() {
@@ -68,29 +55,29 @@ async function resolveChromiumExecutable() {
   return undefined;
 }
 
-async function diag<T>(page: import('@playwright/test').Page, request: any): Promise<T> {
-  return await page.evaluate(async (payload) => {
+async function diag<T>(worker: import('@playwright/test').Worker, request: any): Promise<T> {
+  return await worker.evaluate(async (payload) => {
     return await chrome.runtime.sendMessage({ __diag__: payload });
   }, request);
 }
 
-async function setConfig(page: import('@playwright/test').Page, yaml: string) {
-  const response = await diag<{ ok: boolean; error?: string }>(page, { command: 'setConfig', payload: { yaml } });
+async function setConfig(worker: import('@playwright/test').Worker, yaml: string) {
+  const response = await diag<{ ok: boolean; error?: string }>(worker, { command: 'setConfig', payload: { yaml } });
   if (!response.ok) throw new Error(response.error ?? 'setConfig failed');
 }
 
 test('pattern match and fallback', async ({}, testInfo) => {
-  const { context, page } = await launchExtension(testInfo);
+  const { context, worker } = await launchExtension(testInfo);
   const yaml = `version: 1\napplyMode: manual\nparentFollow: true\nfallbackGroup: "Fallback"\nrules:\n  - pattern: 'example\\.com'\n    group: "Example"\n`;
-  await setConfig(page, yaml);
+  await setConfig(worker, yaml);
 
   const tab1 = await context.newPage();
   await tab1.goto('https://example.com');
   const tab2 = await context.newPage();
   await tab2.goto('https://example.org');
 
-  await diag(page, { command: 'runOnce', payload: { dryRun: false } });
-  const state = await diag<any>(page, { command: 'getState' });
+  await diag(worker, { command: 'runOnce', payload: { dryRun: false } });
+  const state = await diag<any>(worker, { command: 'getState' });
   const exampleTab = state.state.tabs.find((tab: any) => tab.url?.includes('example.com'));
   const fallbackTab = state.state.tabs.find((tab: any) => tab.url?.includes('example.org'));
   const exampleGroup = state.state.groups.find((g: any) => g.id === exampleTab.groupId);
@@ -102,17 +89,17 @@ test('pattern match and fallback', async ({}, testInfo) => {
 });
 
 test('parent follow', async ({}, testInfo) => {
-  const { context, page } = await launchExtension(testInfo);
+  const { context, worker } = await launchExtension(testInfo);
   const yaml = `version: 1\napplyMode: manual\nparentFollow: true\nfallbackGroup: "Fallback"\nrules:\n  - pattern: 'example\\.com/parent'\n    group: "ParentGroup"\n`;
-  await setConfig(page, yaml);
+  await setConfig(worker, yaml);
 
   const parent = await context.newPage();
   await parent.goto('https://example.com/parent');
-  await diag(page, { command: 'runOnce', payload: { dryRun: false } });
+  await diag(worker, { command: 'runOnce', payload: { dryRun: false } });
 
   await parent.evaluate(() => window.open('https://child.com', '_blank'));
-  await diag(page, { command: 'runOnce', payload: { dryRun: false } });
-  const state = await diag<any>(page, { command: 'getState' });
+  await diag(worker, { command: 'runOnce', payload: { dryRun: false } });
+  const state = await diag<any>(worker, { command: 'getState' });
   const child = state.state.tabs.find((tab: any) => tab.url?.includes('child.com'));
   const childGroup = state.state.groups.find((g: any) => g.id === child.groupId);
   expect(childGroup?.title).toBe('ParentGroup');
@@ -121,27 +108,27 @@ test('parent follow', async ({}, testInfo) => {
 });
 
 test('apply modes', async ({}, testInfo) => {
-  const { context, page } = await launchExtension(testInfo);
+  const { context, worker } = await launchExtension(testInfo);
   const yaml = `version: 1\napplyMode: newTabs\nrules:\n  - pattern: 'example\\.com'\n    group: "Example"\n`;
-  await setConfig(page, yaml);
+  await setConfig(worker, yaml);
 
   const tab = await context.newPage();
   await tab.goto('https://example.com');
 
-  await page.waitForTimeout(500);
-  let state = await diag<any>(page, { command: 'getState' });
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  let state = await diag<any>(worker, { command: 'getState' });
   let exampleGrouped = state.state.tabs.some((t: any) => t.url?.includes('example.com') && state.state.groups.find((g: any) => g.id === t.groupId)?.title === 'Example');
   expect(exampleGrouped).toBe(true);
 
   const yamlAlways = `version: 1\napplyMode: always\nrules:\n  - pattern: 'example\\.com'\n    group: "Example"\n`;
-  await setConfig(page, yamlAlways);
+  await setConfig(worker, yamlAlways);
 
   const tab2 = await context.newPage();
   await tab2.goto('https://example.org');
   await tab2.goto('https://example.com');
 
-  await page.waitForTimeout(500);
-  state = await diag<any>(page, { command: 'getState' });
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  state = await diag<any>(worker, { command: 'getState' });
   exampleGrouped = state.state.tabs.some((t: any) => t.url?.includes('example.com') && state.state.groups.find((g: any) => g.id === t.groupId)?.title === 'Example');
   expect(exampleGrouped).toBe(true);
 
@@ -149,22 +136,22 @@ test('apply modes', async ({}, testInfo) => {
 });
 
 test('auto cleanup TTL and maxTabs', async ({}, testInfo) => {
-  const { context, page } = await launchExtension(testInfo);
+  const { context, worker } = await launchExtension(testInfo);
   const yaml = `version: 1\napplyMode: manual\nrules:\n  - pattern: 'example\\.com'\n    group: "Example"\n    color: "blue"\ngroups:\n  Example:\n    ttlMinutes: 1\n    maxTabs: 1\n    lru: true\n`;
-  await setConfig(page, yaml);
+  await setConfig(worker, yaml);
 
   const tab1 = await context.newPage();
   await tab1.goto('https://example.com/old');
   const tab2 = await context.newPage();
   await tab2.goto('https://example.com/new');
 
-  await diag(page, { command: 'runOnce', payload: { dryRun: false } });
-  let state = await diag<any>(page, { command: 'getState' });
+  await diag(worker, { command: 'runOnce', payload: { dryRun: false } });
+  let state = await diag<any>(worker, { command: 'getState' });
   const oldTab = state.state.tabs.find((tab: any) => tab.url?.includes('example.com/old'));
   const newTab = state.state.tabs.find((tab: any) => tab.url?.includes('example.com/new'));
 
   const now = Date.now();
-  await page.evaluate(
+  await worker.evaluate(
     ({ oldId, newId, nowValue }) => {
       const map: Record<string, number> = {};
       map[String(oldId)] = nowValue - 2 * 60 * 1000;
@@ -174,8 +161,8 @@ test('auto cleanup TTL and maxTabs', async ({}, testInfo) => {
     { oldId: oldTab.id, newId: newTab.id, nowValue: now }
   );
 
-  await diag(page, { command: 'runOnce', payload: { dryRun: false } });
-  state = await diag<any>(page, { command: 'getState' });
+  await diag(worker, { command: 'runOnce', payload: { dryRun: false } });
+  state = await diag<any>(worker, { command: 'getState' });
   const remaining = state.state.tabs.filter((tab: any) => tab.url?.includes('example.com'));
   expect(remaining.length).toBe(1);
 
