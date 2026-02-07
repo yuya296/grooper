@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { parse } from 'yaml';
-import type { ApplyMode, CompiledConfig, CompiledRule, Config } from './types.js';
+import type { ApplyMode, CompiledConfig, CompiledRule, Config, MatchMode } from './types.js';
 
 export interface ConfigError {
   path: string;
@@ -11,6 +11,7 @@ const ruleSchema = z
   .object({
     pattern: z.string().min(1),
     group: z.string().min(1),
+    matchMode: z.enum(['regex', 'glob']).optional(),
     color: z.string().optional(),
     priority: z.number().int().optional()
   })
@@ -46,6 +47,32 @@ const configSchema = z
   .strict();
 
 const DEFAULT_APPLY_MODE: ApplyMode = 'manual';
+
+function globToRegexPattern(glob: string): string {
+  let pattern = '^';
+  for (let i = 0; i < glob.length; i += 1) {
+    const ch = glob[i];
+    if (ch === '*') {
+      pattern += '.*';
+      continue;
+    }
+    if (ch === '?') {
+      pattern += '.';
+      continue;
+    }
+    if (ch === '\\') {
+      const next = glob[i + 1];
+      if (next) {
+        pattern += next.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        i += 1;
+        continue;
+      }
+    }
+    pattern += ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+  pattern += '$';
+  return pattern;
+}
 
 export function parseConfigYaml(yamlText: string): { config?: CompiledConfig; errors: ConfigError[] } {
   let raw: unknown;
@@ -87,17 +114,18 @@ export function parseConfigYaml(yamlText: string): { config?: CompiledConfig; er
   };
 
   const rules: CompiledRule[] = config.rules.map((rule, index) => {
+    const matchMode: MatchMode = rule.matchMode ?? 'regex';
     try {
       const pattern = expandVars(rule.pattern, `rules.${index}.pattern`);
       const group = expandVars(rule.group, `rules.${index}.group`);
-      const regex = new RegExp(pattern);
-      return { ...rule, pattern, group, regex, index, priority: rule.priority ?? 0 };
+      const regex = new RegExp(matchMode === 'glob' ? globToRegexPattern(pattern) : pattern);
+      return { ...rule, pattern, group, matchMode, regex, index, priority: rule.priority ?? 0 };
     } catch (err) {
       errors.push({
         path: `rules.${index}.pattern`,
         message: err instanceof Error ? err.message : 'Invalid regex'
       });
-      return { ...rule, regex: /.^/, index, priority: rule.priority ?? 0 };
+      return { ...rule, matchMode, regex: /.^/, index, priority: rule.priority ?? 0 };
     }
   });
 

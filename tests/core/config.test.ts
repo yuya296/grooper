@@ -11,7 +11,14 @@ rules:
 const invalidRegex = `version: 1
 rules:
   - pattern: '('
+    matchMode: regex
     group: "Bad"
+`;
+const globYaml = `version: 1
+rules:
+  - pattern: '*.example.com'
+    matchMode: glob
+    group: "GlobExample"
 `;
 const varsYaml = `version: 1
 vars:
@@ -58,6 +65,14 @@ describe('parseConfigYaml', () => {
     const result = parseConfigYaml(invalidRegex);
     expect(result.config).toBeUndefined();
     expect(result.errors[0].path).toBe('rules.0.pattern');
+  });
+
+  it('supports glob match mode', () => {
+    const result = parseConfigYaml(globYaml);
+    expect(result.errors).toHaveLength(0);
+    expect(result.config?.rules[0].matchMode).toBe('glob');
+    expect(result.config?.rules[0].regex.test('api.example.com')).toBe(true);
+    expect(result.config?.rules[0].regex.test('example.com')).toBe(false);
   });
 
   it('expands variables', () => {

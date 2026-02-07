@@ -1,9 +1,11 @@
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { parseConfigYaml } from '../../core/config.js';
+import type { MatchMode } from '../../core/types.js';
 
 export interface RuleForm {
   pattern: string;
   group: string;
+  matchMode: MatchMode;
   color?: string;
   priority?: number;
 }
@@ -22,6 +24,7 @@ function normalizeRule(rule: any): RuleForm {
   return {
     pattern: String(rule?.pattern ?? ''),
     group: String(rule?.group ?? ''),
+    matchMode: rule?.matchMode === 'glob' ? 'glob' : 'regex',
     color: rule?.color ? String(rule.color) : undefined,
     priority: rule?.priority != null ? Number(rule.priority) : undefined
   };
@@ -82,6 +85,7 @@ export function buildYamlFromUi(
       pattern: rule.pattern,
       group: rule.group
     };
+    if (rule.matchMode === 'glob') entry.matchMode = 'glob';
     if (rule.color) entry.color = rule.color;
     if (rule.priority != null && !Number.isNaN(rule.priority)) entry.priority = rule.priority;
     return entry;

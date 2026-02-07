@@ -10,7 +10,7 @@ const config: CompiledConfig = {
   parentFollow: true,
   groups: {},
   rules: [
-    { pattern: 'example\\.com', group: 'Example', regex: /example\.com/, index: 0, priority: 0 }
+    { pattern: 'example\\.com', group: 'Example', matchMode: 'regex', regex: /example\.com/, index: 0, priority: 0 }
   ]
 };
 

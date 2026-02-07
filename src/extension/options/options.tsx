@@ -22,6 +22,7 @@ import {
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { parseConfigYaml } from '../../core/config.js';
+import type { MatchMode } from '../../core/types.js';
 import { buildYamlFromUi, parseYamlForUi, type RuleForm, type UiState } from './uiState.js';
 
 const NONE_COLOR = '__none__';
@@ -108,6 +109,39 @@ function AppModeSelect({
                 <Select.ItemText>{modeLabels[mode]}</Select.ItemText>
               </Select.Item>
             ))}
+          </Select.Viewport>
+        </Select.Content>
+      </Select.Portal>
+    </Select.Root>
+  );
+}
+
+function MatchModeSelect({
+  value,
+  onChange
+}: {
+  value: MatchMode;
+  onChange: (next: MatchMode) => void;
+}) {
+  const modeLabels: Record<MatchMode, string> = {
+    regex: 'regex',
+    glob: 'wildcard (glob)'
+  };
+  return (
+    <Select.Root value={value} onValueChange={(next) => onChange(next as MatchMode)}>
+      <Select.Trigger className="select-trigger" aria-label="matchMode">
+        <Select.Value>{modeLabels[value]}</Select.Value>
+        <Select.Icon className="select-icon">▾</Select.Icon>
+      </Select.Trigger>
+      <Select.Portal>
+        <Select.Content className="select-content" position="popper" sideOffset={6}>
+          <Select.Viewport className="select-viewport">
+            <Select.Item className="select-item" value="regex">
+              <Select.ItemText>{modeLabels.regex}</Select.ItemText>
+            </Select.Item>
+            <Select.Item className="select-item" value="glob">
+              <Select.ItemText>{modeLabels.glob}</Select.ItemText>
+            </Select.Item>
           </Select.Viewport>
         </Select.Content>
       </Select.Portal>
@@ -255,7 +289,7 @@ function App() {
 
   function openCreateRuleDrawer() {
     setDrawerRuleIndex(null);
-    setDrawerDraft({ pattern: '', group: '', color: undefined, priority: undefined });
+    setDrawerDraft({ pattern: '', group: '', matchMode: 'regex', color: undefined, priority: undefined });
     setDrawerErrors([]);
   }
 
@@ -277,12 +311,13 @@ function App() {
     const nextErrors: string[] = [];
     if (!rule.group.trim()) nextErrors.push('グループ名は必須です');
     if (!rule.pattern.trim()) nextErrors.push('パターンは必須です');
-    const patternRegexError = getPatternRegexError(rule.pattern);
+    const patternRegexError = getPatternRegexError(rule.pattern, rule.matchMode);
     if (patternRegexError) nextErrors.push(patternRegexError);
     return nextErrors;
   }
 
-  function getPatternRegexError(pattern: string) {
+  function getPatternRegexError(pattern: string, matchMode: MatchMode) {
+    if (matchMode !== 'regex') return null;
     const trimmed = pattern.trim();
     if (!trimmed) return null;
     try {
@@ -304,6 +339,7 @@ function App() {
     const normalizedRule: RuleForm = {
       group: drawerDraft.group.trim(),
       pattern: drawerDraft.pattern.trim(),
+      matchMode: drawerDraft.matchMode,
       color: drawerDraft.color,
       priority: undefined
     };
@@ -404,6 +440,10 @@ function App() {
         header: 'パターン',
         cell: (ctx) => <span className="badge">{ctx.getValue() || 'Unset'}</span>
       }),
+      columnHelper.accessor('matchMode', {
+        header: 'マッチ方式',
+        cell: (ctx) => <span className="badge">{ctx.getValue() === 'glob' ? 'glob' : 'regex'}</span>
+      }),
       columnHelper.accessor('color', {
         header: 'ステータス',
         cell: (ctx) => {
@@ -442,7 +482,7 @@ function App() {
   });
 
   const isDrawerOpen = drawerDraft != null;
-  const drawerPatternRegexError = drawerDraft ? getPatternRegexError(drawerDraft.pattern) : null;
+  const drawerPatternRegexError = drawerDraft ? getPatternRegexError(drawerDraft.pattern, drawerDraft.matchMode) : null;
   const isDrawerSaveDisabled =
     !drawerDraft ||
     drawerDraft.group.trim().length === 0 ||
@@ -667,6 +707,17 @@ function App() {
                 />
                 <div className="muted">正規表現または文字列パターンを入力してください</div>
                 {drawerPatternRegexError && <div className="field-error">{drawerPatternRegexError}</div>}
+              </div>
+              <div>
+                <label className="label">マッチ方式</label>
+                <MatchModeSelect
+                  value={drawerDraft.matchMode}
+                  onChange={(next) => {
+                    setDrawerDraft({ ...drawerDraft, matchMode: next });
+                    setDrawerErrors([]);
+                  }}
+                />
+                <div className="muted">regex か wildcard (glob) を選択してください</div>
               </div>
               <div>
                 <label className="label">ステータス（色）</label>

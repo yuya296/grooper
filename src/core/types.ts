@@ -1,8 +1,10 @@
 export type ApplyMode = 'manual' | 'newTabs' | 'always';
+export type MatchMode = 'regex' | 'glob';
 
 export interface Rule {
   pattern: string;
   group: string;
+  matchMode?: MatchMode;
   color?: string;
   priority?: number;
 }
@@ -30,6 +32,7 @@ export interface Config {
 }
 
 export interface CompiledRule extends Rule {
+  matchMode: MatchMode;
   regex: RegExp;
   index: number;
   priority: number;
