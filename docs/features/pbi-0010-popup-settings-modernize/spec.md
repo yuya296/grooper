@@ -27,7 +27,7 @@
 
 # Notes
 
-- 選定方針: D&Dリストなど利用予定パーツが「デフォルト提供」されるライブラリを優先する。
+- 選定方針: D&Dリストなど利用予定パーツが、周辺エコシステム込みで短期実装できるライブラリを優先する。
 - 候補ライブラリは `shadcn/ui`, `Chakra UI`, `MUI` を初期候補として比較し、最終決定は実装前に確定する。
-- `shadcn/ui` と `Chakra UI` は有力候補だが、D&Dは追加ライブラリ併用前提になる可能性も比較時に明記する。
+- `shadcn/ui` は `@tanstack/react-table` と `dnd-kit` の併用で、テーブルD&D要件を満たす有力候補として扱う。
 - 設計詳細は `docs/features/pbi-0010-popup-settings-modernize/design.md` を正本とする。
