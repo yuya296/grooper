@@ -82,6 +82,46 @@
       .panel { padding: 0 18px 18px; }
       .stack { display: flex; flex-direction: column; gap: 12px; }
       .label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+      .label-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .info-tip {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        border-radius: 999px;
+        border: 1px solid #cbd5e1;
+        color: #64748b;
+        font-size: 11px;
+        cursor: help;
+      }
+      .tooltip {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        min-width: 260px;
+        max-width: 320px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: #0f172a;
+        color: #f8fafc;
+        font-size: 12px;
+        line-height: 1.4;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.24);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+        z-index: 30;
+      }
+      .info-tip:hover .tooltip {
+        opacity: 1;
+      }
       .input, .select, .textarea {
         width: 100%;
         border: 1px solid var(--border);
@@ -166,6 +206,7 @@
         display: flex;
         align-items: center;
         gap: 10px;
+        min-height: 36px;
       }
       .fallback-toggle {
         display: inline-flex;

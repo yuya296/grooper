@@ -479,7 +479,15 @@ function App() {
               </div>
               <div className="field-block">
                 <label className="label" htmlFor="fallbackEnabled">
-                  フォールバックグループ
+                  <span className="label-inline">
+                    フォールバックグループ
+                    <span className="info-tip" aria-label="フォールバック説明">
+                      ⓘ
+                      <span className="tooltip">
+                        ルールに一致しないタブを移動する先です。無効時はフォールバックを適用しません。
+                      </span>
+                    </span>
+                  </span>
                 </label>
                 <div className="fallback-controls">
                   <label className="fallback-toggle" htmlFor="fallbackEnabled">
@@ -498,14 +506,15 @@ function App() {
                     </Switch.Root>
                     <span className="muted">無効</span>
                   </label>
-                  <input
-                    id="fallbackGroup"
-                    className="input fallback-input"
-                    placeholder="Fallback GroupName"
-                    value={uiState.fallbackGroup ?? ''}
-                    disabled={uiState.fallbackGroup === undefined}
-                    onChange={(e) => syncFromUi({ ...uiState, fallbackGroup: e.currentTarget.value })}
-                  />
+                  {uiState.fallbackGroup !== undefined && (
+                    <input
+                      id="fallbackGroup"
+                      className="input fallback-input"
+                      placeholder="Fallback GroupName"
+                      value={uiState.fallbackGroup}
+                      onChange={(e) => syncFromUi({ ...uiState, fallbackGroup: e.currentTarget.value })}
+                    />
+                  )}
                 </div>
               </div>
             </div>
