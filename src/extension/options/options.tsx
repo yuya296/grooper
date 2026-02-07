@@ -341,7 +341,7 @@ function App() {
         cell: ({ row }) => <SortHandle rowId={row.original.rowId} />
       }),
       columnHelper.accessor('group', {
-        header: 'Group',
+        header: 'グループ',
         cell: ({ row }) => (
           <button type="button" className="row-title" onClick={() => setSelectedRuleIndex(row.index)}>
             {row.original.group || `Group ${row.index + 1}`}
@@ -349,11 +349,11 @@ function App() {
         )
       }),
       columnHelper.accessor('pattern', {
-        header: 'Pattern',
+        header: 'パターン',
         cell: (ctx) => <span className="badge">{ctx.getValue() || 'Unset'}</span>
       }),
       columnHelper.accessor('color', {
-        header: 'Status',
+        header: 'ステータス',
         cell: (ctx) => {
           const color = ctx.getValue();
           const hex = findColorHex(color);
@@ -366,8 +366,8 @@ function App() {
         }
       }),
       columnHelper.accessor('priority', {
-        header: 'Target',
-        cell: (ctx) => <span>{ctx.getValue() ?? '-'}</span>
+        header: 'ターゲット',
+        cell: (ctx) => <span className="badge">{ctx.getValue() != null ? String(ctx.getValue()) : 'domain'}</span>
       }),
       columnHelper.display({
         id: 'actions',
@@ -404,9 +404,11 @@ function App() {
   return (
     <div className="card">
       <div className="header">
-        <div>
-          <h1 className="title">Tab Grouper Options</h1>
-          <p className="subtitle">Source / UI を切り替えて設定を編集できます。</p>
+        <div className="title-wrap">
+          <button type="button" className="icon-btn" onClick={() => window.history.back()} aria-label="戻る">
+            ←
+          </button>
+          <h1 className="title">設定</h1>
         </div>
         <div className="actions">
           <button className="btn" type="button" onClick={() => validateYaml()}>
@@ -453,10 +455,11 @@ function App() {
 
         <Tabs.Content value="ui">
           <div className="panel stack">
+            <h3 className="section-title">基本設定</h3>
             <div className="settings-row">
               <div className="field-block">
                 <label className="label" htmlFor="applyMode">
-                  applyMode
+                  適用モード
                 </label>
                 <AppModeSelect
                   value={uiState.applyMode}
@@ -465,7 +468,7 @@ function App() {
               </div>
               <div className="field-block">
                 <label className="label" htmlFor="fallbackEnabled">
-                  fallbackGroup
+                  フォールバックグループ
                 </label>
                 <div className="fallback-controls">
                   <label className="fallback-toggle" htmlFor="fallbackEnabled">
@@ -482,7 +485,7 @@ function App() {
                     >
                       <Switch.Thumb className="switch-thumb" />
                     </Switch.Root>
-                    <span className="muted">Fallbackを有効化</span>
+                    <span className="muted">無効</span>
                   </label>
                   <input
                     id="fallbackGroup"
@@ -494,10 +497,13 @@ function App() {
                   />
                 </div>
               </div>
+            </div>
+            <div className="rules-head">
+              <h3 className="section-title">ルール一覧</h3>
               <div className="add-rule-wrap">
                 <button
                   type="button"
-                  className="btn"
+                  className="btn btn-primary"
                   onClick={() =>
                     syncFromUi({
                       ...uiState,
@@ -589,17 +595,17 @@ function App() {
       />
       <aside className={`drawer ${isDrawerOpen ? 'open' : ''}`} aria-hidden={!isDrawerOpen}>
         <div className="drawer-head">
-          <h3 className="side-title">詳細編集</h3>
-          <button type="button" className="btn btn-ghost" onClick={() => setSelectedRuleIndex(null)}>
-            閉じる
+          <h3 className="side-title">ルール編集</h3>
+          <button type="button" className="icon-btn" onClick={() => setSelectedRuleIndex(null)} aria-label="閉じる">
+            ×
           </button>
         </div>
         <div className="drawer-body">
-          {!selectedRule && <div className="muted">Groupをクリックして選択してください。</div>}
+          {!selectedRule && <div className="muted">グループをクリックして選択してください。</div>}
           {selectedRule && (
             <div className="stack">
               <div>
-                <label className="label">Group Name</label>
+                <label className="label">グループ名</label>
                 <input
                   className="input"
                   value={selectedRule.group}
@@ -607,22 +613,24 @@ function App() {
                 />
               </div>
               <div>
-                <label className="label">Pattern</label>
+                <label className="label">パターン</label>
                 <input
                   className="input"
                   value={selectedRule.pattern}
                   onChange={(e) => updateRule(selectedRuleIndex!, { pattern: e.currentTarget.value })}
                 />
+                <div className="muted">正規表現または文字列パターンを入力してください</div>
               </div>
               <div>
-                <label className="label">Status (color)</label>
+                <label className="label">ステータス（色）</label>
                 <ColorSelect
                   value={selectedRule.color}
                   onChange={(next) => updateRule(selectedRuleIndex!, { color: next })}
                 />
+                <div className="muted">Chrome タブグループの色を選択</div>
               </div>
               <div>
-                <label className="label">Target (priority)</label>
+                <label className="label">ターゲット（優先度）</label>
                 <input
                   className="input"
                   type="number"
@@ -632,6 +640,15 @@ function App() {
                     updateRule(selectedRuleIndex!, { priority: value ? Number(value) : undefined });
                   }}
                 />
+                <div className="muted">パターンマッチングの対象を選択</div>
+              </div>
+              <div className="drawer-actions">
+                <button type="button" className="btn btn-primary" onClick={() => setSelectedRuleIndex(null)}>
+                  保存
+                </button>
+                <button type="button" className="btn" onClick={() => setSelectedRuleIndex(null)}>
+                  閉じる
+                </button>
               </div>
             </div>
           )}

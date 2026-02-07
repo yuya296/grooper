@@ -36,9 +36,31 @@
         padding: 16px 18px;
         margin-bottom: 12px;
       }
+      .title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
       .title { margin: 0; font-size: 18px; }
       .subtitle { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+      .section-title {
+        margin: 0;
+        font-size: 24px;
+      }
       .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+      .icon-btn {
+        border: 0;
+        background: transparent;
+        color: #334155;
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .icon-btn:hover { background: #f1f5f9; }
       .btn {
         border: 1px solid var(--border);
         background: #fff;
@@ -135,7 +157,7 @@
       .inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
       .settings-row {
         display: grid;
-        grid-template-columns: 220px minmax(320px, 1fr) auto;
+        grid-template-columns: 1fr 1fr;
         gap: 12px;
         align-items: end;
       }
@@ -158,6 +180,12 @@
         min-width: 240px;
       }
       .grid { display: grid; grid-template-columns: 1fr; gap: 12px; align-items: start; }
+      .rules-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 6px;
+      }
       .table-wrap {
         border: 1px solid var(--border);
         border-radius: 12px;
@@ -278,6 +306,12 @@
         padding: 14px;
         overflow: auto;
       }
+      .drawer-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 8px;
+      }
       .error { color: #b91c1c; white-space: pre-wrap; font-size: 12px; padding: 0 18px 10px; }
       .preview {
         background: #0b1220;
@@ -296,8 +330,13 @@
           grid-template-columns: 1fr;
           align-items: stretch;
         }
+        .rules-head {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 8px;
+        }
         .add-rule-wrap {
-          justify-self: start;
+          justify-self: stretch;
         }
         .fallback-controls {
           flex-wrap: wrap;
