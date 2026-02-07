@@ -186,6 +186,7 @@ function SourceEditor({
 function App() {
   const [activeTab, setActiveTab] = useState<'source' | 'ui'>('source');
   const [yamlText, setYamlText] = useState('');
+  const [savedYamlText, setSavedYamlText] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
   const [uiState, setUiState] = useState<UiState>({ applyMode: 'manual', fallbackGroup: undefined, rules: [] });
   const [rawConfig, setRawConfig] = useState<Record<string, unknown> | null>(null);
@@ -200,9 +201,23 @@ function App() {
   useEffect(() => {
     void (async () => {
       const configResult = await chrome.storage.local.get('configYaml');
-      setYamlText((configResult.configYaml as string) ?? '');
+      const loadedYaml = (configResult.configYaml as string) ?? '';
+      setYamlText(loadedYaml);
+      setSavedYamlText(loadedYaml);
     })();
   }, []);
+
+  const hasUnsavedChanges = yamlText !== savedYamlText;
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const ruleRows = useMemo<RuleRow[]>(
     () =>
@@ -261,6 +276,7 @@ function App() {
     const result = validateYaml();
     if (!result.ok) return;
     await chrome.storage.local.set({ configYaml: yamlText });
+    setSavedYamlText(yamlText);
     setErrors(['保存しました']);
     setToastMessage('設定を保存しました');
     setToastOpen(true);
@@ -374,10 +390,18 @@ function App() {
           <h1 className="title">設定</h1>
         </div>
         <div className="actions">
+          <span className={`save-hint ${hasUnsavedChanges ? 'dirty' : 'clean'}`}>
+            {hasUnsavedChanges ? '未保存の変更があります（保存するまで設定は反映されません）' : '保存済み'}
+          </span>
           <button className="btn" type="button" onClick={() => validateYaml()}>
             検証
           </button>
-          <button className="btn btn-primary" type="button" onClick={() => void saveYaml()}>
+          <button
+            className="btn btn-primary"
+            type="button"
+            onClick={() => void saveYaml()}
+            disabled={!hasUnsavedChanges}
+          >
             保存
           </button>
         </div>

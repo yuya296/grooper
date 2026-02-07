@@ -77,6 +77,7 @@
 ## 7. 受け入れ条件へのマッピング
 
 - AC1: Popup Secondary Actionで `chrome.runtime.openOptionsPage()` 到達
-- AC2: Options主要操作（Validate/Save/Preview/Rollback）を回帰維持
+- AC2: Options主要操作（Validate/Save）を回帰維持
+- AC2.3-2.5: 編集は保存まで非反映、差分時のみ保存有効、未保存離脱警告を実装
 - AC3: 候補比較表と採用理由、Rules編集UI（テーブル+D&D+サイドパネル）を本設計に記録
 - AC4: `pnpm test`, `pnpm build` を通過
