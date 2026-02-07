@@ -8,8 +8,7 @@
 ```yaml
 version: 1
 applyMode: manual
-parentFollow: true
-fallbackGroup: "Fallback"
+parentFollow: false
 rules:
   - pattern: '^https?://example\.com/(?<env>[^/]+)(?:/.*)?$'
     matchMode: regex
@@ -28,7 +27,6 @@ rules:
 ```yaml
 version: 1
 applyMode: manual
-fallbackGroup: "Fallback"
 rules:
   - pattern: '*google.com/search*'
     matchMode: glob
