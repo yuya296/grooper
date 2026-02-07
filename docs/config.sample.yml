@@ -1,0 +1,33 @@
+version: 1
+applyMode: manual
+vars:
+  env: prod
+parentFollow: true
+fallbackGroup: "Fallback"
+shortcuts:
+  slots:
+    - "GroupA"
+    - "GroupB"
+    - "GroupC"
+rules:
+  - pattern: 'example\\.com/${env}'
+    group: 'Example-${env}'
+    color: "blue"
+    priority: 10
+  - pattern: 'google\\.com/search'
+    group: "Search"
+    color: "red"
+    priority: 5
+  - pattern: 'example\\.org'
+    group: "ExampleOrg"
+    priority: 1
+
+groups:
+  Example-prod:
+    ttlMinutes: 60
+    maxTabs: 5
+    lru: true
+  Search:
+    ttlMinutes: 30
+    maxTabs: 10
+    lru: true
