@@ -379,8 +379,13 @@ function App() {
         id: 'actions',
         header: '',
         cell: ({ row }) => (
-          <button type="button" className="btn btn-ghost" onClick={() => removeRule(row.index)}>
-            削除
+          <button
+            type="button"
+            className="row-action-btn"
+            aria-label="ルールを削除"
+            onClick={() => removeRule(row.index)}
+          >
+            🗑
           </button>
         )
       })
