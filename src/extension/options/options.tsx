@@ -268,7 +268,7 @@ function App() {
       setErrors(result.errors.map((e) => `${e.path}: ${e.message}`));
       return { ok: false, errors: result.errors } as const;
     }
-    setErrors(['OK']);
+    setErrors([]);
     return { ok: true, config: result.config! } as const;
   }
 
@@ -277,7 +277,7 @@ function App() {
     if (!result.ok) return;
     await chrome.storage.local.set({ configYaml: yamlText });
     setSavedYamlText(yamlText);
-    setErrors(['保存しました']);
+    setErrors([]);
     setToastMessage('設定を保存しました');
     setToastOpen(true);
   }
