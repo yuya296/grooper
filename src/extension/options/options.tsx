@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as Select from '@radix-ui/react-select';
 import * as Switch from '@radix-ui/react-switch';
+import * as Tabs from '@radix-ui/react-tabs';
 import { DndContext, type DragEndEvent, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
@@ -400,115 +401,117 @@ function App() {
         </div>
       </div>
 
-      <div className="tabs">
-        <button type="button" className={`tab ${activeTab === 'source' ? 'active' : ''}`} onClick={() => switchTab('source')}>
-          Source
-        </button>
-        <button type="button" className={`tab ${activeTab === 'ui' ? 'active' : ''}`} onClick={() => switchTab('ui')}>
-          UI
-        </button>
-      </div>
+      <Tabs.Root value={activeTab} onValueChange={(next) => switchTab(next as 'source' | 'ui')}>
+        <Tabs.List className="tabs">
+          <Tabs.Trigger className="tab-trigger" value="source">
+            Source
+          </Tabs.Trigger>
+          <Tabs.Trigger className="tab-trigger" value="ui">
+            UI
+          </Tabs.Trigger>
+        </Tabs.List>
 
-      {errors.length > 0 && <div className="error">{errors.join('\n')}</div>}
+        {errors.length > 0 && <div className="error">{errors.join('\n')}</div>}
 
-      {activeTab === 'source' && (
-        <div className="panel">
-          <label className="label" htmlFor="yaml">
-            設定（YAML）
-          </label>
-          <textarea id="yaml" className="textarea" value={yamlText} onChange={(e) => setYamlText(e.currentTarget.value)} />
-        </div>
-      )}
+        <Tabs.Content value="source">
+          <div className="panel">
+            <label className="label" htmlFor="yaml">
+              設定（YAML）
+            </label>
+            <textarea id="yaml" className="textarea" value={yamlText} onChange={(e) => setYamlText(e.currentTarget.value)} />
+          </div>
+        </Tabs.Content>
 
-      {activeTab === 'ui' && (
-        <div className="panel stack">
-          <div className="inline">
-            <div>
-              <label className="label" htmlFor="applyMode">
-                applyMode
-              </label>
-              <AppModeSelect
-                value={uiState.applyMode}
-                onChange={(next) => syncFromUi({ ...uiState, applyMode: next })}
-              />
-            </div>
-            <div>
-              <label className="label" htmlFor="fallbackEnabled">
-                fallbackGroup
-              </label>
-              <div className="inline">
-                <label className="inline" htmlFor="fallbackEnabled">
-                  <Switch.Root
-                    id="fallbackEnabled"
-                    className="switch-root"
-                    checked={uiState.fallbackGroup !== undefined}
-                    onCheckedChange={(checked) =>
-                      syncFromUi({
-                        ...uiState,
-                        fallbackGroup: checked ? uiState.fallbackGroup ?? '' : undefined
-                      })
-                    }
-                  >
-                    <Switch.Thumb className="switch-thumb" />
-                  </Switch.Root>
-                  <span className="muted">Fallbackを有効化</span>
+        <Tabs.Content value="ui">
+          <div className="panel stack">
+            <div className="inline">
+              <div>
+                <label className="label" htmlFor="applyMode">
+                  applyMode
                 </label>
-                <input
-                  id="fallbackGroup"
-                  className="input"
-                  placeholder="Fallback GroupName"
-                  value={uiState.fallbackGroup ?? ''}
-                  disabled={uiState.fallbackGroup === undefined}
-                  onChange={(e) => syncFromUi({ ...uiState, fallbackGroup: e.currentTarget.value })}
+                <AppModeSelect
+                  value={uiState.applyMode}
+                  onChange={(next) => syncFromUi({ ...uiState, applyMode: next })}
                 />
               </div>
+              <div>
+                <label className="label" htmlFor="fallbackEnabled">
+                  fallbackGroup
+                </label>
+                <div className="inline">
+                  <label className="inline" htmlFor="fallbackEnabled">
+                    <Switch.Root
+                      id="fallbackEnabled"
+                      className="switch-root"
+                      checked={uiState.fallbackGroup !== undefined}
+                      onCheckedChange={(checked) =>
+                        syncFromUi({
+                          ...uiState,
+                          fallbackGroup: checked ? uiState.fallbackGroup ?? '' : undefined
+                        })
+                      }
+                    >
+                      <Switch.Thumb className="switch-thumb" />
+                    </Switch.Root>
+                    <span className="muted">Fallbackを有効化</span>
+                  </label>
+                  <input
+                    id="fallbackGroup"
+                    className="input"
+                    placeholder="Fallback GroupName"
+                    value={uiState.fallbackGroup ?? ''}
+                    disabled={uiState.fallbackGroup === undefined}
+                    onChange={(e) => syncFromUi({ ...uiState, fallbackGroup: e.currentTarget.value })}
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn"
+                onClick={() =>
+                  syncFromUi({
+                    ...uiState,
+                    rules: [...uiState.rules, { pattern: '', group: '', color: undefined, priority: undefined }]
+                  })
+                }
+              >
+                ルール追加
+              </button>
             </div>
-            <button
-              type="button"
-              className="btn"
-              onClick={() =>
-                syncFromUi({
-                  ...uiState,
-                  rules: [...uiState.rules, { pattern: '', group: '', color: undefined, priority: undefined }]
-                })
-              }
-            >
-              ルール追加
-            </button>
-          </div>
-          <div className="muted">Groupクリックで詳細編集。左端ハンドルで並び替えできます。</div>
-          <div className="grid">
-            <div className="table-wrap">
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-                <table>
-                  <thead>
-                    {table.getHeaderGroups().map((headerGroup) => (
-                      <tr key={headerGroup.id}>
-                        {headerGroup.headers.map((header) => (
-                          <th key={header.id}>
-                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                          </th>
-                        ))}
-                      </tr>
-                    ))}
-                  </thead>
-                  <tbody>
-                    <SortableContext items={ruleRows.map((row) => row.rowId)} strategy={verticalListSortingStrategy}>
-                      {table.getRowModel().rows.map((row) => (
-                        <tr key={row.id}>
-                          {row.getVisibleCells().map((cell) => (
-                            <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+            <div className="muted">Groupクリックで詳細編集。左端ハンドルで並び替えできます。</div>
+            <div className="grid">
+              <div className="table-wrap">
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+                  <table>
+                    <thead>
+                      {table.getHeaderGroups().map((headerGroup) => (
+                        <tr key={headerGroup.id}>
+                          {headerGroup.headers.map((header) => (
+                            <th key={header.id}>
+                              {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                            </th>
                           ))}
                         </tr>
                       ))}
-                    </SortableContext>
-                  </tbody>
-                </table>
-              </DndContext>
+                    </thead>
+                    <tbody>
+                      <SortableContext items={ruleRows.map((row) => row.rowId)} strategy={verticalListSortingStrategy}>
+                        {table.getRowModel().rows.map((row) => (
+                          <tr key={row.id}>
+                            {row.getVisibleCells().map((cell) => (
+                              <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </SortableContext>
+                    </tbody>
+                  </table>
+                </DndContext>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        </Tabs.Content>
+      </Tabs.Root>
 
       <div className="panel stack">
         <div>

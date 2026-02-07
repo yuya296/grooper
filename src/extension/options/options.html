@@ -49,14 +49,14 @@
       .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
       .btn-ghost { background: transparent; }
       .tabs { display: flex; gap: 8px; padding: 0 18px 12px; }
-      .tab {
+      .tab-trigger {
         border: 1px solid var(--border);
         background: #fff;
         border-radius: 999px;
         padding: 6px 12px;
         cursor: pointer;
       }
-      .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+      .tab-trigger[data-state="active"] { background: var(--accent); color: #fff; border-color: var(--accent); }
       .panel { padding: 0 18px 18px; }
       .stack { display: flex; flex-direction: column; gap: 12px; }
       .label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
