@@ -10,6 +10,22 @@ import { appendHistoryEntry, formatPreviewActions, popLatestHistory, type Histor
 import { buildYamlFromUi, parseYamlForUi, type RuleForm, type UiState } from './uiState.js';
 
 const HISTORY_KEY = 'configHistory';
+const GROUP_COLORS = [
+  { value: 'grey', label: 'Grey', hex: '#9ca3af' },
+  { value: 'blue', label: 'Blue', hex: '#3b82f6' },
+  { value: 'red', label: 'Red', hex: '#ef4444' },
+  { value: 'yellow', label: 'Yellow', hex: '#eab308' },
+  { value: 'green', label: 'Green', hex: '#22c55e' },
+  { value: 'pink', label: 'Pink', hex: '#ec4899' },
+  { value: 'purple', label: 'Purple', hex: '#a855f7' },
+  { value: 'cyan', label: 'Cyan', hex: '#06b6d4' },
+  { value: 'orange', label: 'Orange', hex: '#f97316' }
+] as const;
+
+function findColorHex(color?: string) {
+  if (!color) return undefined;
+  return GROUP_COLORS.find((entry) => entry.value === color)?.hex;
+}
 
 interface RuleRow extends RuleForm {
   rowId: string;
@@ -238,7 +254,16 @@ function App() {
       }),
       columnHelper.accessor('color', {
         header: 'Status',
-        cell: (ctx) => <span className="badge">{ctx.getValue() || 'none'}</span>
+        cell: (ctx) => {
+          const color = ctx.getValue();
+          const hex = findColorHex(color);
+          return (
+            <span className="badge">
+              <span className="color-dot" style={{ backgroundColor: hex ?? '#cbd5e1' }} />
+              {color || 'none'}
+            </span>
+          );
+        }
       }),
       columnHelper.accessor('priority', {
         header: 'Target',
@@ -468,11 +493,21 @@ function App() {
               </div>
               <div>
                 <label className="label">Status (color)</label>
-                <input
-                  className="input"
-                  value={selectedRule.color ?? ''}
-                  onChange={(e) => updateRule(selectedRuleIndex!, { color: e.currentTarget.value || undefined })}
-                />
+                <div className="inline">
+                  <span className="color-dot" style={{ backgroundColor: findColorHex(selectedRule.color) ?? '#cbd5e1' }} />
+                  <select
+                    className="select"
+                    value={selectedRule.color ?? ''}
+                    onChange={(e) => updateRule(selectedRuleIndex!, { color: e.currentTarget.value || undefined })}
+                  >
+                    <option value="">none</option>
+                    {GROUP_COLORS.map((color) => (
+                      <option key={color.value} value={color.value}>
+                        ● {color.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div>
                 <label className="label">Target (priority)</label>
