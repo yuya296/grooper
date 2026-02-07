@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import * as Select from '@radix-ui/react-select';
 import { DndContext, type DragEndEvent, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
@@ -10,6 +11,7 @@ import { appendHistoryEntry, formatPreviewActions, popLatestHistory, type Histor
 import { buildYamlFromUi, parseYamlForUi, type RuleForm, type UiState } from './uiState.js';
 
 const HISTORY_KEY = 'configHistory';
+const NONE_COLOR = '__none__';
 const GROUP_COLORS = [
   { value: 'grey', label: 'Grey', hex: '#9ca3af' },
   { value: 'blue', label: 'Blue', hex: '#3b82f6' },
@@ -25,6 +27,46 @@ const GROUP_COLORS = [
 function findColorHex(color?: string) {
   if (!color) return undefined;
   return GROUP_COLORS.find((entry) => entry.value === color)?.hex;
+}
+
+function ColorSelect({
+  value,
+  onChange
+}: {
+  value?: string;
+  onChange: (next: string | undefined) => void;
+}) {
+  return (
+    <Select.Root
+      value={value ?? NONE_COLOR}
+      onValueChange={(next) => onChange(next === NONE_COLOR ? undefined : next)}
+    >
+      <Select.Trigger className="select-trigger" aria-label="Color">
+        <span className="inline">
+          <span className="color-dot" style={{ backgroundColor: findColorHex(value) ?? '#cbd5e1' }} />
+          <Select.Value placeholder="none" />
+        </span>
+        <Select.Icon className="select-icon">▾</Select.Icon>
+      </Select.Trigger>
+      <Select.Portal>
+        <Select.Content className="select-content" position="popper" sideOffset={6}>
+          <Select.Viewport className="select-viewport">
+            <Select.Item className="select-item" value={NONE_COLOR}>
+              <Select.ItemText>none</Select.ItemText>
+            </Select.Item>
+            {GROUP_COLORS.map((color) => (
+              <Select.Item key={color.value} className="select-item" value={color.value}>
+                <span className="inline">
+                  <span className="color-dot" style={{ backgroundColor: color.hex }} />
+                  <Select.ItemText>{color.label}</Select.ItemText>
+                </span>
+              </Select.Item>
+            ))}
+          </Select.Viewport>
+        </Select.Content>
+      </Select.Portal>
+    </Select.Root>
+  );
 }
 
 interface RuleRow extends RuleForm {
@@ -493,21 +535,10 @@ function App() {
               </div>
               <div>
                 <label className="label">Status (color)</label>
-                <div className="inline">
-                  <span className="color-dot" style={{ backgroundColor: findColorHex(selectedRule.color) ?? '#cbd5e1' }} />
-                  <select
-                    className="select"
-                    value={selectedRule.color ?? ''}
-                    onChange={(e) => updateRule(selectedRuleIndex!, { color: e.currentTarget.value || undefined })}
-                  >
-                    <option value="">none</option>
-                    {GROUP_COLORS.map((color) => (
-                      <option key={color.value} value={color.value}>
-                        ● {color.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <ColorSelect
+                  value={selectedRule.color}
+                  onChange={(next) => updateRule(selectedRuleIndex!, { color: next })}
+                />
               </div>
               <div>
                 <label className="label">Target (priority)</label>
