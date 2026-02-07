@@ -23,4 +23,7 @@
 
 # Notes
 
-- 
+- CLI/診断API運用メモ:
+  1. 設定投入は`setConfig`→`runOnce(dryRun: true)`→`runOnce(dryRun: false)`の順で実行する。
+  2. `getState/getLogs`で適用結果と実行ログを採取し、検証は`verify`コマンドでplan一致を判定する。
+  3. CI/自動検証では`plan/apply/snapshot/verify`のみを公開経路として扱う。

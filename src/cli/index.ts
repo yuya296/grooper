@@ -1,8 +1,8 @@
 import { Command } from 'commander';
 import { readFile, writeFile } from 'node:fs/promises';
-import { parseConfigYaml } from '../core/config.js';
 import { createPlan } from '../core/planner.js';
 import type { Plan, StateSnapshot } from '../core/types.js';
+import { applyPlan, ensureConfig } from './lib.js';
 
 async function loadYaml(path: string) {
   return await readFile(path, 'utf8');
@@ -20,58 +20,6 @@ async function writeOutput(path: string | undefined, value: unknown) {
     return;
   }
   process.stdout.write(`${text}\n`);
-}
-
-function ensureConfig(yaml: string) {
-  const { config, errors } = parseConfigYaml(yaml);
-  if (!config) {
-    const message = errors.map((e) => `${e.path}: ${e.message}`).join('\n');
-    throw new Error(message);
-  }
-  return config;
-}
-
-function applyPlan(state: StateSnapshot, plan: Plan): StateSnapshot {
-  const next: StateSnapshot = {
-    tabs: state.tabs.map((tab) => ({ ...tab })),
-    groups: state.groups.map((group) => ({ ...group }))
-  };
-
-  const nextGroupId = () => {
-    const currentMax = next.groups.reduce((max, group) => Math.max(max, group.id), 0);
-    return currentMax + 1;
-  };
-
-  const findGroup = (windowId: number, title: string) =>
-    next.groups.find((group) => group.windowId === windowId && group.title === title);
-
-  for (const action of plan.actions) {
-    if (action.type === 'ensureGroup') {
-      let group = findGroup(action.windowId, action.group);
-      if (!group) {
-        group = { id: nextGroupId(), title: action.group, color: action.color, windowId: action.windowId };
-        next.groups.push(group);
-      } else if (action.color) {
-        group.color = action.color;
-      }
-    }
-
-    if (action.type === 'moveTab') {
-      let group = findGroup(action.windowId, action.group);
-      if (!group) {
-        group = { id: nextGroupId(), title: action.group, color: undefined, windowId: action.windowId };
-        next.groups.push(group);
-      }
-      const tab = next.tabs.find((t) => t.id === action.tabId);
-      if (tab) tab.groupId = group.id;
-    }
-
-    if (action.type === 'closeTab') {
-      next.tabs = next.tabs.filter((tab) => tab.id !== action.tabId);
-    }
-  }
-
-  return next;
 }
 
 const program = new Command();
