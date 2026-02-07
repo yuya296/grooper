@@ -421,9 +421,6 @@ function App() {
     <div className="card">
       <div className="header">
         <div className="title-wrap">
-          <button type="button" className="icon-btn" onClick={() => window.history.back()} aria-label="戻る">
-            ←
-          </button>
           <h1 className="title">設定</h1>
         </div>
         <div className="actions">
