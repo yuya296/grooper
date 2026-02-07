@@ -277,7 +277,21 @@ function App() {
     const nextErrors: string[] = [];
     if (!rule.group.trim()) nextErrors.push('グループ名は必須です');
     if (!rule.pattern.trim()) nextErrors.push('パターンは必須です');
+    const patternRegexError = getPatternRegexError(rule.pattern);
+    if (patternRegexError) nextErrors.push(patternRegexError);
     return nextErrors;
+  }
+
+  function getPatternRegexError(pattern: string) {
+    const trimmed = pattern.trim();
+    if (!trimmed) return null;
+    try {
+      // Runtimeで使う正規表現として事前に妥当性を検証する。
+      new RegExp(trimmed);
+      return null;
+    } catch (err) {
+      return `正規表現が不正です: ${err instanceof Error ? err.message : 'Invalid regex'}`;
+    }
   }
 
   function saveDrawerRule() {
@@ -428,8 +442,12 @@ function App() {
   });
 
   const isDrawerOpen = drawerDraft != null;
+  const drawerPatternRegexError = drawerDraft ? getPatternRegexError(drawerDraft.pattern) : null;
   const isDrawerSaveDisabled =
-    !drawerDraft || drawerDraft.group.trim().length === 0 || drawerDraft.pattern.trim().length === 0;
+    !drawerDraft ||
+    drawerDraft.group.trim().length === 0 ||
+    drawerDraft.pattern.trim().length === 0 ||
+    drawerPatternRegexError != null;
   const drawerTitle = drawerRuleIndex == null ? 'ルール追加' : 'ルール編集';
   const activeDragRow = activeDragId != null ? ruleRows.find((row) => row.rowId === activeDragId) : undefined;
 
@@ -648,6 +666,7 @@ function App() {
                   }}
                 />
                 <div className="muted">正規表現または文字列パターンを入力してください</div>
+                {drawerPatternRegexError && <div className="field-error">{drawerPatternRegexError}</div>}
               </div>
               <div>
                 <label className="label">ステータス（色）</label>
