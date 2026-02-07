@@ -688,7 +688,15 @@ function App() {
           {drawerDraft && (
             <div className="stack">
               <div>
-                <label className="label">グループ名</label>
+                <label className="label">
+                  <span className="label-inline">
+                    グループ名
+                    <span className="info-tip" aria-label="グループ名の説明">
+                      ⓘ
+                      <span className="tooltip">regexモードでは `$1` / `$&lt;name&gt;` でキャプチャ参照できます。</span>
+                    </span>
+                  </span>
+                </label>
                 <input
                   className="input"
                   value={drawerDraft.group}
@@ -697,10 +705,17 @@ function App() {
                     setDrawerErrors([]);
                   }}
                 />
-                <div className="muted">regexモードでは `$1` / `$&lt;name&gt;` でキャプチャ参照できます</div>
               </div>
               <div>
-                <label className="label">マッチ方式</label>
+                <label className="label">
+                  <span className="label-inline">
+                    マッチ方式
+                    <span className="info-tip" aria-label="マッチ方式の説明">
+                      ⓘ
+                      <span className="tooltip">`regex` または `wildcard (glob)` を選択します。</span>
+                    </span>
+                  </span>
+                </label>
                 <MatchModeSelect
                   value={drawerDraft.matchMode}
                   onChange={(next) => {
@@ -708,10 +723,17 @@ function App() {
                     setDrawerErrors([]);
                   }}
                 />
-                <div className="muted">regex か wildcard (glob) を選択してください</div>
               </div>
               <div>
-                <label className="label">パターン</label>
+                <label className="label">
+                  <span className="label-inline">
+                    パターン
+                    <span className="info-tip" aria-label="パターンの説明">
+                      ⓘ
+                      <span className="tooltip">regex か wildcard (glob) の書式でマッチ対象を指定します。</span>
+                    </span>
+                  </span>
+                </label>
                 <input
                   className="input"
                   value={drawerDraft.pattern}
@@ -720,13 +742,19 @@ function App() {
                     setDrawerErrors([]);
                   }}
                 />
-                <div className="muted">正規表現または文字列パターンを入力してください</div>
                 {drawerPatternRegexError && <div className="field-error">{drawerPatternRegexError}</div>}
               </div>
               <div>
-                <label className="label">カラー</label>
+                <label className="label">
+                  <span className="label-inline">
+                    カラー
+                    <span className="info-tip" aria-label="カラーの説明">
+                      ⓘ
+                      <span className="tooltip">Chromeタブグループで選択可能な色を指定します。</span>
+                    </span>
+                  </span>
+                </label>
                 <ColorSelect value={drawerDraft.color} onChange={(next) => setDrawerDraft({ ...drawerDraft, color: next })} />
-                <div className="muted">Chrome タブグループの色を選択</div>
               </div>
               {drawerErrors.length > 0 && <div className="field-error">{drawerErrors.join('\n')}</div>}
               <div className="drawer-actions">
