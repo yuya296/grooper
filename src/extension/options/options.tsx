@@ -113,6 +113,14 @@ interface RuleRow extends RuleForm {
   rowId: string;
 }
 
+function applyPriorityFromOrder(rules: RuleForm[]): RuleForm[] {
+  const size = rules.length;
+  return rules.map((rule, index) => ({
+    ...rule,
+    priority: size - index
+  }));
+}
+
 function SortHandle({ rowId }: { rowId: string }) {
   const { attributes, listeners, setNodeRef } = useSortable({ id: rowId });
   return (
@@ -157,10 +165,12 @@ function App() {
   );
 
   function syncFromUi(nextUiState: UiState, baseRawConfig = rawConfig) {
-    const result = buildYamlFromUi(baseRawConfig, nextUiState);
-    setUiState(nextUiState);
-    setRawConfig(result.rawConfig);
-    setYamlText(result.yaml);
+    const normalizedRules = applyPriorityFromOrder(nextUiState.rules);
+    const normalizedState: UiState = { ...nextUiState, rules: normalizedRules };
+    const normalizedResult = buildYamlFromUi(baseRawConfig, normalizedState);
+    setUiState(normalizedState);
+    setRawConfig(normalizedResult.rawConfig);
+    setYamlText(normalizedResult.yaml);
   }
 
   function switchTab(nextTab: 'source' | 'ui') {
@@ -364,10 +374,6 @@ function App() {
             </span>
           );
         }
-      }),
-      columnHelper.accessor('priority', {
-        header: 'ターゲット',
-        cell: (ctx) => <span className="badge">{ctx.getValue() != null ? String(ctx.getValue()) : 'domain'}</span>
       }),
       columnHelper.display({
         id: 'actions',
@@ -628,19 +634,6 @@ function App() {
                   onChange={(next) => updateRule(selectedRuleIndex!, { color: next })}
                 />
                 <div className="muted">Chrome タブグループの色を選択</div>
-              </div>
-              <div>
-                <label className="label">ターゲット（優先度）</label>
-                <input
-                  className="input"
-                  type="number"
-                  value={selectedRule.priority ?? ''}
-                  onChange={(e) => {
-                    const value = e.currentTarget.value;
-                    updateRule(selectedRuleIndex!, { priority: value ? Number(value) : undefined });
-                  }}
-                />
-                <div className="muted">パターンマッチングの対象を選択</div>
               </div>
               <div className="drawer-actions">
                 <button type="button" className="btn btn-primary" onClick={() => setSelectedRuleIndex(null)}>
