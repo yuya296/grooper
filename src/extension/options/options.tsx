@@ -22,6 +22,7 @@ import {
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { parseConfigYaml } from '../../core/config.js';
+import { validateGroupTemplateForMatchMode } from '../../core/rule-template.js';
 import type { MatchMode } from '../../core/types.js';
 import { buildYamlFromUi, parseYamlForUi, type RuleForm, type UiState } from './uiState.js';
 
@@ -310,6 +311,8 @@ function App() {
   function validateRuleDraft(rule: RuleForm) {
     const nextErrors: string[] = [];
     if (!rule.group.trim()) nextErrors.push('グループ名は必須です');
+    const groupTemplateError = validateGroupTemplateForMatchMode(rule.group, rule.matchMode);
+    if (groupTemplateError) nextErrors.push(groupTemplateError);
     if (!rule.pattern.trim()) nextErrors.push('パターンは必須です');
     const patternRegexError = getPatternRegexError(rule.pattern, rule.matchMode);
     if (patternRegexError) nextErrors.push(patternRegexError);
@@ -694,6 +697,7 @@ function App() {
                     setDrawerErrors([]);
                   }}
                 />
+                <div className="muted">regexモードでは `$1` / `$&lt;name&gt;` でキャプチャ参照できます</div>
               </div>
               <div>
                 <label className="label">マッチ方式</label>

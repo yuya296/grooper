@@ -18,10 +18,10 @@
 | 0011 | Rule matching mode (regex/glob) | 要確認 | `rules[].matchMode` の追加、glob評価、Options UIの選択・バリデーションを実装済み。`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0012 | Dark mode | 未着手 | Popup/Optionsのテーマ切替（light/dark/system）導入計画を作成済み |
 | 0013 | i18n (ja/en) | 未着手 | Popup/Optionsの多言語対応（ja/en）導入計画を作成済み |
-| 0014 | Regex capture group expansion | 未着手 | regexキャプチャ（`$1`, `$<name>`）をgroupへ展開する導入計画を作成済み |
+| 0014 | Regex capture group expansion | 要確認 | regexキャプチャ（`$1`, `$<name>`, `$$`）のgroup展開とglobモード禁止バリデーションを実装済み。`pnpm test`/`pnpm build`通過、手動確認待ち |
 
 ## 現在のフォーカス
-- PBI-0011の最終確認: 実拡張で matchMode(regex/glob) の保存・再読込・マッチ挙動を手動確認する。
+- PBI-0014の最終確認: regexキャプチャ展開（`$1`, `$<name>`）とglob時エラーを実拡張で手動確認する。
 
 ## 進捗更新ルール
 - 1コミットごとに、該当PBIの状態変化をこのファイルに反映する。

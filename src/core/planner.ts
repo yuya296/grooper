@@ -2,12 +2,14 @@ import type { CompiledConfig, Plan, StateSnapshot, TabState } from './types.js';
 import type { Clock } from './clock.js';
 import { systemClock } from './clock.js';
 import { buildCleanupActions } from './cleanup.js';
+import { expandGroupCaptures } from './rule-template.js';
 
 function matchRule(config: CompiledConfig, tab: TabState): { group: string; color?: string } | null {
   if (!tab.url) return null;
   for (const rule of config.rules) {
-    if (rule.regex.test(tab.url)) {
-      return { group: rule.group, color: rule.color };
+    const match = tab.url.match(rule.regex);
+    if (match) {
+      return { group: expandGroupCaptures(rule.group, match), color: rule.color };
     }
   }
   return null;

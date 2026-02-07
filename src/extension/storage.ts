@@ -5,7 +5,8 @@ const LAST_ACTIVE_KEY = 'lastActiveAt';
 export const DEFAULT_CONFIG_YAML = `version: 1
 applyMode: manual
 rules:
-  - pattern: 'example\\.com'
+  - pattern: '*example.com*'
+    matchMode: glob
     group: 'Example'
     color: 'blue'
 `;

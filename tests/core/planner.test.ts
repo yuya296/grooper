@@ -62,4 +62,29 @@ describe('createPlan', () => {
     const move = scoped.actions.find((a) => a.type === 'moveTab');
     expect(move).toBeUndefined();
   });
+
+  it('expands regex captures into group template', () => {
+    const captureConfig: CompiledConfig = {
+      ...config,
+      rules: [
+        {
+          pattern: '^https://([a-z0-9-]+)\\.example\\.com/',
+          group: 'Team-$1',
+          matchMode: 'regex',
+          regex: /^https:\/\/([a-z0-9-]+)\.example\.com\//,
+          index: 0,
+          priority: 0
+        }
+      ]
+    };
+    const plan = createPlan(
+      {
+        tabs: [{ id: 11, url: 'https://dev.example.com/home', windowId: 1 }],
+        groups: []
+      },
+      captureConfig
+    );
+    const move = plan.actions.find((a) => a.type === 'moveTab' && a.tabId === 11);
+    expect(move).toMatchObject({ group: 'Team-dev' });
+  });
 });

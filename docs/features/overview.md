@@ -18,7 +18,7 @@
 | 0008 Diag + CLI | P1 | 0001 | 完了 | 診断APIは開発/CI限定、CLIはplan/apply/snapshot/verifyのみ |
 | 0010 Popup + Settings UI modernize | P1 | 0006,0007 | 完了 | Popup導線、Settings UI刷新、Rulesテーブル+D&D+サイドパネル、保存フロー改善まで反映済み |
 | 0011 Rule matching mode (regex/glob) | P1 | 0002,0010 | 要確認 | `rules[].matchMode` とglob評価、Options UI編集を実装済み。最終手動確認待ち |
-| 0014 Regex capture group expansion | P1 | 0011 | 未着手 | regexモードで `$1` / `$<name>` によるgroup動的展開を導入する |
+| 0014 Regex capture group expansion | P1 | 0011 | 要確認 | regexキャプチャ展開（`$1`/`$<name>`）とglob時禁止バリデーションを実装済み。最終手動確認待ち |
 | 0005 Shortcuts | P2 | 0001 | 完了 | ショートカットの割当はYAMLのみ（UI設定はPBI-0006以降） |
 | 0007 Options UI v2 | P2 | 0006 | 完了 | プレビュー/履歴/ロールバック実装と運用文書化・補強テストまで完了 |
 | 0009 E2E + CI | P2 | 0008 | 完了 | 失敗時artifact収集、テストユーティリティ単体テスト、運用文書化まで完了 |

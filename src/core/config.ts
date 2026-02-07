@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { parse } from 'yaml';
 import type { ApplyMode, CompiledConfig, CompiledRule, Config, MatchMode } from './types.js';
+import { validateGroupTemplateForMatchMode } from './rule-template.js';
 
 export interface ConfigError {
   path: string;
@@ -118,6 +119,13 @@ export function parseConfigYaml(yamlText: string): { config?: CompiledConfig; er
     try {
       const pattern = expandVars(rule.pattern, `rules.${index}.pattern`);
       const group = expandVars(rule.group, `rules.${index}.group`);
+      const groupTemplateError = validateGroupTemplateForMatchMode(group, matchMode);
+      if (groupTemplateError) {
+        errors.push({
+          path: `rules.${index}.group`,
+          message: groupTemplateError
+        });
+      }
       const regex = new RegExp(matchMode === 'glob' ? globToRegexPattern(pattern) : pattern);
       return { ...rule, pattern, group, matchMode, regex, index, priority: rule.priority ?? 0 };
     } catch (err) {

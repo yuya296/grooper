@@ -10,15 +10,18 @@ shortcuts:
     - "GroupB"
     - "GroupC"
 rules:
-  - pattern: 'example\\.com/${env}'
+  - pattern: '*example.com/${env}*'
+    matchMode: glob
     group: 'Example-${env}'
     color: "blue"
     priority: 10
-  - pattern: 'google\\.com/search'
+  - pattern: '*google.com/search*'
+    matchMode: glob
     group: "Search"
     color: "red"
     priority: 5
-  - pattern: 'example\\.org'
+  - pattern: '*example.org*'
+    matchMode: glob
     group: "ExampleOrg"
     priority: 1
 

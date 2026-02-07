@@ -20,6 +20,18 @@ rules:
     matchMode: glob
     group: "GlobExample"
 `;
+const globCaptureGroupYaml = `version: 1
+rules:
+  - pattern: '*.example.com'
+    matchMode: glob
+    group: 'Team-$1'
+`;
+const regexCaptureGroupYaml = `version: 1
+rules:
+  - pattern: '^https://([a-z0-9-]+)\\.example\\.com/'
+    matchMode: regex
+    group: 'Team-$1'
+`;
 const varsYaml = `version: 1
 vars:
   env: prod
@@ -73,6 +85,18 @@ describe('parseConfigYaml', () => {
     expect(result.config?.rules[0].matchMode).toBe('glob');
     expect(result.config?.rules[0].regex.test('api.example.com')).toBe(true);
     expect(result.config?.rules[0].regex.test('example.com')).toBe(false);
+  });
+
+  it('rejects capture template in glob mode', () => {
+    const result = parseConfigYaml(globCaptureGroupYaml);
+    expect(result.config).toBeUndefined();
+    expect(result.errors[0].path).toBe('rules.0.group');
+  });
+
+  it('allows capture template in regex mode', () => {
+    const result = parseConfigYaml(regexCaptureGroupYaml);
+    expect(result.errors).toHaveLength(0);
+    expect(result.config?.rules[0].group).toBe('Team-$1');
   });
 
   it('expands variables', () => {
