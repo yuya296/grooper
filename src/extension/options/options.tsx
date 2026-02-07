@@ -1,9 +1,13 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as Select from '@radix-ui/react-select';
 import * as Switch from '@radix-ui/react-switch';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as Toast from '@radix-ui/react-toast';
+import { basicSetup } from 'codemirror';
+import { EditorState } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
+import { yaml } from '@codemirror/lang-yaml';
 import {
   DndContext,
   DragOverlay,
@@ -130,6 +134,53 @@ function SortHandle({ rowId }: { rowId: string }) {
       ⋮⋮
     </button>
   );
+}
+
+function SourceEditor({
+  value,
+  onChange
+}: {
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  const hostRef = useRef<HTMLDivElement | null>(null);
+  const viewRef = useRef<EditorView | null>(null);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
+  useEffect(() => {
+    if (!hostRef.current) return;
+    const state = EditorState.create({
+      doc: value,
+      extensions: [
+        basicSetup,
+        yaml(),
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) {
+            onChangeRef.current(update.state.doc.toString());
+          }
+        })
+      ]
+    });
+    const view = new EditorView({ state, parent: hostRef.current });
+    viewRef.current = view;
+    return () => {
+      view.destroy();
+      viewRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+    const current = view.state.doc.toString();
+    if (current === value) return;
+    view.dispatch({
+      changes: { from: 0, to: view.state.doc.length, insert: value }
+    });
+  }, [value]);
+
+  return <div className="cm-host" ref={hostRef} />;
 }
 
 function App() {
@@ -384,7 +435,7 @@ function App() {
             <label className="label" htmlFor="yaml">
               設定（YAML）
             </label>
-            <textarea id="yaml" className="textarea" value={yamlText} onChange={(e) => setYamlText(e.currentTarget.value)} />
+            <SourceEditor value={yamlText} onChange={setYamlText} />
           </div>
         </Tabs.Content>
 

@@ -206,6 +206,20 @@
         transform: translateX(18px);
       }
       .textarea { min-height: 320px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .cm-host {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        background: #fff;
+      }
+      .cm-host .cm-editor {
+        min-height: 360px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 13px;
+      }
+      .cm-host .cm-scroller {
+        min-height: 360px;
+      }
       .inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
       .settings-row {
         display: grid;

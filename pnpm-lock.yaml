@@ -8,6 +8,15 @@ importers:
 
   .:
     dependencies:
+      '@codemirror/lang-yaml':
+        specifier: ^6.1.2
+        version: 6.1.2
+      '@codemirror/state':
+        specifier: ^6.5.4
+        version: 6.5.4
+      '@codemirror/view':
+        specifier: ^6.39.12
+        version: 6.39.12
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -32,6 +41,9 @@ importers:
       '@tanstack/react-table':
         specifier: ^8.21.3
         version: 8.21.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      codemirror:
+        specifier: ^6.0.2
+        version: 6.0.2
       commander:
         specifier: ^12.1.0
         version: 12.1.0
@@ -71,6 +83,30 @@ importers:
         version: 1.6.1
 
 packages:
+
+  '@codemirror/autocomplete@6.20.0':
+    resolution: {integrity: sha512-bOwvTOIJcG5FVo5gUUupiwYh8MioPLQ4UcqbcRf7UQ98X90tCa9E1kZ3Z7tqwpZxYyOvh1YTYbmZE9RTfTp5hg==}
+
+  '@codemirror/commands@6.10.2':
+    resolution: {integrity: sha512-vvX1fsih9HledO1c9zdotZYUZnE4xV0m6i3m25s5DIfXofuprk6cRcLUZvSk3CASUbwjQX21tOGbkY2BH8TpnQ==}
+
+  '@codemirror/lang-yaml@6.1.2':
+    resolution: {integrity: sha512-dxrfG8w5Ce/QbT7YID7mWZFKhdhsaTNOYjOkSIMt1qmC4VQnXSDSYVHHHn8k6kJUfIhtLo8t1JJgltlxWdsITw==}
+
+  '@codemirror/language@6.12.1':
+    resolution: {integrity: sha512-Fa6xkSiuGKc8XC8Cn96T+TQHYj4ZZ7RdFmXA3i9xe/3hLHfwPZdM+dqfX0Cp0zQklBKhVD8Yzc8LS45rkqcwpQ==}
+
+  '@codemirror/lint@6.9.3':
+    resolution: {integrity: sha512-y3YkYhdnhjDBAe0VIA0c4wVoFOvnp8CnAvfLqi0TqotIv92wIlAAP7HELOpLBsKwjAX6W92rSflA6an/2zBvXw==}
+
+  '@codemirror/search@6.6.0':
+    resolution: {integrity: sha512-koFuNXcDvyyotWcgOnZGmY7LZqEOXZaaxD/j6n18TCLx2/9HieZJ5H6hs1g8FiRxBD0DNfs0nXn17g872RmYdw==}
+
+  '@codemirror/state@6.5.4':
+    resolution: {integrity: sha512-8y7xqG/hpB53l25CIoit9/ngxdfoG+fx+V3SHBrinnhOtLvKHRyAJJuHzkWrR4YXXLX8eXBsejgAAxHUOdW1yw==}
+
+  '@codemirror/view@6.39.12':
+    resolution: {integrity: sha512-f+/VsHVn/kOA9lltk/GFzuYwVVAKmOnNjxbrhkk3tPHntFqjWeI2TbIXx006YkBkqC10wZ4NsnWXCQiFPeAISQ==}
 
   '@dnd-kit/accessibility@3.1.1':
     resolution: {integrity: sha512-2P+YgaXF+gRsIihwwY1gCsQSYnu9Zyj2py8kY5fFvUM1qm2WA2u639R6YNVfU4GWr+ZM5mqEsfHZZLoRONbemw==}
@@ -403,6 +439,21 @@ packages:
 
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
+
+  '@lezer/common@1.5.1':
+    resolution: {integrity: sha512-6YRVG9vBkaY7p1IVxL4s44n5nUnaNnGM2/AckNgYOnxTG2kWh1vR8BMxPseWPjRNpb5VtXnMpeYAEAADoRV1Iw==}
+
+  '@lezer/highlight@1.2.3':
+    resolution: {integrity: sha512-qXdH7UqTvGfdVBINrgKhDsVTJTxactNNxLk7+UMwZhU13lMHaOBlJe9Vqp907ya56Y3+ed2tlqzys7jDkTmW0g==}
+
+  '@lezer/lr@1.4.8':
+    resolution: {integrity: sha512-bPWa0Pgx69ylNlMlPvBPryqeLYQjyJjqPx+Aupm5zydLIF3NE+6MMLT8Yi23Bd9cif9VS00aUebn+6fDIGBcDA==}
+
+  '@lezer/yaml@1.0.4':
+    resolution: {integrity: sha512-2lrrHqxalACEbxIbsjhqGpSW8kWpUKuY6RHgnSAFZa6qK62wvnPxA8hGOwOoDbwHcOFs5M4o27mjGu+P7TvBmw==}
+
+  '@marijn/find-cluster-break@1.0.2':
+    resolution: {integrity: sha512-l0h88YhZFyKdXIFNfSWpyjStDjGHwZ/U7iobcK1cQQD8sejsONdQtTVU+1wVN1PBw40PiiHB1vA5S7VTfQiP9g==}
 
   '@playwright/test@1.58.1':
     resolution: {integrity: sha512-6LdVIUERWxQMmUSSQi0I53GgCBYgM2RpGngCPY7hSeju+VrKjq3lvs7HpJoPbDiY5QM5EYRtRX5fvrinnMAz3w==}
@@ -934,12 +985,18 @@ packages:
   check-error@1.0.3:
     resolution: {integrity: sha512-iKEoDYaRmd1mxM90a2OEfWhjsjPpYPuQ+lMYsoxB126+t8fw7ySEO48nmDg5COTjxDI65/Y2OWpeEHk3ZOe8zg==}
 
+  codemirror@6.0.2:
+    resolution: {integrity: sha512-VhydHotNW5w1UGK0Qj96BwSk/Zqbp9WbnyK2W/eVMv4QyF41INRGpjUhFJY7/uDNuudSc33a/PKr4iDqRduvHw==}
+
   commander@12.1.0:
     resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
     engines: {node: '>=18'}
 
   confbox@0.1.8:
     resolution: {integrity: sha512-RMtmw0iFkeR4YV+fUOSucriAQNb9g8zFR52MWCtl+cCZOFRNL6zeB395vPzFhEjjn4fMxXudmELnl/KF/WrK6w==}
+
+  crelt@1.0.6:
+    resolution: {integrity: sha512-VQ2MBenTq1fWZUH9DJNGti7kKv6EeAuYr3cLwxUWhIu1baTaXh4Ib5W2CqHVqib4/MqbYGJqiL3Zb8GJZr3l4g==}
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -1183,6 +1240,9 @@ packages:
   strip-literal@2.1.1:
     resolution: {integrity: sha512-631UJ6O00eNGfMiWG78ck80dfBab8X6IVFB51jZK5Icd7XAs60Z5y7QdSd/wGIklnWvRbUNloVzhOKKmutxQ6Q==}
 
+  style-mod@4.1.3:
+    resolution: {integrity: sha512-i/n8VsZydrugj3Iuzll8+x/00GH2vnYsk1eomD8QiRrSAeW6ItbCQDtfXCeJHd0iwiNagqjQkvpvREEPtW3IoQ==}
+
   tinybench@2.9.0:
     resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
 
@@ -1290,6 +1350,9 @@ packages:
       jsdom:
         optional: true
 
+  w3c-keyname@2.2.8:
+    resolution: {integrity: sha512-dpojBhNsCNN7T82Tm7k26A6G9ML3NkhDsnw9n/eoxSRlVBB4CEtIQ/KTCLI2Fwf3ataSXRhYFkQi3SlnFwPvPQ==}
+
   which@2.0.2:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
     engines: {node: '>= 8'}
@@ -1313,6 +1376,62 @@ packages:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
 snapshots:
+
+  '@codemirror/autocomplete@6.20.0':
+    dependencies:
+      '@codemirror/language': 6.12.1
+      '@codemirror/state': 6.5.4
+      '@codemirror/view': 6.39.12
+      '@lezer/common': 1.5.1
+
+  '@codemirror/commands@6.10.2':
+    dependencies:
+      '@codemirror/language': 6.12.1
+      '@codemirror/state': 6.5.4
+      '@codemirror/view': 6.39.12
+      '@lezer/common': 1.5.1
+
+  '@codemirror/lang-yaml@6.1.2':
+    dependencies:
+      '@codemirror/autocomplete': 6.20.0
+      '@codemirror/language': 6.12.1
+      '@codemirror/state': 6.5.4
+      '@lezer/common': 1.5.1
+      '@lezer/highlight': 1.2.3
+      '@lezer/lr': 1.4.8
+      '@lezer/yaml': 1.0.4
+
+  '@codemirror/language@6.12.1':
+    dependencies:
+      '@codemirror/state': 6.5.4
+      '@codemirror/view': 6.39.12
+      '@lezer/common': 1.5.1
+      '@lezer/highlight': 1.2.3
+      '@lezer/lr': 1.4.8
+      style-mod: 4.1.3
+
+  '@codemirror/lint@6.9.3':
+    dependencies:
+      '@codemirror/state': 6.5.4
+      '@codemirror/view': 6.39.12
+      crelt: 1.0.6
+
+  '@codemirror/search@6.6.0':
+    dependencies:
+      '@codemirror/state': 6.5.4
+      '@codemirror/view': 6.39.12
+      crelt: 1.0.6
+
+  '@codemirror/state@6.5.4':
+    dependencies:
+      '@marijn/find-cluster-break': 1.0.2
+
+  '@codemirror/view@6.39.12':
+    dependencies:
+      '@codemirror/state': 6.5.4
+      crelt: 1.0.6
+      style-mod: 4.1.3
+      w3c-keyname: 2.2.8
 
   '@dnd-kit/accessibility@3.1.1(react@19.2.4)':
     dependencies:
@@ -1505,6 +1624,24 @@ snapshots:
       '@sinclair/typebox': 0.27.10
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
+
+  '@lezer/common@1.5.1': {}
+
+  '@lezer/highlight@1.2.3':
+    dependencies:
+      '@lezer/common': 1.5.1
+
+  '@lezer/lr@1.4.8':
+    dependencies:
+      '@lezer/common': 1.5.1
+
+  '@lezer/yaml@1.0.4':
+    dependencies:
+      '@lezer/common': 1.5.1
+      '@lezer/highlight': 1.2.3
+      '@lezer/lr': 1.4.8
+
+  '@marijn/find-cluster-break@1.0.2': {}
 
   '@playwright/test@1.58.1':
     dependencies:
@@ -1973,9 +2110,21 @@ snapshots:
     dependencies:
       get-func-name: 2.0.2
 
+  codemirror@6.0.2:
+    dependencies:
+      '@codemirror/autocomplete': 6.20.0
+      '@codemirror/commands': 6.10.2
+      '@codemirror/language': 6.12.1
+      '@codemirror/lint': 6.9.3
+      '@codemirror/search': 6.6.0
+      '@codemirror/state': 6.5.4
+      '@codemirror/view': 6.39.12
+
   commander@12.1.0: {}
 
   confbox@0.1.8: {}
+
+  crelt@1.0.6: {}
 
   cross-spawn@7.0.6:
     dependencies:
@@ -2256,6 +2405,8 @@ snapshots:
     dependencies:
       js-tokens: 9.0.1
 
+  style-mod@4.1.3: {}
+
   tinybench@2.9.0: {}
 
   tinypool@0.8.4: {}
@@ -2342,6 +2493,8 @@ snapshots:
       - sugarss
       - supports-color
       - terser
+
+  w3c-keyname@2.2.8: {}
 
   which@2.0.2:
     dependencies:
