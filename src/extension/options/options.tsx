@@ -233,7 +233,7 @@ function App() {
         )
       }),
       columnHelper.accessor('pattern', {
-        header: 'Header',
+        header: 'Pattern',
         cell: (ctx) => <span className="badge">{ctx.getValue() || 'Unset'}</span>
       }),
       columnHelper.accessor('color', {
@@ -384,7 +384,7 @@ function App() {
               ルール追加
             </button>
           </div>
-          <div className="muted">タイトルクリックで詳細編集。左端ハンドルで並び替えできます。</div>
+          <div className="muted">Groupクリックで詳細編集。左端ハンドルで並び替えできます。</div>
           <div className="grid">
             <div className="table-wrap">
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
@@ -447,23 +447,23 @@ function App() {
           </button>
         </div>
         <div className="drawer-body">
-          {!selectedRule && <div className="muted">ルールタイトルをクリックして選択してください。</div>}
+          {!selectedRule && <div className="muted">Groupをクリックして選択してください。</div>}
           {selectedRule && (
             <div className="stack">
-              <div>
-                <label className="label">Header (pattern)</label>
-                <input
-                  className="input"
-                  value={selectedRule.pattern}
-                  onChange={(e) => updateRule(selectedRuleIndex!, { pattern: e.currentTarget.value })}
-                />
-              </div>
               <div>
                 <label className="label">Group Name</label>
                 <input
                   className="input"
                   value={selectedRule.group}
                   onChange={(e) => updateRule(selectedRuleIndex!, { group: e.currentTarget.value })}
+                />
+              </div>
+              <div>
+                <label className="label">Pattern</label>
+                <input
+                  className="input"
+                  value={selectedRule.pattern}
+                  onChange={(e) => updateRule(selectedRuleIndex!, { pattern: e.currentTarget.value })}
                 />
               </div>
               <div>
