@@ -17,6 +17,17 @@ import {
 let isApplying = false;
 const RESCAN_ALARM = 'tabgrouper-rescan';
 const RESCAN_MINUTES = 5;
+const pendingNewTabIds = new Set<number>();
+
+function isTransientNewTabUrl(url?: string) {
+  if (!url) return true;
+  return (
+    url === 'about:blank' ||
+    url.startsWith('chrome://newtab') ||
+    url.startsWith('edge://newtab') ||
+    url.startsWith('about:newtab')
+  );
+}
 
 async function ensureDefaultConfig() {
   const existing = await chrome.storage.local.get('configYaml');
@@ -132,7 +143,11 @@ chrome.tabs.onCreated.addListener((tab) => {
     const { config } = await loadConfig();
     if (!config || !shouldApply(config, 'newTabs')) return;
     if (!tab.id) return;
-    await runWithScope({ windowId: tab.windowId, tabIds: [tab.id], reason: 'onCreated', includeCleanup: false });
+    pendingNewTabIds.add(tab.id);
+    if (!isTransientNewTabUrl(tab.url)) {
+      await runWithScope({ windowId: tab.windowId, tabIds: [tab.id], reason: 'onCreated', includeCleanup: false });
+      pendingNewTabIds.delete(tab.id);
+    }
   })();
 });
 
@@ -140,8 +155,15 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (!changeInfo.url) return;
   void (async () => {
     const { config } = await loadConfig();
-    if (!config || !shouldApply(config, 'always')) return;
-    await runWithScope({ windowId: tab.windowId, tabIds: [tabId], reason: 'onUpdated', includeCleanup: false });
+    if (!config) return;
+    if (shouldApply(config, 'always')) {
+      await runWithScope({ windowId: tab.windowId, tabIds: [tabId], reason: 'onUpdated', includeCleanup: false });
+      return;
+    }
+    if (shouldApply(config, 'newTabs') && pendingNewTabIds.has(tabId)) {
+      await runWithScope({ windowId: tab.windowId, tabIds: [tabId], reason: 'onUpdated:newTab', includeCleanup: false });
+      pendingNewTabIds.delete(tabId);
+    }
   })();
 });
 
@@ -155,6 +177,7 @@ chrome.tabs.onActivated.addListener((info) => {
 });
 
 chrome.tabs.onRemoved.addListener((tabId) => {
+  pendingNewTabIds.delete(tabId);
   void removeLastActive(tabId);
 });
 
