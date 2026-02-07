@@ -436,13 +436,13 @@ function App() {
           </button>
         )
       }),
-      columnHelper.accessor('pattern', {
-        header: 'パターン',
-        cell: (ctx) => <span className="badge">{ctx.getValue() || 'Unset'}</span>
-      }),
       columnHelper.accessor('matchMode', {
         header: 'マッチ方式',
         cell: (ctx) => <span className="badge">{ctx.getValue() === 'glob' ? 'glob' : 'regex'}</span>
+      }),
+      columnHelper.accessor('pattern', {
+        header: 'パターン',
+        cell: (ctx) => <span className="badge">{ctx.getValue() || 'Unset'}</span>
       }),
       columnHelper.accessor('color', {
         header: 'ステータス',
@@ -696,6 +696,17 @@ function App() {
                 />
               </div>
               <div>
+                <label className="label">マッチ方式</label>
+                <MatchModeSelect
+                  value={drawerDraft.matchMode}
+                  onChange={(next) => {
+                    setDrawerDraft({ ...drawerDraft, matchMode: next });
+                    setDrawerErrors([]);
+                  }}
+                />
+                <div className="muted">regex か wildcard (glob) を選択してください</div>
+              </div>
+              <div>
                 <label className="label">パターン</label>
                 <input
                   className="input"
@@ -707,17 +718,6 @@ function App() {
                 />
                 <div className="muted">正規表現または文字列パターンを入力してください</div>
                 {drawerPatternRegexError && <div className="field-error">{drawerPatternRegexError}</div>}
-              </div>
-              <div>
-                <label className="label">マッチ方式</label>
-                <MatchModeSelect
-                  value={drawerDraft.matchMode}
-                  onChange={(next) => {
-                    setDrawerDraft({ ...drawerDraft, matchMode: next });
-                    setDrawerErrors([]);
-                  }}
-                />
-                <div className="muted">regex か wildcard (glob) を選択してください</div>
               </div>
               <div>
                 <label className="label">ステータス（色）</label>
