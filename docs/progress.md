@@ -15,9 +15,12 @@
 | 0008 | Diag + CLI | 完了 | `__diag__` API と CLI(plan/apply/snapshot/verify) を実装済み |
 | 0009 | E2E + CI | 完了 | 失敗時diag(state/plan/log)保存・artifact収集・テストユーティリティ単体テストを追加済み |
 | 0010 | Popup + Settings UI modernize | 完了 | Popup導線、Optionsのshadcn系UI統一、Rules D&D+右ドロワー編集、保存フロー/regexバリデーション改善まで実装済み。`pnpm test`/`pnpm build`通過 |
+| 0011 | Rule matching mode (regex/glob) | 未着手 | `rules[].matchMode` を追加し、regex/glob選択を導入する計画を作成済み |
+| 0012 | Dark mode | 未着手 | Popup/Optionsのテーマ切替（light/dark/system）導入計画を作成済み |
+| 0013 | i18n (ja/en) | 未着手 | Popup/Optionsの多言語対応（ja/en）導入計画を作成済み |
 
 ## 現在のフォーカス
-- 次のPBI着手待ち。
+- PBI-0011（regex/globマッチモード）の設計着手待ち。
 
 ## 進捗更新ルール
 - 1コミットごとに、該当PBIの状態変化をこのファイルに反映する。
