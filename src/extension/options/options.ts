@@ -16,6 +16,8 @@ const previewButton = document.getElementById('preview') as HTMLButtonElement;
 const rollbackButton = document.getElementById('rollback') as HTMLButtonElement;
 
 const applyModeSelect = document.getElementById('applyMode') as HTMLSelectElement;
+const fallbackModeSelect = document.getElementById('fallbackMode') as HTMLSelectElement;
+const fallbackGroupInput = document.getElementById('fallbackGroup') as HTMLInputElement;
 const rulesList = document.getElementById('rulesList') as HTMLDivElement;
 const addRuleButton = document.getElementById('addRule') as HTMLButtonElement;
 
@@ -31,7 +33,7 @@ interface HistoryEntry {
 }
 
 let activeTab: 'source' | 'ui' = 'source';
-let uiState: UiState = { applyMode: 'manual', rules: [] };
+let uiState: UiState = { applyMode: 'manual', fallbackGroup: undefined, rules: [] };
 let rawConfig: Record<string, unknown> | null = null;
 
 function renderErrors(messages: string[]) {
@@ -162,6 +164,10 @@ function renderRules() {
 
 function renderUi() {
   applyModeSelect.value = uiState.applyMode;
+  const hasFallback = !!uiState.fallbackGroup;
+  fallbackModeSelect.value = hasFallback ? 'custom' : 'none';
+  fallbackGroupInput.value = uiState.fallbackGroup ?? '';
+  fallbackGroupInput.disabled = !hasFallback;
   renderRules();
 }
 
@@ -307,6 +313,26 @@ async function rollback() {
 
 applyModeSelect.addEventListener('change', () => {
   uiState.applyMode = applyModeSelect.value as UiState['applyMode'];
+  syncYamlFromUi();
+});
+
+fallbackModeSelect.addEventListener('change', () => {
+  const mode = fallbackModeSelect.value;
+  if (mode === 'none') {
+    uiState.fallbackGroup = undefined;
+    fallbackGroupInput.value = '';
+    fallbackGroupInput.disabled = true;
+  } else {
+    fallbackGroupInput.disabled = false;
+    uiState.fallbackGroup = fallbackGroupInput.value.trim();
+  }
+  syncYamlFromUi();
+});
+
+fallbackGroupInput.addEventListener('input', () => {
+  if (fallbackModeSelect.value !== 'custom') return;
+  const value = fallbackGroupInput.value.trim();
+  uiState.fallbackGroup = value.length > 0 ? value : undefined;
   syncYamlFromUi();
 });
 

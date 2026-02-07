@@ -16,6 +16,7 @@ rules:
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.uiState.applyMode).toBe('newTabs');
+    expect(result.uiState.fallbackGroup).toBe('Fallback');
     expect(result.uiState.rules).toHaveLength(1);
     expect(result.uiState.rules[0].pattern).toBe('example\\.com');
     expect(result.rawConfig.fallbackGroup).toBe('Fallback');
@@ -27,19 +28,33 @@ rules:
       vars: { env: 'prod' },
       groups: { Example: { maxTabs: 3 } },
       applyMode: 'manual',
+      fallbackGroup: 'Legacy',
       rules: [{ pattern: 'old', group: 'Old' }]
     };
     const uiState = {
       applyMode: 'always' as const,
+      fallbackGroup: 'Fallback',
       rules: [{ pattern: 'example\\.com', group: 'Example', color: 'blue', priority: 2 }]
     };
     const result = buildYamlFromUi(rawConfig, uiState);
     const parsed = parse(result.yaml) as Record<string, any>;
     expect(parsed.applyMode).toBe('always');
+    expect(parsed.fallbackGroup).toBe('Fallback');
     expect(parsed.vars.env).toBe('prod');
     expect(parsed.groups.Example.maxTabs).toBe(3);
     expect(parsed.rules).toHaveLength(1);
     expect(parsed.rules[0].group).toBe('Example');
     expect(parsed.rules[0].priority).toBe(2);
+  });
+
+  it('treats fallbackGroup none as unset', () => {
+    const yaml = `version: 1
+fallbackGroup: none
+rules: []
+`;
+    const result = parseYamlForUi(yaml);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.uiState.fallbackGroup).toBeUndefined();
   });
 });

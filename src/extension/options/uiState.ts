@@ -10,6 +10,7 @@ export interface RuleForm {
 
 export interface UiState {
   applyMode: 'manual' | 'newTabs' | 'always';
+  fallbackGroup?: string;
   rules: RuleForm[];
 }
 
@@ -51,9 +52,15 @@ export function parseYamlForUi(yamlText: string): UiParseResult {
 
   const rawConfig = raw as Record<string, unknown>;
   const applyMode = (rawConfig.applyMode as UiState['applyMode']) ?? 'manual';
+  const fallbackGroup = (() => {
+    const value = typeof rawConfig.fallbackGroup === 'string' ? rawConfig.fallbackGroup.trim() : '';
+    if (!value) return undefined;
+    if (value.toLowerCase() === 'none') return undefined;
+    return value;
+  })();
   const rules = Array.isArray(rawConfig.rules) ? rawConfig.rules.map(normalizeRule) : [];
 
-  return { ok: true, uiState: { applyMode, rules }, rawConfig };
+  return { ok: true, uiState: { applyMode, fallbackGroup, rules }, rawConfig };
 }
 
 export function buildYamlFromUi(
@@ -65,6 +72,11 @@ export function buildYamlFromUi(
 
   nextConfig.version = 1;
   nextConfig.applyMode = uiState.applyMode;
+  if (uiState.fallbackGroup && uiState.fallbackGroup.trim().length > 0) {
+    nextConfig.fallbackGroup = uiState.fallbackGroup.trim();
+  } else {
+    delete nextConfig.fallbackGroup;
+  }
   nextConfig.rules = uiState.rules.map((rule) => {
     const entry: Record<string, unknown> = {
       pattern: rule.pattern,

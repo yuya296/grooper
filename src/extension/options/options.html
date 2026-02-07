@@ -51,6 +51,8 @@
       .field { margin: 12px 0; }
       .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
       .field select, .field input { padding: 6px 8px; width: 100%; max-width: 360px; }
+      .inline-field { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      .inline-field select, .inline-field input { width: auto; max-width: 360px; }
 
       .rules-header { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
       .rules-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
@@ -97,6 +99,17 @@
           <option value="newTabs">newTabs</option>
           <option value="always">always</option>
         </select>
+      </div>
+      <div class="field">
+        <label for="fallbackMode">fallbackGroup</label>
+        <div class="inline-field">
+          <select id="fallbackMode">
+            <option value="none">none</option>
+            <option value="custom">custom</option>
+          </select>
+          <input id="fallbackGroup" placeholder="Group name" />
+        </div>
+        <div class="hint">noneなら未設定として扱います。</div>
       </div>
 
       <div class="rules-header">
