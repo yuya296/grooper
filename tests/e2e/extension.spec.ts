@@ -16,6 +16,7 @@ async function launchExtension(testInfo: { outputPath: (name?: string) => string
     headless,
     ignoreDefaultArgs: ['--disable-extensions'],
     args: [
+      '--enable-extensions',
       `--disable-extensions-except=${extensionPath}`,
       `--load-extension=${extensionPath}`
     ]
