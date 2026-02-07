@@ -453,8 +453,8 @@ function App() {
 
         <Tabs.Content value="ui">
           <div className="panel stack">
-            <div className="inline">
-              <div>
+            <div className="settings-row">
+              <div className="field-block">
                 <label className="label" htmlFor="applyMode">
                   applyMode
                 </label>
@@ -463,12 +463,12 @@ function App() {
                   onChange={(next) => syncFromUi({ ...uiState, applyMode: next })}
                 />
               </div>
-              <div>
+              <div className="field-block">
                 <label className="label" htmlFor="fallbackEnabled">
                   fallbackGroup
                 </label>
-                <div className="inline">
-                  <label className="inline" htmlFor="fallbackEnabled">
+                <div className="fallback-controls">
+                  <label className="fallback-toggle" htmlFor="fallbackEnabled">
                     <Switch.Root
                       id="fallbackEnabled"
                       className="switch-root"
@@ -486,7 +486,7 @@ function App() {
                   </label>
                   <input
                     id="fallbackGroup"
-                    className="input"
+                    className="input fallback-input"
                     placeholder="Fallback GroupName"
                     value={uiState.fallbackGroup ?? ''}
                     disabled={uiState.fallbackGroup === undefined}
@@ -494,18 +494,20 @@ function App() {
                   />
                 </div>
               </div>
-              <button
-                type="button"
-                className="btn"
-                onClick={() =>
-                  syncFromUi({
-                    ...uiState,
-                    rules: [...uiState.rules, { pattern: '', group: '', color: undefined, priority: undefined }]
-                  })
-                }
-              >
-                ルール追加
-              </button>
+              <div className="add-rule-wrap">
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() =>
+                    syncFromUi({
+                      ...uiState,
+                      rules: [...uiState.rules, { pattern: '', group: '', color: undefined, priority: undefined }]
+                    })
+                  }
+                >
+                  ルール追加
+                </button>
+              </div>
             </div>
             <div className="muted">Groupクリックで詳細編集。左端ハンドルで並び替えできます。</div>
             <div className="grid">
