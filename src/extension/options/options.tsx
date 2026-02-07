@@ -335,28 +335,28 @@ function App() {
               </select>
             </div>
             <div>
-              <label className="label" htmlFor="fallbackMode">
+              <label className="label" htmlFor="fallbackEnabled">
                 fallbackGroup
               </label>
               <div className="inline">
-                <select
-                  id="fallbackMode"
-                  className="select"
-                  value={uiState.fallbackGroup ? 'custom' : 'none'}
-                  onChange={(e) => {
-                    if (e.currentTarget.value === 'none') {
-                      syncFromUi({ ...uiState, fallbackGroup: undefined });
-                    } else {
-                      syncFromUi({ ...uiState, fallbackGroup: uiState.fallbackGroup ?? '' });
+                <label className="inline" htmlFor="fallbackEnabled">
+                  <input
+                    id="fallbackEnabled"
+                    type="checkbox"
+                    checked={uiState.fallbackGroup !== undefined}
+                    onChange={(e) =>
+                      syncFromUi({
+                        ...uiState,
+                        fallbackGroup: e.currentTarget.checked ? uiState.fallbackGroup ?? '' : undefined
+                      })
                     }
-                  }}
-                >
-                  <option value="none">none</option>
-                  <option value="custom">custom</option>
-                </select>
+                  />
+                  <span className="muted">Fallbackを有効化</span>
+                </label>
                 <input
+                  id="fallbackGroup"
                   className="input"
-                  placeholder="Group name"
+                  placeholder="Fallback GroupName"
                   value={uiState.fallbackGroup ?? ''}
                   disabled={uiState.fallbackGroup === undefined}
                   onChange={(e) => syncFromUi({ ...uiState, fallbackGroup: e.currentTarget.value })}
