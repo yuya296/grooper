@@ -14,9 +14,10 @@
 | 0007 | Options UI v2 | 完了 | プレビュー/履歴/ロールバック実装に加え、運用手順の文書化と補強テストを追加済み |
 | 0008 | Diag + CLI | 完了 | `__diag__` API と CLI(plan/apply/snapshot/verify) を実装済み |
 | 0009 | E2E + CI | 完了 | 失敗時diag(state/plan/log)保存・artifact収集・テストユーティリティ単体テストを追加済み |
+| 0010 | Popup + Settings UI modernize | 未着手 | Popupの設定導線追加とOptions UIモダナイズのPBIを起票済み |
 
 ## 現在のフォーカス
-- 保守フェーズ: 既存PBIの回帰監視と必要時の改善を継続する。
+- PBI-0010の設計: Popup導線追加とUIライブラリ選定を含むモダナイズ方針を確定する。
 
 ## 進捗更新ルール
 - 1コミットごとに、該当PBIの状態変化をこのファイルに反映する。
