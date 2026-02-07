@@ -159,7 +159,12 @@ test('parent follow', async ({}, testInfo) => {
     await parent.goto('https://example.com/parent');
     await diag(worker, { command: 'runOnce', payload: { dryRun: false } });
 
+    // Wait for the new page to be created when window.open is called
+    const pagePromise = context.waitForEvent('page');
     await parent.evaluate(() => window.open('https://child.com', '_blank'));
+    const childPage = await pagePromise;
+    await childPage.waitForLoadState();
+    
     await diag(worker, { command: 'runOnce', payload: { dryRun: false } });
     const state = await diag<any>(worker, { command: 'getState' });
     const child = state.state.tabs.find((tab: any) => tab.url?.includes('child.com'));
