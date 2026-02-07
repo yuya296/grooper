@@ -30,6 +30,12 @@
         --toast-border: #d1fae5;
         --toast-bg: #ecfdf5;
         --toast-text: #065f46;
+        --cm-bg: #ffffff;
+        --cm-text: #0f172a;
+        --cm-gutter-bg: #f8fafc;
+        --cm-gutter-text: #64748b;
+        --cm-cursor: #0f172a;
+        --cm-selection: rgba(59, 130, 246, 0.22);
       }
       :root[data-theme="dark"] {
         --bg: #020617;
@@ -56,6 +62,12 @@
         --toast-border: #166534;
         --toast-bg: #052e1f;
         --toast-text: #86efac;
+        --cm-bg: #020817;
+        --cm-text: #e2e8f0;
+        --cm-gutter-bg: #0b1220;
+        --cm-gutter-text: #94a3b8;
+        --cm-cursor: #e2e8f0;
+        --cm-selection: rgba(148, 163, 184, 0.28);
       }
       * { box-sizing: border-box; }
       body {
@@ -278,15 +290,34 @@
         border: 1px solid var(--border);
         border-radius: 10px;
         overflow: hidden;
-        background: #fff;
+        background: var(--cm-bg);
       }
       .cm-host .cm-editor {
         min-height: 360px;
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
         font-size: 13px;
+        background: var(--cm-bg);
+        color: var(--cm-text);
       }
       .cm-host .cm-scroller {
         min-height: 360px;
+      }
+      .cm-host .cm-gutters {
+        background: var(--cm-gutter-bg);
+        color: var(--cm-gutter-text);
+        border-right: 1px solid var(--border);
+      }
+      .cm-host .cm-activeLine,
+      .cm-host .cm-activeLineGutter {
+        background: var(--soft);
+      }
+      .cm-host .cm-content::selection,
+      .cm-host .cm-line ::selection,
+      .cm-host .cm-selectionBackground {
+        background: var(--cm-selection);
+      }
+      .cm-host .cm-cursor {
+        border-left-color: var(--cm-cursor);
       }
       .inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
       .settings-row {
