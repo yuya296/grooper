@@ -149,6 +149,26 @@
       }
       .btn-primary { background: var(--accent); color: var(--accent-foreground); border-color: var(--accent); }
       .btn-ghost { background: transparent; }
+      .theme-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 6px 10px;
+      }
+      .theme-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+      }
+      .theme-icon.active {
+        background: var(--soft);
+        color: var(--text);
+      }
       .tabs {
         display: flex;
         gap: 2px;
@@ -323,7 +343,7 @@
       .inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
       .settings-row {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
         align-items: end;
       }

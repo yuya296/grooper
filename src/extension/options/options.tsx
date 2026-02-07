@@ -157,43 +157,6 @@ function MatchModeSelect({
   );
 }
 
-function ThemeModeSelect({
-  value,
-  onChange
-}: {
-  value: ThemeMode;
-  onChange: (next: ThemeMode) => void;
-}) {
-  const labels: Record<ThemeMode, string> = {
-    system: 'system',
-    light: 'light',
-    dark: 'dark'
-  };
-  return (
-    <Select.Root value={value} onValueChange={(next) => onChange(next as ThemeMode)}>
-      <Select.Trigger className="select-trigger" aria-label="themeMode">
-        <Select.Value>{labels[value]}</Select.Value>
-        <Select.Icon className="select-icon">▾</Select.Icon>
-      </Select.Trigger>
-      <Select.Portal>
-        <Select.Content className="select-content" position="popper" sideOffset={6}>
-          <Select.Viewport className="select-viewport">
-            <Select.Item className="select-item" value="system">
-              <Select.ItemText>{labels.system}</Select.ItemText>
-            </Select.Item>
-            <Select.Item className="select-item" value="light">
-              <Select.ItemText>{labels.light}</Select.ItemText>
-            </Select.Item>
-            <Select.Item className="select-item" value="dark">
-              <Select.ItemText>{labels.dark}</Select.ItemText>
-            </Select.Item>
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
-    </Select.Root>
-  );
-}
-
 interface RuleRow extends RuleForm {
   rowId: string;
 }
@@ -303,6 +266,17 @@ function App() {
   async function updateThemeMode(next: ThemeMode) {
     setThemeMode(next);
     await chrome.storage.local.set({ [THEME_MODE_KEY]: next });
+  }
+
+  const isDarkResolved =
+    themeMode === 'dark' ||
+    (themeMode === 'system' &&
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  async function toggleThemeMode() {
+    await updateThemeMode(isDarkResolved ? 'light' : 'dark');
   }
 
   const hasUnsavedChanges = yamlText !== savedYamlText;
@@ -572,6 +546,20 @@ function App() {
           <h1 className="title">設定</h1>
         </div>
         <div className="actions">
+          <button
+            className="btn btn-ghost theme-toggle"
+            type="button"
+            onClick={() => void toggleThemeMode()}
+            aria-label="テーマ切替"
+            title={isDarkResolved ? 'dark' : 'light'}
+          >
+            <span className={`theme-icon ${!isDarkResolved ? 'active' : ''}`} aria-hidden>
+              ☀
+            </span>
+            <span className={`theme-icon ${isDarkResolved ? 'active' : ''}`} aria-hidden>
+              ☾
+            </span>
+          </button>
           <span className={`save-hint ${hasUnsavedChanges ? 'dirty' : 'clean'}`}>
             {hasUnsavedChanges ? '未保存の変更があります（保存するまで設定は反映されません）' : '保存済み'}
           </span>
@@ -662,12 +650,6 @@ function App() {
                     />
                   )}
                 </div>
-              </div>
-              <div className="field-block">
-                <label className="label" htmlFor="themeMode">
-                  テーマ
-                </label>
-                <ThemeModeSelect value={themeMode} onChange={(next) => void updateThemeMode(next)} />
               </div>
             </div>
             <div className="rules-head">
