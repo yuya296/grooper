@@ -248,3 +248,8 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     }
   })();
 });
+
+// Expose diagnostics handler for tests
+if (__DIAGNOSTICS__) {
+  (globalThis as any).__handleDiag__ = handleDiag;
+}
