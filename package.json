@@ -7,7 +7,6 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "DIAGNOSTICS=1 pnpm build && playwright test",
-    "e2e:headless": "PW_HEADLESS=1 DIAGNOSTICS=1 pnpm build && playwright test",
     "lint": "node scripts/lint.mjs"
   },
   "bin": {
