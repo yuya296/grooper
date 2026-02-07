@@ -25,6 +25,13 @@ import { parseConfigYaml } from '../../core/config.js';
 import { validateGroupTemplateForMatchMode } from '../../core/rule-template.js';
 import type { MatchMode } from '../../core/types.js';
 import { buildYamlFromUi, parseYamlForUi, type RuleForm, type UiState } from './uiState.js';
+import {
+  DEFAULT_THEME_MODE,
+  THEME_MODE_KEY,
+  applyTheme,
+  loadThemeMode,
+  type ThemeMode
+} from '../theme.js';
 
 const NONE_COLOR = '__none__';
 const GROUP_COLORS = [
@@ -150,6 +157,43 @@ function MatchModeSelect({
   );
 }
 
+function ThemeModeSelect({
+  value,
+  onChange
+}: {
+  value: ThemeMode;
+  onChange: (next: ThemeMode) => void;
+}) {
+  const labels: Record<ThemeMode, string> = {
+    system: 'system',
+    light: 'light',
+    dark: 'dark'
+  };
+  return (
+    <Select.Root value={value} onValueChange={(next) => onChange(next as ThemeMode)}>
+      <Select.Trigger className="select-trigger" aria-label="themeMode">
+        <Select.Value>{labels[value]}</Select.Value>
+        <Select.Icon className="select-icon">▾</Select.Icon>
+      </Select.Trigger>
+      <Select.Portal>
+        <Select.Content className="select-content" position="popper" sideOffset={6}>
+          <Select.Viewport className="select-viewport">
+            <Select.Item className="select-item" value="system">
+              <Select.ItemText>{labels.system}</Select.ItemText>
+            </Select.Item>
+            <Select.Item className="select-item" value="light">
+              <Select.ItemText>{labels.light}</Select.ItemText>
+            </Select.Item>
+            <Select.Item className="select-item" value="dark">
+              <Select.ItemText>{labels.dark}</Select.ItemText>
+            </Select.Item>
+          </Select.Viewport>
+        </Select.Content>
+      </Select.Portal>
+    </Select.Root>
+  );
+}
+
 interface RuleRow extends RuleForm {
   rowId: string;
 }
@@ -232,6 +276,7 @@ function App() {
   const [overDragId, setOverDragId] = useState<string | null>(null);
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [themeMode, setThemeMode] = useState<ThemeMode>(DEFAULT_THEME_MODE);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
@@ -241,8 +286,24 @@ function App() {
       const loadedYaml = (configResult.configYaml as string) ?? '';
       setYamlText(loadedYaml);
       setSavedYamlText(loadedYaml);
+      const loadedTheme = await loadThemeMode();
+      setThemeMode(loadedTheme);
+      applyTheme(loadedTheme, document, window.matchMedia('(prefers-color-scheme: dark)').matches);
     })();
   }, []);
+
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const apply = () => applyTheme(themeMode, document, media.matches);
+    apply();
+    media.addEventListener('change', apply);
+    return () => media.removeEventListener('change', apply);
+  }, [themeMode]);
+
+  async function updateThemeMode(next: ThemeMode) {
+    setThemeMode(next);
+    await chrome.storage.local.set({ [THEME_MODE_KEY]: next });
+  }
 
   const hasUnsavedChanges = yamlText !== savedYamlText;
 
@@ -601,6 +662,12 @@ function App() {
                     />
                   )}
                 </div>
+              </div>
+              <div className="field-block">
+                <label className="label" htmlFor="themeMode">
+                  テーマ
+                </label>
+                <ThemeModeSelect value={themeMode} onChange={(next) => void updateThemeMode(next)} />
               </div>
             </div>
             <div className="rules-head">

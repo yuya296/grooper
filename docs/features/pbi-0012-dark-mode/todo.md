@@ -1,11 +1,15 @@
 # Tasks
 
-- [ ] 設計: テーマ設定値（light/dark/system）と保存先を定義
-- [ ] 実装: テーマトークン・クラス切替ロジックを導入
-- [ ] 実装: Popup/Optionsの主要コンポーネント配色をダーク対応
-- [ ] テスト: テーマ切替の永続化と主要画面の表示崩れを確認
-- [ ] docs更新: 設定項目と確認手順を反映
+- [x] 設計: テーマ設定値（light/dark/system）と保存先を定義
+- [x] 実装: テーマトークン・クラス切替ロジックを導入
+- [x] 実装: Popup/Optionsの主要コンポーネント配色をダーク対応
+- [x] テスト: テーマ切替の永続化と主要画面の表示崩れを確認
+- [x] docs更新: 設定項目と確認手順を反映
 
 # Updates
 
 - 2026-02-07: PBI起票。ダークモードをテーマ設定として独立導入する方針を整理。
+- 2026-02-07: `themeMode`（system/light/dark）を `chrome.storage.local` へ保存する方式で導入。
+- 2026-02-07: Optionsにテーマ選択UIを追加し、Popup/Optionsの表示テーマを即時反映する処理を実装。
+- 2026-02-07: Popup/OptionsのCSSトークンを `data-theme` ベースでダーク対応。
+- 2026-02-07: `tests/extension/theme.test.ts` を追加。`pnpm test` / `pnpm build` 通過、台帳を `要確認` へ更新。
