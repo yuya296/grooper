@@ -33,7 +33,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps
-      - run: pnpm e2e
+      - run: xvfb-run pnpm e2e
       - if: failure()
         uses: actions/upload-artifact@v4
         with:

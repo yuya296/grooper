@@ -11,7 +11,9 @@ const extensionPath = path.resolve(__dirname, '../../dist/extension');
 
 async function launchExtension(testInfo: { outputPath: (name?: string) => string }) {
   const userDataDir = testInfo.outputPath('user-data');
-  const headless = process.env.PW_HEADLESS === '1';
+  // Chrome extensions don't work properly in new headless mode
+  // Use headed mode in CI with xvfb-run, or headed locally
+  const headless = false;
   const executablePath = await resolveChromiumExecutable();
   const launchOptions: Parameters<typeof chromium.launchPersistentContext>[1] = {
     headless,
@@ -29,7 +31,20 @@ async function launchExtension(testInfo: { outputPath: (name?: string) => string
   }
   const context = await chromium.launchPersistentContext(userDataDir, launchOptions);
 
-  const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+  // Wait for service worker to be ready
+  let worker = context.serviceWorkers()[0];
+  if (!worker) {
+    // Open a page to trigger extension activation
+    const page = await context.newPage();
+    await page.goto('about:blank');
+    // Wait for service worker event with timeout
+    worker = await context.waitForEvent('serviceworker', { timeout: 10000 });
+    await page.close();
+  }
+  
+  // Give the service worker time to fully initialize and register message listeners
+  await worker.evaluate(() => new Promise(resolve => setTimeout(resolve, 1000)));
+  
   return { context, worker };
 }
 
@@ -57,8 +72,14 @@ async function resolveChromiumExecutable() {
 }
 
 async function diag<T>(worker: import('@playwright/test').Worker, request: any): Promise<T> {
+  // Instead of sending a message to itself, directly evaluate the diagnostic handler
   return await worker.evaluate(async (payload) => {
-    return await chrome.runtime.sendMessage({ __diag__: payload });
+    // Import types needed for evaluation
+    const handleDiag = (globalThis as any).__handleDiag__;
+    if (!handleDiag) {
+      throw new Error('Diagnostics handler not available');
+    }
+    return await handleDiag(payload);
   }, request);
 }
 
