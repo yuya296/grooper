@@ -14,7 +14,7 @@
 | 0002 Rule eval | P0 | 0001 | 完了 | 競合解決はpriority降順→YAML順、評価順は親子→パターン→フォールバック |
 | 0003 Apply modes | P0 | 0001 | 完了 | alwaysは低頻度スキャン併用、無限ループ回避を必須化 |
 | 0004 Auto cleanup | P0 | 0001 | 完了 | Clock抽象化はこのPBIで導入固定 |
-| 0006 Options UI v1 | P1 | 0001 | 進行中 | UIはYAML編集/検証/インポート/エクスポートを中心に段階拡張 |
+| 0006 Options UI v1 | P1 | 0001 | 完了 | YAML編集/検証/インポート/エクスポートと設定編集フロー文書化まで完了 |
 | 0008 Diag + CLI | P1 | 0001 | 完了 | 診断APIは開発/CI限定、CLIはplan/apply/snapshot/verifyのみ |
 | 0005 Shortcuts | P2 | 0001 | 完了 | ショートカットの割当はYAMLのみ（UI設定はPBI-0006以降） |
 | 0007 Options UI v2 | P2 | 0006 | 進行中 | プレビュー/履歴/ロールバックに限定 |
