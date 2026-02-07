@@ -38,6 +38,10 @@
 - 代替:
   - フォーム/フィードバック部品の即戦力を優先するなら `Chakra UI + dnd-kit`
   - 企業向け標準化重視なら `MUI + dnd-kit`
+- 合意事項:
+  - Rules一覧は shadcnベースのテーブルUIを採用する。
+  - 行の並び替えは D&D を有効化する。
+  - タイトルクリックで右サイドパネルを開き、項目詳細を編集できるようにする。
 
 ## 5. UI構成設計
 
@@ -54,9 +58,11 @@
   - 左: 設定ナビ（Source/UI/Advanced）
   - 右: 編集エリア
 - Rules編集:
-  - 各ルールをCard化
-  - D&Dハンドルで並び替え
-  - 追加/削除/複製を明示ボタン化
+  - shadcnテーブルで一覧表示（列: Header/Section Type/Status/Target/Limit/Reviewer）
+  - 先頭列にD&Dハンドルを配置し、ドラッグで優先順を変更
+  - タイトルセルクリックで右サイドパネルを開く
+  - サイドパネルで詳細編集（type/status/target/limit/reviewer 等）
+  - 追加/削除/複製をテーブル上のアクションで提供
 
 ## 6. 技術設計（実装前提）
 
@@ -72,5 +78,5 @@
 
 - AC1: Popup Secondary Actionで `chrome.runtime.openOptionsPage()` 到達
 - AC2: Options主要操作（Validate/Save/Preview/Rollback）を回帰維持
-- AC3: 候補比較表と採用理由を本設計に記録
+- AC3: 候補比較表と採用理由、Rules編集UI（テーブル+D&D+サイドパネル）を本設計に記録
 - AC4: `pnpm test`, `pnpm build` を通過
