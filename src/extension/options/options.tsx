@@ -266,35 +266,6 @@ function App() {
     setToastOpen(true);
   }
 
-  async function exportYaml() {
-    try {
-      await navigator.clipboard.writeText(yamlText);
-      setErrors(['クリップボードにコピーしました']);
-    } catch {
-      const exported = prompt('YAMLをコピーしてください', yamlText);
-      if (exported != null) setErrors(['エクスポートしました']);
-    }
-  }
-
-  function importYaml() {
-    const imported = prompt('YAMLを貼り付けてください');
-    if (imported == null) return;
-    setYamlText(imported);
-    const result = parseConfigYaml(imported);
-    if (result.errors.length > 0) {
-      setErrors(result.errors.map((e) => `${e.path}: ${e.message}`));
-      return;
-    }
-    setErrors(['OK']);
-    if (activeTab === 'ui') {
-      const uiParse = parseYamlForUi(imported);
-      if (uiParse.ok) {
-        setUiState(uiParse.uiState);
-        setRawConfig(uiParse.rawConfig);
-      }
-    }
-  }
-
   function onDragStart(event: DragStartEvent) {
     setActiveDragId(String(event.active.id));
     setOverDragId(String(event.active.id));
@@ -408,12 +379,6 @@ function App() {
           </button>
           <button className="btn btn-primary" type="button" onClick={() => void saveYaml()}>
             保存
-          </button>
-          <button className="btn" type="button" onClick={() => void exportYaml()}>
-            エクスポート
-          </button>
-          <button className="btn" type="button" onClick={() => importYaml()}>
-            インポート
           </button>
         </div>
       </div>
