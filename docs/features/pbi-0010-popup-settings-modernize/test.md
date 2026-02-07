@@ -7,6 +7,7 @@
 ## Preconditions
 
 - [ ] UIライブラリ採用方針が確定している
+- [ ] D&D実装方式（標準機能のみ or `dnd-kit`併用）が確定している
 - [ ] Options UIの主要操作（Validate/Save/Preview/Rollback）が実装済み
 
 ## CLI Checks
