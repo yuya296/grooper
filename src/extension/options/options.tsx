@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import * as Select from '@radix-ui/react-select';
 import * as Switch from '@radix-ui/react-switch';
 import * as Tabs from '@radix-ui/react-tabs';
+import * as Toast from '@radix-ui/react-toast';
 import {
   DndContext,
   DragOverlay,
@@ -140,6 +141,8 @@ function App() {
   const [selectedRuleIndex, setSelectedRuleIndex] = useState<number | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [overDragId, setOverDragId] = useState<string | null>(null);
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
@@ -208,6 +211,8 @@ function App() {
     if (!result.ok) return;
     await chrome.storage.local.set({ configYaml: yamlText });
     setErrors(['保存しました']);
+    setToastMessage('設定を保存しました');
+    setToastOpen(true);
   }
 
   async function exportYaml() {
@@ -340,7 +345,8 @@ function App() {
   }, [isDrawerOpen]);
 
   return (
-    <div className="card">
+    <Toast.Provider swipeDirection="right">
+      <div className="card">
       <div className="header">
         <div className="title-wrap">
           <h1 className="title">設定</h1>
@@ -563,7 +569,12 @@ function App() {
           )}
         </div>
       </aside>
+      <Toast.Root className="toast-root" open={toastOpen} onOpenChange={setToastOpen} duration={2200}>
+        <Toast.Title className="toast-title">{toastMessage}</Toast.Title>
+      </Toast.Root>
+      <Toast.Viewport className="toast-viewport" />
     </div>
+    </Toast.Provider>
   );
 }
 
