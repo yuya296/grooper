@@ -1,6 +1,7 @@
 import { parseConfigYaml } from '../../core/config.js';
 import { createPlan } from '../../core/planner.js';
 import type { StateSnapshot } from '../../core/types.js';
+import { appendHistoryEntry, formatPreviewActions, popLatestHistory, type HistoryEntry } from './advanced.js';
 import { buildYamlFromUi, parseYamlForUi, type RuleForm, type UiState } from './uiState.js';
 
 const yamlArea = document.getElementById('yaml') as HTMLTextAreaElement;
@@ -26,11 +27,6 @@ const tabSource = document.getElementById('tab-source') as HTMLDivElement;
 const tabUi = document.getElementById('tab-ui') as HTMLDivElement;
 
 const HISTORY_KEY = 'configHistory';
-
-interface HistoryEntry {
-  timestamp: string;
-  yaml: string;
-}
 
 let activeTab: 'source' | 'ui' = 'source';
 let uiState: UiState = { applyMode: 'manual', fallbackGroup: undefined, rules: [] };
@@ -200,8 +196,7 @@ async function getHistory(): Promise<HistoryEntry[]> {
 
 async function saveHistory(previousYaml: string) {
   const history = await getHistory();
-  const entry: HistoryEntry = { timestamp: new Date().toISOString(), yaml: previousYaml };
-  const next = [entry, ...history].slice(0, 20);
+  const next = appendHistoryEntry(history, previousYaml, new Date().toISOString());
   await chrome.storage.local.set({ [HISTORY_KEY]: next });
 }
 
@@ -287,27 +282,21 @@ async function previewPlan() {
     previewOutput.textContent = '変更はありません。';
     return;
   }
-  previewOutput.textContent = plan.actions
-    .map((action) => {
-      if (action.type === 'moveTab') return `move tab ${action.tabId} -> ${action.group}`;
-      if (action.type === 'ensureGroup') return `ensure group ${action.group}`;
-      if (action.type === 'closeTab') return `close tab ${action.tabId} (${action.reason})`;
-      return `${action.type}`;
-    })
-    .join('\n');
+  previewOutput.textContent = formatPreviewActions(plan.actions);
 }
 
 async function rollback() {
   const entries = await getHistory();
-  if (entries.length === 0) {
+  const result = popLatestHistory(entries);
+  if (!result) {
     renderErrors(['履歴がありません']);
     return;
   }
-  const latest = entries[0];
+  const { latest, remaining } = result;
   yamlArea.value = latest.yaml;
-  await chrome.storage.local.set({ configYaml: latest.yaml });
+  await chrome.storage.local.set({ configYaml: latest.yaml, [HISTORY_KEY]: remaining });
   renderErrors(['直前の履歴へロールバックしました']);
-  renderHistory(entries.slice(1));
+  renderHistory(remaining);
   if (activeTab === 'ui') syncUiFromYaml();
 }
 
