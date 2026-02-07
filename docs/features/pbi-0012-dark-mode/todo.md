@@ -13,3 +13,4 @@
 - 2026-02-07: Optionsにテーマ選択UIを追加し、Popup/Optionsの表示テーマを即時反映する処理を実装。
 - 2026-02-07: Popup/OptionsのCSSトークンを `data-theme` ベースでダーク対応。
 - 2026-02-07: `tests/extension/theme.test.ts` を追加。`pnpm test` / `pnpm build` 通過、台帳を `要確認` へ更新。
+- 2026-02-07: ダークモード時に文字・ボタン・トースト等の配色がライト固定になる問題をトークン化で修正。
