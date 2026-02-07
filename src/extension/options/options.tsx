@@ -190,7 +190,9 @@ function App() {
   const [errors, setErrors] = useState<string[]>([]);
   const [uiState, setUiState] = useState<UiState>({ applyMode: 'manual', fallbackGroup: undefined, rules: [] });
   const [rawConfig, setRawConfig] = useState<Record<string, unknown> | null>(null);
-  const [selectedRuleIndex, setSelectedRuleIndex] = useState<number | null>(null);
+  const [drawerRuleIndex, setDrawerRuleIndex] = useState<number | null>(null);
+  const [drawerDraft, setDrawerDraft] = useState<RuleForm | null>(null);
+  const [drawerErrors, setDrawerErrors] = useState<string[]>([]);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [overDragId, setOverDragId] = useState<string | null>(null);
   const [toastOpen, setToastOpen] = useState(false);
@@ -251,15 +253,65 @@ function App() {
     setActiveTab(nextTab);
   }
 
-  function updateRule(index: number, patch: Partial<RuleForm>) {
-    const nextRules = uiState.rules.map((rule, i) => (i === index ? { ...rule, ...patch } : rule));
-    syncFromUi({ ...uiState, rules: nextRules });
+  function openCreateRuleDrawer() {
+    setDrawerRuleIndex(null);
+    setDrawerDraft({ pattern: '', group: '', color: undefined, priority: undefined });
+    setDrawerErrors([]);
+  }
+
+  function openEditRuleDrawer(index: number) {
+    const rule = uiState.rules[index];
+    if (!rule) return;
+    setDrawerRuleIndex(index);
+    setDrawerDraft({ ...rule });
+    setDrawerErrors([]);
+  }
+
+  function closeDrawer() {
+    setDrawerRuleIndex(null);
+    setDrawerDraft(null);
+    setDrawerErrors([]);
+  }
+
+  function validateRuleDraft(rule: RuleForm) {
+    const nextErrors: string[] = [];
+    if (!rule.group.trim()) nextErrors.push('グループ名は必須です');
+    if (!rule.pattern.trim()) nextErrors.push('パターンは必須です');
+    return nextErrors;
+  }
+
+  function saveDrawerRule() {
+    if (!drawerDraft) return;
+    const nextErrors = validateRuleDraft(drawerDraft);
+    if (nextErrors.length > 0) {
+      setDrawerErrors(nextErrors);
+      return;
+    }
+    const normalizedRule: RuleForm = {
+      group: drawerDraft.group.trim(),
+      pattern: drawerDraft.pattern.trim(),
+      color: drawerDraft.color,
+      priority: undefined
+    };
+    if (drawerRuleIndex == null) {
+      syncFromUi({ ...uiState, rules: [...uiState.rules, normalizedRule] });
+    } else {
+      const nextRules = uiState.rules.map((rule, index) => (index === drawerRuleIndex ? normalizedRule : rule));
+      syncFromUi({ ...uiState, rules: nextRules });
+    }
+    closeDrawer();
   }
 
   function removeRule(index: number) {
     const nextRules = uiState.rules.filter((_, i) => i !== index);
     syncFromUi({ ...uiState, rules: nextRules });
-    if (selectedRuleIndex === index) setSelectedRuleIndex(null);
+    if (drawerRuleIndex === index) {
+      closeDrawer();
+      return;
+    }
+    if (drawerRuleIndex != null && drawerRuleIndex > index) {
+      setDrawerRuleIndex(drawerRuleIndex - 1);
+    }
   }
 
   function validateYaml() {
@@ -301,8 +353,14 @@ function App() {
     if (!Number.isFinite(fromIndex) || !Number.isFinite(toIndex)) return;
     const nextRules = arrayMove(uiState.rules, fromIndex, toIndex);
     syncFromUi({ ...uiState, rules: nextRules });
-    if (selectedRuleIndex != null) {
-      if (selectedRuleIndex === fromIndex) setSelectedRuleIndex(toIndex);
+    if (drawerRuleIndex != null) {
+      if (drawerRuleIndex === fromIndex) {
+        setDrawerRuleIndex(toIndex);
+      } else if (fromIndex < drawerRuleIndex && drawerRuleIndex <= toIndex) {
+        setDrawerRuleIndex(drawerRuleIndex - 1);
+      } else if (toIndex <= drawerRuleIndex && drawerRuleIndex < fromIndex) {
+        setDrawerRuleIndex(drawerRuleIndex + 1);
+      }
     }
   }
 
@@ -323,7 +381,7 @@ function App() {
       columnHelper.accessor('group', {
         header: 'グループ',
         cell: ({ row }) => (
-          <button type="button" className="row-title" onClick={() => setSelectedRuleIndex(row.index)}>
+          <button type="button" className="row-title" onClick={() => openEditRuleDrawer(row.index)}>
             {row.original.group || `Group ${row.index + 1}`}
           </button>
         )
@@ -369,14 +427,16 @@ function App() {
     getCoreRowModel: getCoreRowModel()
   });
 
-  const selectedRule = selectedRuleIndex != null ? uiState.rules[selectedRuleIndex] : undefined;
-  const isDrawerOpen = selectedRuleIndex != null;
+  const isDrawerOpen = drawerDraft != null;
+  const isDrawerSaveDisabled =
+    !drawerDraft || drawerDraft.group.trim().length === 0 || drawerDraft.pattern.trim().length === 0;
+  const drawerTitle = drawerRuleIndex == null ? 'ルール追加' : 'ルール編集';
   const activeDragRow = activeDragId != null ? ruleRows.find((row) => row.rowId === activeDragId) : undefined;
 
   useEffect(() => {
     if (!isDrawerOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setSelectedRuleIndex(null);
+      if (event.key === 'Escape') closeDrawer();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
@@ -488,12 +548,7 @@ function App() {
                 <button
                   type="button"
                   className="btn btn-primary"
-                  onClick={() =>
-                    syncFromUi({
-                      ...uiState,
-                      rules: [...uiState.rules, { pattern: '', group: '', color: undefined, priority: undefined }]
-                    })
-                  }
+                  onClick={openCreateRuleDrawer}
                 >
                   ＋
                 </button>
@@ -558,50 +613,53 @@ function App() {
 
       <div
         className={`drawer-backdrop ${isDrawerOpen ? 'open' : ''}`}
-        onClick={() => setSelectedRuleIndex(null)}
+        onClick={closeDrawer}
         aria-hidden={!isDrawerOpen}
       />
       <aside className={`drawer ${isDrawerOpen ? 'open' : ''}`} aria-hidden={!isDrawerOpen}>
         <div className="drawer-head">
-          <h3 className="side-title">ルール編集</h3>
-          <button type="button" className="icon-btn" onClick={() => setSelectedRuleIndex(null)} aria-label="閉じる">
+          <h3 className="side-title">{drawerTitle}</h3>
+          <button type="button" className="icon-btn" onClick={closeDrawer} aria-label="閉じる">
             ×
           </button>
         </div>
         <div className="drawer-body">
-          {!selectedRule && <div className="muted">グループをクリックして選択してください。</div>}
-          {selectedRule && (
+          {drawerDraft && (
             <div className="stack">
               <div>
                 <label className="label">グループ名</label>
                 <input
                   className="input"
-                  value={selectedRule.group}
-                  onChange={(e) => updateRule(selectedRuleIndex!, { group: e.currentTarget.value })}
+                  value={drawerDraft.group}
+                  onChange={(e) => {
+                    setDrawerDraft({ ...drawerDraft, group: e.currentTarget.value });
+                    setDrawerErrors([]);
+                  }}
                 />
               </div>
               <div>
                 <label className="label">パターン</label>
                 <input
                   className="input"
-                  value={selectedRule.pattern}
-                  onChange={(e) => updateRule(selectedRuleIndex!, { pattern: e.currentTarget.value })}
+                  value={drawerDraft.pattern}
+                  onChange={(e) => {
+                    setDrawerDraft({ ...drawerDraft, pattern: e.currentTarget.value });
+                    setDrawerErrors([]);
+                  }}
                 />
                 <div className="muted">正規表現または文字列パターンを入力してください</div>
               </div>
               <div>
                 <label className="label">ステータス（色）</label>
-                <ColorSelect
-                  value={selectedRule.color}
-                  onChange={(next) => updateRule(selectedRuleIndex!, { color: next })}
-                />
+                <ColorSelect value={drawerDraft.color} onChange={(next) => setDrawerDraft({ ...drawerDraft, color: next })} />
                 <div className="muted">Chrome タブグループの色を選択</div>
               </div>
+              {drawerErrors.length > 0 && <div className="field-error">{drawerErrors.join('\n')}</div>}
               <div className="drawer-actions">
-                <button type="button" className="btn btn-primary" onClick={() => setSelectedRuleIndex(null)}>
+                <button type="button" className="btn btn-primary" onClick={saveDrawerRule} disabled={isDrawerSaveDisabled}>
                   保存
                 </button>
-                <button type="button" className="btn" onClick={() => setSelectedRuleIndex(null)}>
+                <button type="button" className="btn" onClick={closeDrawer}>
                   閉じる
                 </button>
               </div>

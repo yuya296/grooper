@@ -56,6 +56,7 @@
   - 有効/無効トグル
   - 有効時のみ GroupName 入力可
 - `ルール追加` ボタン（右寄せ）
+  - クリックで右ドロワーを「新規作成モード」で開く（一覧に即追加しない）
 
 ### UI constraints
 
@@ -88,6 +89,9 @@
   - Chrome tab group 対応色のみ選択可能
   - 選択肢: `none, grey, blue, red, yellow, green, pink, purple, cyan, orange`
   - 項目内に色ドット表示
+- 必須入力: `Group Name`, `Pattern`
+- 必須不足時は保存不可（保存ボタン無効）
+- 保存押下時にのみ新規行が一覧へ追加される（編集時も保存押下で反映）
 
 ### Must (open/close)
 
