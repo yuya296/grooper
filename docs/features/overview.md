@@ -16,7 +16,7 @@
 | 0004 Auto cleanup | P0 | 0001 | 完了 | Clock抽象化はこのPBIで導入固定 |
 | 0006 Options UI v1 | P1 | 0001 | 完了 | YAML編集/検証/インポート/エクスポートと設定編集フロー文書化まで完了 |
 | 0008 Diag + CLI | P1 | 0001 | 完了 | 診断APIは開発/CI限定、CLIはplan/apply/snapshot/verifyのみ |
-| 0010 Popup + Settings UI modernize | P1 | 0006,0007 | 要確認 | Popup導線とRulesテーブル+D&D+サイドパネル実装済み。最終UI手動確認待ち |
+| 0010 Popup + Settings UI modernize | P1 | 0006,0007 | 完了 | Popup導線、Settings UI刷新、Rulesテーブル+D&D+サイドパネル、保存フロー改善まで反映済み |
 | 0005 Shortcuts | P2 | 0001 | 完了 | ショートカットの割当はYAMLのみ（UI設定はPBI-0006以降） |
 | 0007 Options UI v2 | P2 | 0006 | 完了 | プレビュー/履歴/ロールバック実装と運用文書化・補強テストまで完了 |
 | 0009 E2E + CI | P2 | 0008 | 完了 | 失敗時artifact収集、テストユーティリティ単体テスト、運用文書化まで完了 |
