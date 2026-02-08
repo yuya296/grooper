@@ -3,12 +3,99 @@ const LOGS_KEY = 'logs';
 const LAST_ACTIVE_KEY = 'lastActiveAt';
 
 export const DEFAULT_CONFIG_YAML = `version: 1
-applyMode: manual
+applyMode: newTabs
+parentFollow: false
+shortcuts:
+  slots:
+    - "Work"
+    - "Search"
+    - "Personal"
 rules:
-  - pattern: '*example.com*'
+  # 開発・業務系
+  - pattern: '*github.com*'
     matchMode: glob
-    group: 'Example'
+    group: 'Work'
     color: 'blue'
+    priority: 100
+  - pattern: '*gitlab.com*'
+    matchMode: glob
+    group: 'Work'
+    color: 'blue'
+    priority: 100
+  - pattern: '*bitbucket.org*'
+    matchMode: glob
+    group: 'Work'
+    color: 'blue'
+    priority: 100
+  - pattern: '*atlassian.net*'
+    matchMode: glob
+    group: 'Work'
+    color: 'blue'
+    priority: 95
+  - pattern: '*linear.app*'
+    matchMode: glob
+    group: 'Work'
+    color: 'blue'
+    priority: 95
+  # ドキュメント・ナレッジ
+  - pattern: '*docs.google.com*'
+    matchMode: glob
+    group: 'Docs'
+    color: 'green'
+    priority: 90
+  - pattern: '*notion.so*'
+    matchMode: glob
+    group: 'Docs'
+    color: 'green'
+    priority: 90
+  - pattern: '*qiita.com*'
+    matchMode: glob
+    group: 'Docs'
+    color: 'green'
+    priority: 85
+  - pattern: '*zenn.dev*'
+    matchMode: glob
+    group: 'Docs'
+    color: 'green'
+    priority: 85
+  # 検索
+  - pattern: '*google.*/search*'
+    matchMode: glob
+    group: 'Search'
+    color: 'red'
+    priority: 80
+  - pattern: '*bing.com/search*'
+    matchMode: glob
+    group: 'Search'
+    color: 'red'
+    priority: 80
+  - pattern: '*duckduckgo.com/*'
+    matchMode: glob
+    group: 'Search'
+    color: 'red'
+    priority: 80
+  # メディア
+  - pattern: '*youtube.com*'
+    matchMode: glob
+    group: 'Media'
+    color: 'purple'
+    priority: 70
+  - pattern: '*netflix.com*'
+    matchMode: glob
+    group: 'Media'
+    color: 'purple'
+    priority: 70
+  # SNS
+  - pattern: '*x.com*'
+    matchMode: glob
+    group: 'Social'
+    color: 'orange'
+    priority: 60
+  - pattern: '*twitter.com*'
+    matchMode: glob
+    group: 'Social'
+    color: 'orange'
+    priority: 60
 `;
 
 export async function getConfigYaml(): Promise<string> {

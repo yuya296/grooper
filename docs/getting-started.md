@@ -19,8 +19,8 @@ pnpm build
 ## 3. 設定する
 
 1. 拡張の `Options` を開く
-2. `Source` タブに `docs/config.sample.yml` の内容を貼り付ける
-3. `保存` を押す
+2. 初期状態では `newTabs` ベースのデフォルトプリセットが入っていることを確認する
+3. 必要なら `Source` タブに `docs/config.sample.yml` を貼り付けて保存する
 
 ## 4. 動作確認する
 

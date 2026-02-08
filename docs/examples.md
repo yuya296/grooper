@@ -3,7 +3,42 @@
 目的別にすぐ使える設定例です。  
 基本形は `docs/config.sample.yml` を参照してください。
 
-## 1. example.com の1階層目でグルーピング（regexキャプチャ）
+## 1. Default preset（初期状態）
+
+```yaml
+version: 1
+applyMode: newTabs
+parentFollow: false
+rules:
+  - pattern: '*github.com*'
+    matchMode: glob
+    group: "Work"
+    color: "blue"
+    priority: 100
+  - pattern: '*docs.google.com*'
+    matchMode: glob
+    group: "Docs"
+    color: "green"
+    priority: 90
+  - pattern: '*google.*/search*'
+    matchMode: glob
+    group: "Search"
+    color: "red"
+    priority: 80
+  - pattern: '*youtube.com*'
+    matchMode: glob
+    group: "Media"
+    color: "purple"
+    priority: 70
+```
+
+すぐ試せるURL:
+- `https://github.com/`
+- `https://docs.google.com/`
+- `https://www.google.com/search?q=grooper`
+- `https://www.youtube.com/`
+
+## 2. example.com の1階層目でグルーピング（regexキャプチャ）
 
 ```yaml
 version: 1
@@ -22,7 +57,7 @@ rules:
 - `https://example.com/hoge/foo` -> `Example:hoge`
 - `https://example.com/fuga/aaa` -> `Example:fuga`
 
-## 2. シンプルなglobマッチ（固定グループ）
+## 3. シンプルなglobマッチ（固定グループ）
 
 ```yaml
 version: 1
@@ -39,7 +74,7 @@ rules:
     priority: 1
 ```
 
-## 3. fallbackGroup を使う
+## 4. fallbackGroup を使う
 
 ```yaml
 version: 1
@@ -54,7 +89,7 @@ rules:
 
 一致しないURLは `Fallback` にまとめられます。
 
-## 4. always + groupsで自動整理強化
+## 5. always + groupsで自動整理強化
 
 ```yaml
 version: 1

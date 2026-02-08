@@ -2,6 +2,16 @@
 
 Grooper の設定は YAML で管理します。
 
+## 初期プリセット（インストール直後）
+
+初期状態では「効果をすぐ体感できる」ことを優先し、以下方針のプリセットが入っています。
+
+- `applyMode: newTabs`（新規タブに限定して自動整理）
+- `fallbackGroup` は未設定（過剰な自動回収を防ぐ）
+- `Work / Docs / Search / Media / Social` を中心に汎用globで整理
+
+正本: `docs/config.sample.yml`
+
 ## 最小構成
 
 ```yaml
@@ -32,6 +42,10 @@ rules:
 | `manual` | 手動実行時のみ適用 |
 | `newTabs` | 新規タブ作成時に適用 |
 | `always` | 定期評価で継続適用 |
+
+補足:
+- キー自体のデフォルト値は `manual`（未指定時）です。
+- ただし、アプリ初期設定テンプレートは `newTabs` を採用しています（初期体験重視）。
 
 ## `rules[]`
 
