@@ -18,3 +18,14 @@
 - PBIタスク: `docs/features/pbi-xxxx-*/todo.md`
 - PBIテスト計画: `docs/features/pbi-xxxx-*/test.md`
 - 設定サンプルYAML: `docs/config.sample.yml`
+
+## UIテスト用 localhost 起動手順
+- 目的: 拡張を読み込まずに `Options/Popup` のUIだけをブラウザで確認する。
+- 手順:
+  1. `pnpm build`
+  2. `python3 -m http.server 4173 -d dist/extension`
+  3. ブラウザで以下を開く
+     - `http://localhost:4173/options.html`
+     - `http://localhost:4173/popup.html`
+- 補足:
+  - これはUI確認用。`chrome.*` API依存の動作はローカル配信では一部制限される。

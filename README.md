@@ -2,6 +2,14 @@
 
 Chrome拡張として動作する、ルールベースのタブグルーピングツールです。
 
+## Docs
+
+- Getting Started: `docs/getting-started.md`
+- Configuration Reference: `docs/configuration.md`
+- Configuration Examples: `docs/examples.md`
+- Maintenance Guide: `docs/maintenance.md`
+- Chrome Web Store Release: `docs/chrome-web-store-release.md`
+
 ## Development
 
 ```bash

@@ -26,6 +26,8 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'options.themeToggle': 'テーマ切替',
     'options.saveHintDirty': '未保存の変更があります（保存するまで設定は反映されません）',
     'options.saveHintClean': '保存済み',
+    'options.reset': 'デフォルトに戻す',
+    'options.resetConfirm': '設定をデフォルトに戻しますか？\n未保存の変更は上書きされます。',
     'options.yamlLabel': '設定（YAML）',
     'options.basicSettings': '基本設定',
     'options.applyMode': '適用モード',
@@ -37,7 +39,8 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'options.fallbackDisabled': '無効',
     'options.fallbackPlaceholder': 'Fallback GroupName',
     'options.rules': 'ルール一覧',
-    'options.addRule': '＋',
+    'options.addRule': 'ルール追加',
+    'options.emptyRules': 'ルールがまだありません。「＋ ルール追加」から始めましょう。',
     'options.sort': '並び替え',
     'options.table.group': 'グループ',
     'options.table.matchMode': 'マッチ方式',
@@ -63,6 +66,7 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'options.validation.patternRequired': 'パターンは必須です',
     'options.validation.regexInvalid': '正規表現が不正です: {message}',
     'options.toast.saved': '設定を保存しました',
+    'options.toast.resetLoaded': 'デフォルト設定を読み込みました（保存で反映されます）',
     'options.matchMode.regex': 'regex',
     'options.matchMode.glob': 'wildcard (glob)',
     'options.color.none': 'none'
@@ -89,6 +93,8 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'options.themeToggle': 'Toggle theme',
     'options.saveHintDirty': 'Unsaved changes (settings are not applied until you save)',
     'options.saveHintClean': 'Saved',
+    'options.reset': 'Reset to defaults',
+    'options.resetConfirm': 'Reset configuration to defaults?\nYour unsaved changes will be overwritten.',
     'options.yamlLabel': 'Configuration (YAML)',
     'options.basicSettings': 'Basic settings',
     'options.applyMode': 'Apply mode',
@@ -100,7 +106,8 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'options.fallbackDisabled': 'Disabled',
     'options.fallbackPlaceholder': 'Fallback GroupName',
     'options.rules': 'Rules',
-    'options.addRule': '+',
+    'options.addRule': 'Add rule',
+    'options.emptyRules': 'No rules yet. Click "+ Add rule" to get started.',
     'options.sort': 'Reorder',
     'options.table.group': 'Group',
     'options.table.matchMode': 'Match mode',
@@ -126,6 +133,7 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'options.validation.patternRequired': 'Pattern is required',
     'options.validation.regexInvalid': 'Invalid regex: {message}',
     'options.toast.saved': 'Settings saved',
+    'options.toast.resetLoaded': 'Default configuration loaded (click Save to apply)',
     'options.matchMode.regex': 'regex',
     'options.matchMode.glob': 'wildcard (glob)',
     'options.color.none': 'none'
@@ -145,8 +153,8 @@ function resolveFromLanguageTag(lang: string | undefined): Locale {
 export function detectBrowserLocale(): Locale {
   const chromeLocale =
     typeof chrome !== 'undefined' &&
-    chrome.i18n &&
-    typeof chrome.i18n.getUILanguage === 'function'
+      chrome.i18n &&
+      typeof chrome.i18n.getUILanguage === 'function'
       ? chrome.i18n.getUILanguage()
       : undefined;
   if (chromeLocale) return resolveFromLanguageTag(chromeLocale);

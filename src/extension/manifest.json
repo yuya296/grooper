@@ -1,14 +1,26 @@
 {
   "manifest_version": 3,
   "name": "Grooper",
+  "short_name": "Grooper",
   "version": "0.1.0",
-  "description": "Rule-based tab grouping.",
+  "description": "Rule-based tab grouping for Chrome.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
   "permissions": ["tabs", "tabGroups", "storage", "alarms"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
   },
   "action": {
+    "default_title": "Grooper — Rule-based tab grouping",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    },
     "default_popup": "popup.html"
   },
   "options_page": "options.html",

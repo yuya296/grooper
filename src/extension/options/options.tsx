@@ -1,3 +1,4 @@
+import '../chrome-polyfill.js';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as Select from '@radix-ui/react-select';
@@ -26,6 +27,7 @@ import { validateGroupTemplateForMatchMode } from '../../core/rule-template.js';
 import type { MatchMode } from '../../core/types.js';
 import { buildYamlFromUi, parseYamlForUi, type RuleForm, type UiState } from './uiState.js';
 import { LANGUAGE_KEY, loadLocale, saveLocale, t, type Locale } from '../i18n.js';
+import { DEFAULT_CONFIG_YAML } from '../storage.js';
 import {
   DEFAULT_THEME_MODE,
   THEME_MODE_KEY,
@@ -489,6 +491,20 @@ function App() {
     setToastOpen(true);
   }
 
+  function resetToDefaultWithConfirm() {
+    const confirmed = window.confirm(t(locale, 'options.resetConfirm'));
+    if (!confirmed) return;
+    setYamlText(DEFAULT_CONFIG_YAML);
+    setErrors([]);
+    const parsed = parseYamlForUi(DEFAULT_CONFIG_YAML);
+    if (parsed.ok) {
+      setRawConfig(parsed.rawConfig);
+      setUiState(parsed.uiState);
+    }
+    setToastMessage(t(locale, 'options.toast.resetLoaded'));
+    setToastOpen(true);
+  }
+
   function onDragStart(event: DragStartEvent) {
     setActiveDragId(String(event.active.id));
     setOverDragId(String(event.active.id));
@@ -608,300 +624,313 @@ function App() {
   return (
     <Toast.Provider swipeDirection="right">
       <div className="card">
-      <div className="header">
-        <div className="title-wrap">
-          <h1 className="title">{t(locale, 'options.title')}</h1>
-        </div>
-        <div className="actions">
-          <LanguageSelect locale={locale} onChange={(next) => void updateLocale(next)} />
-          <button
-            className="btn btn-ghost theme-toggle"
-            type="button"
-            onClick={() => void toggleThemeMode()}
-            aria-label={t(locale, 'options.themeToggle')}
-            title={isDarkResolved ? 'dark' : 'light'}
-          >
-            <span className={`theme-icon ${!isDarkResolved ? 'active' : ''}`} aria-hidden>
-              ☀
-            </span>
-            <span className={`theme-icon ${isDarkResolved ? 'active' : ''}`} aria-hidden>
-              ☾
-            </span>
-          </button>
-          <span className={`save-hint ${hasUnsavedChanges ? 'dirty' : 'clean'}`}>
-            {hasUnsavedChanges ? t(locale, 'options.saveHintDirty') : t(locale, 'options.saveHintClean')}
-          </span>
-          <button className="btn" type="button" onClick={() => validateYaml()}>
-            {t(locale, 'common.validate')}
-          </button>
-          <button
-            className="btn btn-primary"
-            type="button"
-            onClick={() => void saveYaml()}
-            disabled={!hasUnsavedChanges}
-          >
-            {t(locale, 'common.save')}
-          </button>
-        </div>
-      </div>
-
-      <Tabs.Root value={activeTab} onValueChange={(next) => switchTab(next as 'source' | 'ui')}>
-        <Tabs.List className="tabs">
-          <Tabs.Trigger className="tab-trigger" value="source">
-            {t(locale, 'common.source')}
-          </Tabs.Trigger>
-          <Tabs.Trigger className="tab-trigger" value="ui">
-            {t(locale, 'common.ui')}
-          </Tabs.Trigger>
-        </Tabs.List>
-
-        {errors.length > 0 && <div className="error">{errors.join('\n')}</div>}
-
-        <Tabs.Content value="source">
-          <div className="panel">
-            <label className="label" htmlFor="yaml">
-              {t(locale, 'options.yamlLabel')}
-            </label>
-            <SourceEditor value={yamlText} onChange={setYamlText} />
+        <div className="header">
+          <div className="title-wrap">
+            <img className="title-logo" src="icons/icon-32.png" alt="" />
+            <div>
+              <h1 className="title">{t(locale, 'options.title')}</h1>
+            </div>
           </div>
-        </Tabs.Content>
+          <div className="actions">
+            <LanguageSelect locale={locale} onChange={(next) => void updateLocale(next)} />
+            <button
+              className="btn btn-ghost theme-toggle"
+              type="button"
+              onClick={() => void toggleThemeMode()}
+              aria-label={t(locale, 'options.themeToggle')}
+              title={isDarkResolved ? 'dark' : 'light'}
+            >
+              <span className={`theme-icon ${!isDarkResolved ? 'active' : ''}`} aria-hidden>
+                ☀
+              </span>
+              <span className={`theme-icon ${isDarkResolved ? 'active' : ''}`} aria-hidden>
+                ☾
+              </span>
+            </button>
+            <span className={`save-hint ${hasUnsavedChanges ? 'dirty' : 'clean'}`}>
+              {hasUnsavedChanges ? t(locale, 'options.saveHintDirty') : t(locale, 'options.saveHintClean')}
+            </span>
+            <button className="btn" type="button" onClick={resetToDefaultWithConfirm}>
+              {t(locale, 'options.reset')}
+            </button>
+            <button className="btn" type="button" onClick={() => validateYaml()}>
+              {t(locale, 'common.validate')}
+            </button>
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={() => void saveYaml()}
+              disabled={!hasUnsavedChanges}
+            >
+              {t(locale, 'common.save')}
+            </button>
+          </div>
+        </div>
 
-        <Tabs.Content value="ui">
-          <div className="panel stack">
-            <h3 className="section-title">{t(locale, 'options.basicSettings')}</h3>
-            <div className="settings-row">
-              <div className="field-block">
-                <label className="label" htmlFor="applyMode">
-                  {t(locale, 'options.applyMode')}
-                </label>
-                <AppModeSelect
-                  locale={locale}
-                  value={uiState.applyMode}
-                  onChange={(next) => syncFromUi({ ...uiState, applyMode: next })}
-                />
-              </div>
-              <div className="field-block">
-                <label className="label" htmlFor="fallbackEnabled">
-                  <span className="label-inline">
-                    {t(locale, 'options.fallbackGroup')}
-                    <span className="info-tip" aria-label={t(locale, 'options.fallbackGroup')}>
-                      ⓘ
-                      <span className="tooltip">
-                        {t(locale, 'options.fallbackHelp')}
+        <Tabs.Root value={activeTab} onValueChange={(next) => switchTab(next as 'source' | 'ui')}>
+          <Tabs.List className="tabs">
+            <Tabs.Trigger className="tab-trigger" value="source">
+              {t(locale, 'common.source')}
+            </Tabs.Trigger>
+            <Tabs.Trigger className="tab-trigger" value="ui">
+              {t(locale, 'common.ui')}
+            </Tabs.Trigger>
+          </Tabs.List>
+
+          {errors.length > 0 && <div className="error">{errors.join('\n')}</div>}
+
+          <Tabs.Content value="source">
+            <div className="panel">
+              <label className="label" htmlFor="yaml">
+                {t(locale, 'options.yamlLabel')}
+              </label>
+              <SourceEditor value={yamlText} onChange={setYamlText} />
+            </div>
+          </Tabs.Content>
+
+          <Tabs.Content value="ui">
+            <div className="panel stack">
+              <h3 className="section-title">{t(locale, 'options.basicSettings')}</h3>
+              <div className="settings-row">
+                <div className="field-block">
+                  <label className="label" htmlFor="applyMode">
+                    {t(locale, 'options.applyMode')}
+                  </label>
+                  <AppModeSelect
+                    locale={locale}
+                    value={uiState.applyMode}
+                    onChange={(next) => syncFromUi({ ...uiState, applyMode: next })}
+                  />
+                </div>
+                <div className="field-block">
+                  <label className="label" htmlFor="fallbackEnabled">
+                    <span className="label-inline">
+                      {t(locale, 'options.fallbackGroup')}
+                      <span className="info-tip" aria-label={t(locale, 'options.fallbackGroup')}>
+                        ⓘ
+                        <span className="tooltip">
+                          {t(locale, 'options.fallbackHelp')}
+                        </span>
                       </span>
                     </span>
-                  </span>
-                </label>
-                <div className="fallback-controls">
-                  <label className="fallback-toggle" htmlFor="fallbackEnabled">
-                    <Switch.Root
-                      id="fallbackEnabled"
-                      className="switch-root"
-                      checked={uiState.fallbackGroup !== undefined}
-                      onCheckedChange={(checked) =>
-                        syncFromUi({
-                          ...uiState,
-                          fallbackGroup: checked ? uiState.fallbackGroup ?? '' : undefined
-                        })
-                      }
-                    >
-                      <Switch.Thumb className="switch-thumb" />
-                    </Switch.Root>
-                    <span className="muted">{t(locale, 'options.fallbackDisabled')}</span>
                   </label>
-                  {uiState.fallbackGroup !== undefined && (
-                    <input
-                      id="fallbackGroup"
-                      className="input fallback-input"
-                      placeholder={t(locale, 'options.fallbackPlaceholder')}
-                      value={uiState.fallbackGroup}
-                      onChange={(e) => syncFromUi({ ...uiState, fallbackGroup: e.currentTarget.value })}
-                    />
-                  )}
+                  <div className="fallback-controls">
+                    <label className="fallback-toggle" htmlFor="fallbackEnabled">
+                      <Switch.Root
+                        id="fallbackEnabled"
+                        className="switch-root"
+                        checked={uiState.fallbackGroup !== undefined}
+                        onCheckedChange={(checked) =>
+                          syncFromUi({
+                            ...uiState,
+                            fallbackGroup: checked ? uiState.fallbackGroup ?? '' : undefined
+                          })
+                        }
+                      >
+                        <Switch.Thumb className="switch-thumb" />
+                      </Switch.Root>
+                      <span className="muted">{t(locale, 'options.fallbackDisabled')}</span>
+                    </label>
+                    {uiState.fallbackGroup !== undefined && (
+                      <input
+                        id="fallbackGroup"
+                        className="input fallback-input"
+                        placeholder={t(locale, 'options.fallbackPlaceholder')}
+                        value={uiState.fallbackGroup}
+                        onChange={(e) => syncFromUi({ ...uiState, fallbackGroup: e.currentTarget.value })}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="rules-head">
+                <h3 className="section-title">{t(locale, 'options.rules')}</h3>
+                <div className="add-rule-wrap">
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={openCreateRuleDrawer}
+                  >
+                    ＋ {t(locale, 'options.addRule')}
+                  </button>
+                </div>
+              </div>
+              <div className="grid">
+                <div className="table-wrap">
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragStart={onDragStart}
+                    onDragOver={onDragOver}
+                    onDragEnd={onDragEnd}
+                    onDragCancel={onDragCancel}
+                  >
+                    {ruleRows.length === 0 ? (
+                      <div className="empty-state">
+                        <div className="empty-state-icon">📋</div>
+                        <div className="empty-state-text">{t(locale, 'options.emptyRules')}</div>
+                      </div>
+                    ) : (
+                      <table>
+                        <thead>
+                          {table.getHeaderGroups().map((headerGroup) => (
+                            <tr key={headerGroup.id}>
+                              {headerGroup.headers.map((header) => (
+                                <th key={header.id}>
+                                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                                </th>
+                              ))}
+                            </tr>
+                          ))}
+                        </thead>
+                        <tbody>
+                          <SortableContext items={ruleRows.map((row) => row.rowId)} strategy={verticalListSortingStrategy}>
+                            {table.getRowModel().rows.map((row) => (
+                              <tr
+                                key={row.id}
+                                className={[
+                                  activeDragId === row.original.rowId ? 'drag-source' : '',
+                                  overDragId === row.original.rowId && activeDragId !== row.original.rowId ? 'drop-target' : ''
+                                ]
+                                  .join(' ')
+                                  .trim()}
+                              >
+                                {row.getVisibleCells().map((cell) => (
+                                  <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                                ))}
+                              </tr>
+                            ))}
+                          </SortableContext>
+                        </tbody>
+                      </table>
+                    )}
+                    <DragOverlay>
+                      {activeDragRow ? (
+                        <div className="drag-overlay">
+                          <div className="drag-overlay-title">
+                            {activeDragRow.group ||
+                              t(locale, 'options.table.groupFallback', { index: Number(activeDragRow.rowId) + 1 })}
+                          </div>
+                          <div className="drag-overlay-sub">
+                            {t(locale, 'options.table.patternPrefix')}: {activeDragRow.pattern || t(locale, 'options.table.empty')}
+                          </div>
+                        </div>
+                      ) : null}
+                    </DragOverlay>
+                  </DndContext>
                 </div>
               </div>
             </div>
-            <div className="rules-head">
-              <h3 className="section-title">{t(locale, 'options.rules')}</h3>
-              <div className="add-rule-wrap">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={openCreateRuleDrawer}
-                >
-                  {t(locale, 'options.addRule')}
-                </button>
-              </div>
-            </div>
-            <div className="grid">
-              <div className="table-wrap">
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragStart={onDragStart}
-                  onDragOver={onDragOver}
-                  onDragEnd={onDragEnd}
-                  onDragCancel={onDragCancel}
-                >
-                  <table>
-                    <thead>
-                      {table.getHeaderGroups().map((headerGroup) => (
-                        <tr key={headerGroup.id}>
-                          {headerGroup.headers.map((header) => (
-                            <th key={header.id}>
-                              {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                            </th>
-                          ))}
-                        </tr>
-                      ))}
-                    </thead>
-                    <tbody>
-                      <SortableContext items={ruleRows.map((row) => row.rowId)} strategy={verticalListSortingStrategy}>
-                        {table.getRowModel().rows.map((row) => (
-                          <tr
-                            key={row.id}
-                            className={[
-                              activeDragId === row.original.rowId ? 'drag-source' : '',
-                              overDragId === row.original.rowId && activeDragId !== row.original.rowId ? 'drop-target' : ''
-                            ]
-                              .join(' ')
-                              .trim()}
-                          >
-                            {row.getVisibleCells().map((cell) => (
-                              <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-                            ))}
-                          </tr>
-                        ))}
-                      </SortableContext>
-                    </tbody>
-                  </table>
-                  <DragOverlay>
-                    {activeDragRow ? (
-                      <div className="drag-overlay">
-                        <div className="drag-overlay-title">
-                          {activeDragRow.group ||
-                            t(locale, 'options.table.groupFallback', { index: Number(activeDragRow.rowId) + 1 })}
-                        </div>
-                        <div className="drag-overlay-sub">
-                          {t(locale, 'options.table.patternPrefix')}: {activeDragRow.pattern || t(locale, 'options.table.empty')}
-                        </div>
-                      </div>
-                    ) : null}
-                  </DragOverlay>
-                </DndContext>
-              </div>
-            </div>
-          </div>
-        </Tabs.Content>
-      </Tabs.Root>
+          </Tabs.Content>
+        </Tabs.Root>
 
-      <div
-        className={`drawer-backdrop ${isDrawerOpen ? 'open' : ''}`}
-        onClick={closeDrawer}
-        aria-hidden={!isDrawerOpen}
-      />
-      <aside className={`drawer ${isDrawerOpen ? 'open' : ''}`} aria-hidden={!isDrawerOpen}>
-        <div className="drawer-head">
-          <h3 className="side-title">{drawerTitle}</h3>
-          <button type="button" className="icon-btn" onClick={closeDrawer} aria-label={t(locale, 'common.close')}>
-            ×
-          </button>
-        </div>
-        <div className="drawer-body">
-          {drawerDraft && (
-            <div className="stack">
-              <div>
-                <label className="label">
-                  <span className="label-inline">
-                    {t(locale, 'options.drawer.group')}
-                    <span className="info-tip" aria-label={t(locale, 'options.drawer.group')}>
-                      ⓘ
-                      <span className="tooltip">{t(locale, 'options.drawer.groupHelp')}</span>
+        <div
+          className={`drawer-backdrop ${isDrawerOpen ? 'open' : ''}`}
+          onClick={closeDrawer}
+          aria-hidden={!isDrawerOpen}
+        />
+        <aside className={`drawer ${isDrawerOpen ? 'open' : ''}`} aria-hidden={!isDrawerOpen}>
+          <div className="drawer-head">
+            <h3 className="side-title">{drawerTitle}</h3>
+            <button type="button" className="icon-btn" onClick={closeDrawer} aria-label={t(locale, 'common.close')}>
+              ×
+            </button>
+          </div>
+          <div className="drawer-body">
+            {drawerDraft && (
+              <div className="stack">
+                <div>
+                  <label className="label">
+                    <span className="label-inline">
+                      {t(locale, 'options.drawer.group')}
+                      <span className="info-tip" aria-label={t(locale, 'options.drawer.group')}>
+                        ⓘ
+                        <span className="tooltip">{t(locale, 'options.drawer.groupHelp')}</span>
+                      </span>
                     </span>
-                  </span>
-                </label>
-                <input
-                  className="input"
-                  value={drawerDraft.group}
-                  onChange={(e) => {
-                    setDrawerDraft({ ...drawerDraft, group: e.currentTarget.value });
-                    setDrawerErrors([]);
-                  }}
-                />
-              </div>
-              <div>
-                <label className="label">
-                  <span className="label-inline">
-                    {t(locale, 'options.drawer.matchMode')}
-                    <span className="info-tip" aria-label={t(locale, 'options.drawer.matchMode')}>
-                      ⓘ
-                      <span className="tooltip">{t(locale, 'options.drawer.matchModeHelp')}</span>
+                  </label>
+                  <input
+                    className="input"
+                    value={drawerDraft.group}
+                    onChange={(e) => {
+                      setDrawerDraft({ ...drawerDraft, group: e.currentTarget.value });
+                      setDrawerErrors([]);
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="label">
+                    <span className="label-inline">
+                      {t(locale, 'options.drawer.matchMode')}
+                      <span className="info-tip" aria-label={t(locale, 'options.drawer.matchMode')}>
+                        ⓘ
+                        <span className="tooltip">{t(locale, 'options.drawer.matchModeHelp')}</span>
+                      </span>
                     </span>
-                  </span>
-                </label>
-                <MatchModeSelect
-                  locale={locale}
-                  value={drawerDraft.matchMode}
-                  onChange={(next) => {
-                    setDrawerDraft({ ...drawerDraft, matchMode: next });
-                    setDrawerErrors([]);
-                  }}
-                />
-              </div>
-              <div>
-                <label className="label">
-                  <span className="label-inline">
-                    {t(locale, 'options.drawer.pattern')}
-                    <span className="info-tip" aria-label={t(locale, 'options.drawer.pattern')}>
-                      ⓘ
-                      <span className="tooltip">{t(locale, 'options.drawer.patternHelp')}</span>
+                  </label>
+                  <MatchModeSelect
+                    locale={locale}
+                    value={drawerDraft.matchMode}
+                    onChange={(next) => {
+                      setDrawerDraft({ ...drawerDraft, matchMode: next });
+                      setDrawerErrors([]);
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className="label">
+                    <span className="label-inline">
+                      {t(locale, 'options.drawer.pattern')}
+                      <span className="info-tip" aria-label={t(locale, 'options.drawer.pattern')}>
+                        ⓘ
+                        <span className="tooltip">{t(locale, 'options.drawer.patternHelp')}</span>
+                      </span>
                     </span>
-                  </span>
-                </label>
-                <input
-                  className="input"
-                  value={drawerDraft.pattern}
-                  onChange={(e) => {
-                    setDrawerDraft({ ...drawerDraft, pattern: e.currentTarget.value });
-                    setDrawerErrors([]);
-                  }}
-                />
-                {drawerPatternRegexError && <div className="field-error">{drawerPatternRegexError}</div>}
-              </div>
-              <div>
-                <label className="label">
-                  <span className="label-inline">
-                    {t(locale, 'options.drawer.color')}
-                    <span className="info-tip" aria-label={t(locale, 'options.drawer.color')}>
-                      ⓘ
-                      <span className="tooltip">{t(locale, 'options.drawer.colorHelp')}</span>
+                  </label>
+                  <input
+                    className="input"
+                    value={drawerDraft.pattern}
+                    onChange={(e) => {
+                      setDrawerDraft({ ...drawerDraft, pattern: e.currentTarget.value });
+                      setDrawerErrors([]);
+                    }}
+                  />
+                  {drawerPatternRegexError && <div className="field-error">{drawerPatternRegexError}</div>}
+                </div>
+                <div>
+                  <label className="label">
+                    <span className="label-inline">
+                      {t(locale, 'options.drawer.color')}
+                      <span className="info-tip" aria-label={t(locale, 'options.drawer.color')}>
+                        ⓘ
+                        <span className="tooltip">{t(locale, 'options.drawer.colorHelp')}</span>
+                      </span>
                     </span>
-                  </span>
-                </label>
-                <ColorSelect
-                  locale={locale}
-                  value={drawerDraft.color}
-                  onChange={(next) => setDrawerDraft({ ...drawerDraft, color: next })}
-                />
+                  </label>
+                  <ColorSelect
+                    locale={locale}
+                    value={drawerDraft.color}
+                    onChange={(next) => setDrawerDraft({ ...drawerDraft, color: next })}
+                  />
+                </div>
+                {drawerErrors.length > 0 && <div className="field-error">{drawerErrors.join('\n')}</div>}
+                <div className="drawer-actions">
+                  <button type="button" className="btn btn-primary" onClick={saveDrawerRule} disabled={isDrawerSaveDisabled}>
+                    {t(locale, 'common.save')}
+                  </button>
+                  <button type="button" className="btn" onClick={closeDrawer}>
+                    {t(locale, 'common.close')}
+                  </button>
+                </div>
               </div>
-              {drawerErrors.length > 0 && <div className="field-error">{drawerErrors.join('\n')}</div>}
-              <div className="drawer-actions">
-                <button type="button" className="btn btn-primary" onClick={saveDrawerRule} disabled={isDrawerSaveDisabled}>
-                  {t(locale, 'common.save')}
-                </button>
-                <button type="button" className="btn" onClick={closeDrawer}>
-                  {t(locale, 'common.close')}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </aside>
-      <Toast.Root className="toast-root" open={toastOpen} onOpenChange={setToastOpen} duration={2200}>
-        <Toast.Title className="toast-title">{toastMessage}</Toast.Title>
-      </Toast.Root>
-      <Toast.Viewport className="toast-viewport" />
-    </div>
+            )}
+          </div>
+        </aside>
+        <Toast.Root className="toast-root" open={toastOpen} onOpenChange={setToastOpen} duration={2200}>
+          <Toast.Title className="toast-title">{toastMessage}</Toast.Title>
+        </Toast.Root>
+        <Toast.Viewport className="toast-viewport" />
+      </div>
     </Toast.Provider>
   );
 }
