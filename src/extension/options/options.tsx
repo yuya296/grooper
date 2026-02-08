@@ -1,3 +1,4 @@
+import '../chrome-polyfill.js';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as Select from '@radix-ui/react-select';
@@ -625,7 +626,10 @@ function App() {
       <div className="card">
       <div className="header">
         <div className="title-wrap">
-          <h1 className="title">{t(locale, 'options.title')}</h1>
+          <img className="title-logo" src="icons/icon-32.png" alt="" />
+          <div>
+            <h1 className="title">{t(locale, 'options.title')}</h1>
+          </div>
         </div>
         <div className="actions">
           <LanguageSelect locale={locale} onChange={(next) => void updateLocale(next)} />
@@ -747,7 +751,7 @@ function App() {
                   className="btn btn-primary"
                   onClick={openCreateRuleDrawer}
                 >
-                  {t(locale, 'options.addRule')}
+                  ＋ {t(locale, 'options.addRule')}
                 </button>
               </div>
             </div>
@@ -761,6 +765,12 @@ function App() {
                   onDragEnd={onDragEnd}
                   onDragCancel={onDragCancel}
                 >
+                  {ruleRows.length === 0 ? (
+                    <div className="empty-state">
+                      <div className="empty-state-icon">📋</div>
+                      <div className="empty-state-text">{t(locale, 'options.emptyRules')}</div>
+                    </div>
+                  ) : (
                   <table>
                     <thead>
                       {table.getHeaderGroups().map((headerGroup) => (
@@ -793,6 +803,7 @@ function App() {
                       </SortableContext>
                     </tbody>
                   </table>
+                  )}
                   <DragOverlay>
                     {activeDragRow ? (
                       <div className="drag-overlay">
