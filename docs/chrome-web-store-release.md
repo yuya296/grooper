@@ -10,6 +10,7 @@
 - [ ] `src/extension/manifest.json` の `version` をリリース版へ更新
 - [ ] ストア掲載素材を準備済み
   - [ ] ストアアイコン（128x128）
+    - ソース: `assets/logo.png`（1024x1024）
   - [ ] スクリーンショット（最低1枚）
   - [ ] 必要に応じてプロモーション画像
 - [ ] 公開情報を準備済み
@@ -26,6 +27,17 @@ zip -r ../grooper-extension-vX.Y.Z.zip .
 
 - 出力例: `dist/grooper-extension-v0.1.0.zip`
 - zip作成前に不要ファイル（ローカルメモ等）が含まれていないことを確認する
+
+## 2.5 アイコン素材の書き出し
+
+`assets/logo.png` からストア提出用サイズを作成する。
+
+```bash
+# 128x128（Store icon）
+sips -Z 128 assets/logo.png --out assets/logo-128.png
+```
+
+必要に応じて追加サイズも同様に書き出す。
 
 ## 3. manifest確認ポイント
 

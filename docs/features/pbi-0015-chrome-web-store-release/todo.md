@@ -17,3 +17,4 @@
 - 2026-02-07: `pnpm test` / `pnpm build` は通過。Dashboard下書き入力の手動確認が残タスク。
 - 2026-02-08: ドキュメント構成を再編。`docs/getting-started.md`, `docs/configuration.md`, `docs/examples.md`, `docs/maintenance.md` を追加し、README導線を更新。
 - 2026-02-08: `docs/config-examples.md` は移行案内に変更し、設定例の正本を `docs/examples.md` へ統一。
+- 2026-02-08: ロゴ素材 `assets/logo.png`（1024x1024）を追加。公開手順ドキュメントにアイコン書き出し手順（128x128）を追記。
