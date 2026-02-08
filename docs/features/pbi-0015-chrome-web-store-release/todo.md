@@ -6,6 +6,7 @@
 - [x] 実装: ストア掲載情報テンプレート（概要/詳細/カテゴリ/サポート）を作成
 - [x] 実装: 利用者向けドキュメント導線を再編（getting-started/configuration/examples/maintenance）
 - [x] 実装: 初期体験向けデフォルト設定（newTabs + 汎用glob）を整備し、sample/docsと同期
+- [x] 実装: 設定画面に「デフォルトに戻す」ボタンを追加（確認ダイアログ付き）
 - [ ] テスト: 公開チェックリストで提出準備の再現性を確認（Dashboard入力は手動実施待ち）
 - [x] docs更新: `overview/progress` と公開運用ドキュメントを更新
 
@@ -21,3 +22,4 @@
 - 2026-02-08: ロゴ素材 `assets/logo.png`（1024x1024）を追加。公開手順ドキュメントにアイコン書き出し手順（128x128）を追記。
 - 2026-02-08: 拡張アイコンを `src/extension/icons/icon-{16,32,48,128}.png` として配置し、`manifest.icons` / `action.default_icon` / `options・popup favicon` へ適用。
 - 2026-02-08: `DEFAULT_CONFIG_YAML` を `applyMode: newTabs` の汎用プリセットへ更新し、`docs/config.sample.yml` / `docs/configuration.md` / `docs/examples.md` / `docs/getting-started.md` を同期。
+- 2026-02-08: Optionsヘッダーに「デフォルトに戻す」を追加。確認ダイアログ承認後に `DEFAULT_CONFIG_YAML` を読込し、保存するまで反映しないフローを維持。

@@ -26,6 +26,7 @@ import { validateGroupTemplateForMatchMode } from '../../core/rule-template.js';
 import type { MatchMode } from '../../core/types.js';
 import { buildYamlFromUi, parseYamlForUi, type RuleForm, type UiState } from './uiState.js';
 import { LANGUAGE_KEY, loadLocale, saveLocale, t, type Locale } from '../i18n.js';
+import { DEFAULT_CONFIG_YAML } from '../storage.js';
 import {
   DEFAULT_THEME_MODE,
   THEME_MODE_KEY,
@@ -489,6 +490,20 @@ function App() {
     setToastOpen(true);
   }
 
+  function resetToDefaultWithConfirm() {
+    const confirmed = window.confirm(t(locale, 'options.resetConfirm'));
+    if (!confirmed) return;
+    setYamlText(DEFAULT_CONFIG_YAML);
+    setErrors([]);
+    const parsed = parseYamlForUi(DEFAULT_CONFIG_YAML);
+    if (parsed.ok) {
+      setRawConfig(parsed.rawConfig);
+      setUiState(parsed.uiState);
+    }
+    setToastMessage(t(locale, 'options.toast.resetLoaded'));
+    setToastOpen(true);
+  }
+
   function onDragStart(event: DragStartEvent) {
     setActiveDragId(String(event.active.id));
     setOverDragId(String(event.active.id));
@@ -631,6 +646,9 @@ function App() {
           <span className={`save-hint ${hasUnsavedChanges ? 'dirty' : 'clean'}`}>
             {hasUnsavedChanges ? t(locale, 'options.saveHintDirty') : t(locale, 'options.saveHintClean')}
           </span>
+          <button className="btn" type="button" onClick={resetToDefaultWithConfirm}>
+            {t(locale, 'options.reset')}
+          </button>
           <button className="btn" type="button" onClick={() => validateYaml()}>
             {t(locale, 'common.validate')}
           </button>
