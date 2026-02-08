@@ -63,6 +63,7 @@ if (diagnosticsEnabled) {
 }
 await cp('src/extension/popup/popup.html', join(distExt, 'popup.html'));
 await cp('src/extension/options/options.html', join(distExt, 'options.html'));
+await cp('src/extension/icons', join(distExt, 'icons'), { recursive: true });
 
 const readme = `Build complete. Diagnostics: ${diagnosticsEnabled ? 'enabled' : 'disabled'}.\n`;
 await writeFile(join(dist, 'BUILD_INFO.txt'), readme);

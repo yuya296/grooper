@@ -11,6 +11,7 @@
 - [ ] ストア掲載素材を準備済み
   - [ ] ストアアイコン（128x128）
     - ソース: `assets/logo.png`（1024x1024）
+    - 拡張適用先: `src/extension/icons/icon-128.png`
   - [ ] スクリーンショット（最低1枚）
   - [ ] 必要に応じてプロモーション画像
 - [ ] 公開情報を準備済み
@@ -45,6 +46,7 @@ sips -Z 128 assets/logo.png --out assets/logo-128.png
 
 - `name`: `Grooper`
 - `description`: 80文字以内を目安に簡潔に
+- `icons`: `src/extension/icons/icon-{16,32,48,128}.png` が参照されている
 - `version`: ストア提出ごとにインクリメント
 - `minimum_chrome_version`: サポート範囲と矛盾しない値
 - `permissions` / `host_permissions`: 必要最小限

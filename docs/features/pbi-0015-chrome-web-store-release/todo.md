@@ -18,3 +18,4 @@
 - 2026-02-08: ドキュメント構成を再編。`docs/getting-started.md`, `docs/configuration.md`, `docs/examples.md`, `docs/maintenance.md` を追加し、README導線を更新。
 - 2026-02-08: `docs/config-examples.md` は移行案内に変更し、設定例の正本を `docs/examples.md` へ統一。
 - 2026-02-08: ロゴ素材 `assets/logo.png`（1024x1024）を追加。公開手順ドキュメントにアイコン書き出し手順（128x128）を追記。
+- 2026-02-08: 拡張アイコンを `src/extension/icons/icon-{16,32,48,128}.png` として配置し、`manifest.icons` / `action.default_icon` / `options・popup favicon` へ適用。
