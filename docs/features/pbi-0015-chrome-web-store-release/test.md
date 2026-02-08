@@ -18,6 +18,9 @@
 
 ## Browser / Store Checks
 
+- [x] URL / Screen: README / docs
+  - Steps: READMEのDocsセクションから各ドキュメントへ遷移
+  - Expected: `getting-started/configuration/examples/maintenance/release` の導線が切れていない
 - [ ] URL / Screen: Chrome Extensions（ローカル読込）
   - Steps: `dist/extension` を読み込んで基本動作を確認
   - Expected: Popup/Options/自動適用の主要機能が動作する

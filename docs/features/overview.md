@@ -24,4 +24,4 @@
 | 0009 E2E + CI | P2 | 0008 | 完了 | 失敗時artifact収集、テストユーティリティ単体テスト、運用文書化まで完了 |
 | 0012 Dark mode | P2 | 0010 | 要確認 | themeMode（system/light/dark）導入とPopup/Optionsのダーク配色対応を実装済み。最終手動確認待ち |
 | 0013 i18n (ja/en) | P2 | 0010 | 要確認 | Popup/Optionsの多言語対応（ja/en）と言語設定保存を実装済み。実拡張での表示確認待ち |
-| 0015 Chrome Web Store公開準備 | P2 | 0010,0012,0013 | 要確認 | manifest整備、LICENSE追加、公開手順/掲載テンプレ整備まで実装済み。Dashboard下書き入力の最終確認待ち |
+| 0015 Chrome Web Store公開準備 | P2 | 0010,0012,0013 | 要確認 | manifest整備、LICENSE追加、公開手順/掲載テンプレ整備と利用者向けdocs再編まで実装済み。Dashboard下書き入力の最終確認待ち |
