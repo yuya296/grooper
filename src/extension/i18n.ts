@@ -153,8 +153,8 @@ function resolveFromLanguageTag(lang: string | undefined): Locale {
 export function detectBrowserLocale(): Locale {
   const chromeLocale =
     typeof chrome !== 'undefined' &&
-    chrome.i18n &&
-    typeof chrome.i18n.getUILanguage === 'function'
+      chrome.i18n &&
+      typeof chrome.i18n.getUILanguage === 'function'
       ? chrome.i18n.getUILanguage()
       : undefined;
   if (chromeLocale) return resolveFromLanguageTag(chromeLocale);

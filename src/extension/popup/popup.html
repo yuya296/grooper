@@ -1,198 +1,227 @@
 <!doctype html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Grooper — Rule-based tab grouping</title>
-    <link rel="icon" href="icons/icon-32.png" sizes="32x32" />
-    <style>
-      :root {
-        --bg: #f8fafc;
-        --bg-subtle: #f1f5f9;
-        --card: #ffffff;
-        --text: #0f172a;
-        --text-secondary: #334155;
-        --border: #e2e8f0;
-        --muted: #64748b;
-        --accent: #2563eb;
-        --accent-hover: #1d4ed8;
-        --accent-soft: #eff6ff;
-        --secondary-hover: #f1f5f9;
-        --success: #16a34a;
-        --success-bg: #f0fdf4;
-        --error: #dc2626;
-        --error-bg: #fef2f2;
-        --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-        --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
-      }
-      :root[data-theme="dark"] {
-        --bg: #0f172a;
-        --bg-subtle: #1e293b;
-        --card: #1e293b;
-        --text: #f1f5f9;
-        --text-secondary: #cbd5e1;
-        --border: #334155;
-        --muted: #94a3b8;
-        --accent: #3b82f6;
-        --accent-hover: #60a5fa;
-        --accent-soft: #1e3a5f;
-        --secondary-hover: #334155;
-        --success: #4ade80;
-        --success-bg: #052e1f;
-        --error: #f87171;
-        --error-bg: #3f1d1d;
-        --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
-        --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
-      }
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-        width: 300px;
-        background: var(--bg);
-        color: var(--text);
-        -webkit-font-smoothing: antialiased;
-      }
-      .popup-container {
-        padding: 16px;
-      }
-      .popup-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 16px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid var(--border);
-      }
-      .popup-logo {
-        width: 28px;
-        height: 28px;
-        border-radius: 8px;
-        object-fit: contain;
-      }
-      .popup-header-text {
-        flex: 1;
-        min-width: 0;
-      }
-      .popup-title {
-        font-size: 15px;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-        color: var(--text);
-        line-height: 1.2;
-      }
-      .popup-subtitle {
-        font-size: 11px;
-        color: var(--muted);
-        margin-top: 2px;
-      }
-      .actions {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-      .btn {
-        width: 100%;
-        padding: 10px 14px;
-        border-radius: 10px;
-        border: 1px solid var(--border);
-        background: var(--card);
-        color: var(--text-secondary);
-        cursor: pointer;
-        font-size: 13px;
-        font-weight: 500;
-        font-family: inherit;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        transition: all 0.15s ease;
-        position: relative;
-        overflow: hidden;
-      }
-      .btn:hover {
-        background: var(--secondary-hover);
-        border-color: var(--muted);
-      }
-      .btn:active {
-        transform: scale(0.98);
-      }
-      .btn-primary {
-        background: var(--accent);
-        color: #ffffff;
-        border-color: var(--accent);
-        font-weight: 600;
-        box-shadow: var(--shadow-sm);
-      }
-      .btn-primary:hover {
-        background: var(--accent-hover);
-        border-color: var(--accent-hover);
-        box-shadow: var(--shadow);
-      }
-      .btn-icon {
-        font-size: 15px;
-        line-height: 1;
-        flex-shrink: 0;
-      }
-      #status {
-        margin-top: 10px;
-        font-size: 12px;
-        color: var(--muted);
-        min-height: 20px;
-        text-align: center;
-        padding: 0 4px;
-        transition: all 0.2s ease;
-        border-radius: 6px;
-      }
-      #status:not(:empty) {
-        padding: 6px 10px;
-        background: var(--bg-subtle);
-      }
-      #status.success {
-        color: var(--success);
-        background: var(--success-bg);
-      }
-      #status.error {
-        color: var(--error);
-        background: var(--error-bg);
-      }
-      .popup-footer {
-        margin-top: 12px;
-        padding-top: 10px;
-        border-top: 1px solid var(--border);
-        display: flex;
-        justify-content: center;
-      }
-      .popup-version {
-        font-size: 10px;
-        color: var(--muted);
-        opacity: 0.7;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="popup-container">
-      <div class="popup-header">
-        <img class="popup-logo" src="icons/icon-32.png" alt="" />
-        <div class="popup-header-text">
-          <div class="popup-title" id="title">Grooper</div>
-          <div class="popup-subtitle">Rule-based tab grouping</div>
-        </div>
-      </div>
-      <div class="actions">
-        <button class="btn btn-primary" id="run">
-          <span class="btn-icon">▶</span>
-          <span>今すぐ整理</span>
-        </button>
-        <button class="btn" id="openOptions">
-          <span class="btn-icon">⚙</span>
-          <span>設定を開く</span>
-        </button>
-      </div>
-      <div id="status"></div>
-      <div class="popup-footer">
-        <span class="popup-version">Grooper v0.1.0</span>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Grooper — Rule-based tab grouping</title>
+  <link rel="icon" href="icons/icon-32.png" sizes="32x32" />
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --bg-subtle: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --border: #e2e8f0;
+      --muted: #64748b;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-soft: #eff6ff;
+      --secondary-hover: #f1f5f9;
+      --success: #16a34a;
+      --success-bg: #f0fdf4;
+      --error: #dc2626;
+      --error-bg: #fef2f2;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #0f172a;
+      --bg-subtle: #1e293b;
+      --card: #1e293b;
+      --text: #f1f5f9;
+      --text-secondary: #cbd5e1;
+      --border: #334155;
+      --muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-hover: #60a5fa;
+      --accent-soft: #1e3a5f;
+      --secondary-hover: #334155;
+      --success: #4ade80;
+      --success-bg: #052e1f;
+      --error: #f87171;
+      --error-bg: #3f1d1d;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      width: 300px;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .popup-container {
+      padding: 16px;
+    }
+
+    .popup-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .popup-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+
+    .popup-header-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .popup-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .popup-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn:hover {
+      background: var(--secondary-hover);
+      border-color: var(--muted);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+      font-weight: 600;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+      box-shadow: var(--shadow);
+    }
+
+    .btn-icon {
+      font-size: 15px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    #status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      min-height: 20px;
+      text-align: center;
+      padding: 0 4px;
+      transition: all 0.2s ease;
+      border-radius: 6px;
+    }
+
+    #status:not(:empty) {
+      padding: 6px 10px;
+      background: var(--bg-subtle);
+    }
+
+    #status.success {
+      color: var(--success);
+      background: var(--success-bg);
+    }
+
+    #status.error {
+      color: var(--error);
+      background: var(--error-bg);
+    }
+
+    .popup-footer {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: center;
+    }
+
+    .popup-version {
+      font-size: 10px;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="popup-container">
+    <div class="popup-header">
+      <img class="popup-logo" src="icons/icon-32.png" alt="" />
+      <div class="popup-header-text">
+        <div class="popup-title" id="title">Grooper</div>
+        <div class="popup-subtitle">Rule-based tab grouping</div>
       </div>
     </div>
-    <script src="popup.js"></script>
-  </body>
+    <div class="actions">
+      <button class="btn btn-primary" id="run">
+        <span class="btn-icon">▶</span>
+        <span>今すぐ整理</span>
+      </button>
+      <button class="btn" id="openOptions">
+        <span class="btn-icon">⚙</span>
+        <span>設定を開く</span>
+      </button>
+    </div>
+    <div id="status"></div>
+    <div class="popup-footer">
+      <span class="popup-version">Grooper v0.1.0</span>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+
 </html>
