@@ -25,7 +25,7 @@
 | 0012 Dark mode | P2 | 0010 | 要確認 | themeMode（system/light/dark）導入とPopup/Optionsのダーク配色対応を実装済み。最終手動確認待ち |
 | 0013 i18n (ja/en) | P2 | 0010 | 要確認 | Popup/Optionsの多言語対応（ja/en）と言語設定保存を実装済み。実拡張での表示確認待ち |
 | 0015 Chrome Web Store公開準備 | P2 | 0010,0012,0013 | 完了 | `main` へのマージ（`2949211`）まで完了。manifest整備、LICENSE追加、公開手順/掲載テンプレ整備と利用者向けdocs再編を反映済み |
-| 0016 Settings IA改善（UI先頭・fallbackGroup UI閉塞・matchMode=glob初期値） | P2 | 0010,0011 | 未着手 | Issue #5 起票。Optionsの初期導線と既定値をUI中心へ最適化予定 |
+| 0016 Settings IA改善（UI先頭・fallbackGroup UI閉塞・matchMode=glob初期値） | P2 | 0010,0011 | 要確認 | Optionsのタブ順/初期表示をUI中心へ変更、fallbackGroup UI閉塞、新規ruleのmatchMode初期glob化まで実装。`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0017 Groups policy UI編集（ttlMinutes/maxTabs/lru） | P2 | 0016,0004 | 未着手 | Issue #6 起票。既存機能（cleanup policy）のUI編集対応を追加予定 |
 | 0018 並び順/priority/適用優先度の仕様統一 | P2 | 0011,0016 | 未着手 | Issue #7 起票。並び順と優先度概念の仕様を一本化予定 |
 | 0019 タブ並びを grouped > ungrouped に整理 | P2 | 0018 | 未着手 | Issue #8 起票。グループ済みタブ優先の視認性改善を実装予定 |

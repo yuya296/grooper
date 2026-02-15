@@ -2,7 +2,6 @@ import '../chrome-polyfill.js';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as Select from '@radix-ui/react-select';
-import * as Switch from '@radix-ui/react-switch';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as Toast from '@radix-ui/react-toast';
 import { basicSetup } from 'codemirror';
@@ -266,7 +265,7 @@ function SourceEditor({
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'source' | 'ui'>('source');
+  const [activeTab, setActiveTab] = useState<'source' | 'ui'>('ui');
   const [yamlText, setYamlText] = useState('');
   const [savedYamlText, setSavedYamlText] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
@@ -290,6 +289,14 @@ function App() {
       const loadedYaml = (configResult.configYaml as string) ?? '';
       setYamlText(loadedYaml);
       setSavedYamlText(loadedYaml);
+      const parsed = parseYamlForUi(loadedYaml);
+      if (parsed.ok) {
+        setRawConfig(parsed.rawConfig);
+        setUiState(parsed.uiState);
+        setErrors([]);
+      } else {
+        setErrors(parsed.errors);
+      }
       const loadedTheme = await loadThemeMode();
       setThemeMode(loadedTheme);
       applyTheme(loadedTheme, document, window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -392,7 +399,7 @@ function App() {
 
   function openCreateRuleDrawer() {
     setDrawerRuleIndex(null);
-    setDrawerDraft({ pattern: '', group: '', matchMode: 'regex', color: undefined, priority: undefined });
+    setDrawerDraft({ pattern: '', group: '', matchMode: 'glob', color: undefined, priority: undefined });
     setDrawerErrors([]);
   }
 
@@ -669,11 +676,11 @@ function App() {
 
         <Tabs.Root value={activeTab} onValueChange={(next) => switchTab(next as 'source' | 'ui')}>
           <Tabs.List className="tabs">
-            <Tabs.Trigger className="tab-trigger" value="source">
-              {t(locale, 'common.source')}
-            </Tabs.Trigger>
             <Tabs.Trigger className="tab-trigger" value="ui">
               {t(locale, 'common.ui')}
+            </Tabs.Trigger>
+            <Tabs.Trigger className="tab-trigger" value="source">
+              {t(locale, 'common.source')}
             </Tabs.Trigger>
           </Tabs.List>
 
@@ -701,46 +708,6 @@ function App() {
                     value={uiState.applyMode}
                     onChange={(next) => syncFromUi({ ...uiState, applyMode: next })}
                   />
-                </div>
-                <div className="field-block">
-                  <label className="label" htmlFor="fallbackEnabled">
-                    <span className="label-inline">
-                      {t(locale, 'options.fallbackGroup')}
-                      <span className="info-tip" aria-label={t(locale, 'options.fallbackGroup')}>
-                        ⓘ
-                        <span className="tooltip">
-                          {t(locale, 'options.fallbackHelp')}
-                        </span>
-                      </span>
-                    </span>
-                  </label>
-                  <div className="fallback-controls">
-                    <label className="fallback-toggle" htmlFor="fallbackEnabled">
-                      <Switch.Root
-                        id="fallbackEnabled"
-                        className="switch-root"
-                        checked={uiState.fallbackGroup !== undefined}
-                        onCheckedChange={(checked) =>
-                          syncFromUi({
-                            ...uiState,
-                            fallbackGroup: checked ? uiState.fallbackGroup ?? '' : undefined
-                          })
-                        }
-                      >
-                        <Switch.Thumb className="switch-thumb" />
-                      </Switch.Root>
-                      <span className="muted">{t(locale, 'options.fallbackDisabled')}</span>
-                    </label>
-                    {uiState.fallbackGroup !== undefined && (
-                      <input
-                        id="fallbackGroup"
-                        className="input fallback-input"
-                        placeholder={t(locale, 'options.fallbackPlaceholder')}
-                        value={uiState.fallbackGroup}
-                        onChange={(e) => syncFromUi({ ...uiState, fallbackGroup: e.currentTarget.value })}
-                      />
-                    )}
-                  </div>
                 </div>
               </div>
               <div className="rules-head">
