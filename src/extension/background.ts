@@ -232,7 +232,7 @@ chrome.commands.onCommand.addListener((command) => {
       const slotIndex = Number(command.replace('move-to-group-', '')) - 1;
       const groupName = config.shortcuts?.slots?.[slotIndex];
       if (!groupName) return;
-      const color = config.groups[groupName]?.color;
+      const color = config.groupsByName[groupName]?.color;
       await moveTabToGroup(activeTab.id, windowId, groupName, color);
       await reorderGroupedTabsFirst(windowId);
     }

@@ -27,10 +27,10 @@
 | 0020 | parent保持 vs rule matching 優先順位の仕様化 | 要確認 | `groupingPriority`（inheritFirst/ruleFirst）を追加し、`parentFollow` との組み合わせで評価順を制御可能化。`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0021 | Chrome/Edge 色整合とフォールバック設計 | 要確認 | 色定義を共通化し、`tabGroups.update` の色適用失敗時は色なし更新へフォールバックする安全処理を実装。`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0022 | Chakra UI 再評価（ADR更新） | 完了 | `docs/adr/ADR-2-keep-shadcn-radix-and-defer-chakra-migration.md` を追加し、当面は現行維持（shadcn系 + Radix）方針を確定 |
-| 0023 | YAML v2再定義（Group中心・dynamic name閉塞） | 進行中 | `version: 2` / `groups[].rules[]` への再定義、`groupingStrategy` 統合、fallback/priority/dynamic展開廃止を実装中 |
+| 0023 | YAML v2再定義（Group中心・dynamic name閉塞） | 要確認 | `version: 2` への破壊的移行（groups中心・groupingStrategy・dynamic閉塞・fallback/priority廃止）を実装。`pnpm test`/`pnpm build`通過、手動確認待ち |
 
 ## 現在のフォーカス
-- PBI-0023の実装: 設定モデルをv2へ破壊的変更し、core/UI/docs/testsの整合を完了させる。
+- PBI-0023の最終確認: Options UIで groups/rules 編集、groupingStrategy 切替、保存/再読込が想定どおり動くことを実拡張で確認する。
 
 ## 進捗更新ルール
 - 1コミットごとに、該当PBIの状態変化をこのファイルに反映する。

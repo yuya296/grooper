@@ -4,21 +4,25 @@ import type { Plan, StateSnapshot } from '../../src/core/types.js';
 
 describe('cli lib', () => {
   it('ensures valid config yaml', () => {
-    const config = ensureConfig(`version: 1
-rules:
-  - pattern: 'example\\.com'
-    group: 'Example'
+    const config = ensureConfig(`version: 2
+groups:
+  - name: Example
+    rules:
+      - pattern: 'example\\.com'
+        matchMode: regex
 `);
     expect(config.rules).toHaveLength(1);
-    expect(config.rules[0].group).toBe('Example');
+    expect(config.rules[0].groupName).toBe('Example');
   });
 
   it('throws for invalid config yaml', () => {
     expect(() =>
-      ensureConfig(`version: 1
-rules:
-  - pattern: '('
-    group: 'Broken'
+      ensureConfig(`version: 2
+groups:
+  - name: Broken
+    rules:
+      - pattern: '('
+        matchMode: regex
 `)
     ).toThrow();
   });

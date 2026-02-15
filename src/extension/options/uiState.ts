@@ -1,58 +1,35 @@
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { parseConfigYaml } from '../../core/config.js';
-import type { MatchMode } from '../../core/types.js';
+import type { GroupingStrategy, MatchMode } from '../../core/types.js';
 
 export interface RuleForm {
   pattern: string;
-  group: string;
   matchMode: MatchMode;
-  color?: string;
-  priority?: number;
 }
 
-export interface GroupPolicyForm {
+export interface GroupForm {
   name: string;
   color?: string;
   ttlMinutes?: number;
   maxTabs?: number;
   lru?: boolean;
+  rules: RuleForm[];
 }
 
 export interface UiState {
   applyMode: 'manual' | 'newTabs' | 'always';
-  fallbackGroup?: string;
-  rules: RuleForm[];
-  groups: GroupPolicyForm[];
+  groupingStrategy: GroupingStrategy;
+  groups: GroupForm[];
 }
 
 export type UiParseResult =
   | { ok: true; uiState: UiState; rawConfig: Record<string, unknown> }
   | { ok: false; errors: string[] };
 
-function normalizeRule(rule: any): RuleForm {
-  return {
-    pattern: String(rule?.pattern ?? ''),
-    group: String(rule?.group ?? ''),
-    matchMode: rule?.matchMode === 'glob' ? 'glob' : 'regex',
-    color: rule?.color ? String(rule.color) : undefined,
-    priority: rule?.priority != null ? Number(rule.priority) : undefined
-  };
-}
-
 function normalizePositiveNumber(value: unknown): number | undefined {
   const num = Number(value);
   if (!Number.isFinite(num) || num <= 0) return undefined;
   return num;
-}
-
-function normalizeGroupPolicy(name: string, policy: any): GroupPolicyForm {
-  return {
-    name,
-    color: typeof policy?.color === 'string' && policy.color.length > 0 ? policy.color : undefined,
-    ttlMinutes: normalizePositiveNumber(policy?.ttlMinutes),
-    maxTabs: normalizePositiveNumber(policy?.maxTabs),
-    lru: policy?.lru === true ? true : undefined
-  };
 }
 
 export function parseYamlForUi(yamlText: string): UiParseResult {
@@ -67,7 +44,7 @@ export function parseYamlForUi(yamlText: string): UiParseResult {
   }
 
   const validation = parseConfigYaml(yamlText);
-  if (validation.errors.length > 0) {
+  if (validation.errors.length > 0 || !validation.config) {
     return {
       ok: false,
       errors: validation.errors.map((e) => `${e.path}: ${e.message}`)
@@ -78,23 +55,28 @@ export function parseYamlForUi(yamlText: string): UiParseResult {
     return { ok: false, errors: ['config: invalid structure'] };
   }
 
-  const rawConfig = raw as Record<string, unknown>;
-  const applyMode = (rawConfig.applyMode as UiState['applyMode']) ?? 'manual';
-  const fallbackGroup = (() => {
-    const value = typeof rawConfig.fallbackGroup === 'string' ? rawConfig.fallbackGroup.trim() : '';
-    if (!value) return undefined;
-    if (value.toLowerCase() === 'none') return undefined;
-    return value;
-  })();
-  const rules = Array.isArray(rawConfig.rules) ? rawConfig.rules.map(normalizeRule) : [];
-  const groups = (() => {
-    if (!rawConfig.groups || typeof rawConfig.groups !== 'object') return [];
-    return Object.entries(rawConfig.groups as Record<string, unknown>)
-      .map(([name, policy]) => normalizeGroupPolicy(name, policy))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  })();
+  const compiled = validation.config;
+  const groups: GroupForm[] = compiled.groups.map((group) => ({
+    name: group.name,
+    color: group.color,
+    ttlMinutes: normalizePositiveNumber(group.cleanup.ttlMinutes),
+    maxTabs: normalizePositiveNumber(group.cleanup.maxTabs),
+    lru: group.cleanup.lru === true ? true : undefined,
+    rules: group.rules.map((rule) => ({
+      pattern: rule.pattern,
+      matchMode: rule.matchMode
+    }))
+  }));
 
-  return { ok: true, uiState: { applyMode, fallbackGroup, rules, groups }, rawConfig };
+  return {
+    ok: true,
+    uiState: {
+      applyMode: compiled.applyMode,
+      groupingStrategy: compiled.groupingStrategy,
+      groups
+    },
+    rawConfig: raw as Record<string, unknown>
+  };
 }
 
 export function buildYamlFromUi(
@@ -102,49 +84,43 @@ export function buildYamlFromUi(
   uiState: UiState
 ): { yaml: string; rawConfig: Record<string, unknown> } {
   const nextConfig: Record<string, unknown> =
-    rawConfig && typeof rawConfig === 'object' ? { ...rawConfig } : { version: 1 };
+    rawConfig && typeof rawConfig === 'object' ? { ...rawConfig } : { version: 2 };
 
-  nextConfig.version = 1;
+  nextConfig.version = 2;
   nextConfig.applyMode = uiState.applyMode;
-  if (uiState.fallbackGroup && uiState.fallbackGroup.trim().length > 0) {
-    nextConfig.fallbackGroup = uiState.fallbackGroup.trim();
-  } else {
-    delete nextConfig.fallbackGroup;
-  }
-  nextConfig.rules = uiState.rules.map((rule) => {
+  nextConfig.groupingStrategy = uiState.groupingStrategy;
+
+  delete nextConfig.fallbackGroup;
+  delete nextConfig.parentFollow;
+  delete nextConfig.groupingPriority;
+  delete nextConfig.rules;
+
+  nextConfig.groups = uiState.groups.map((group) => {
     const entry: Record<string, unknown> = {
-      pattern: rule.pattern,
-      group: rule.group
+      name: group.name,
+      rules: group.rules.map((rule) => {
+        const ruleEntry: Record<string, unknown> = { pattern: rule.pattern };
+        if (rule.matchMode === 'regex') ruleEntry.matchMode = 'regex';
+        return ruleEntry;
+      })
     };
-    if (rule.matchMode === 'glob') entry.matchMode = 'glob';
-    if (rule.color) entry.color = rule.color;
-    if (rule.priority != null && !Number.isNaN(rule.priority)) entry.priority = rule.priority;
-    return entry;
-  });
-  const nextGroups: Record<string, Record<string, unknown>> = {};
-  for (const group of uiState.groups) {
-    const name = group.name.trim();
-    if (!name) continue;
-    const policy: Record<string, unknown> = {};
-    if (group.color) policy.color = group.color;
+
+    if (group.color) entry.color = group.color;
+    const cleanup: Record<string, unknown> = {};
     if (group.ttlMinutes != null && Number.isFinite(group.ttlMinutes) && group.ttlMinutes > 0) {
-      policy.ttlMinutes = Math.floor(group.ttlMinutes);
+      cleanup.ttlMinutes = Math.floor(group.ttlMinutes);
     }
     if (group.maxTabs != null && Number.isFinite(group.maxTabs) && group.maxTabs > 0) {
-      policy.maxTabs = Math.floor(group.maxTabs);
+      cleanup.maxTabs = Math.floor(group.maxTabs);
     }
-    if (group.lru === true) policy.lru = true;
-    nextGroups[name] = policy;
-  }
-  if (Object.keys(nextGroups).length > 0) {
-    nextConfig.groups = nextGroups;
-  } else {
-    delete nextConfig.groups;
-  }
+    if (group.lru === true) cleanup.lru = true;
+    if (Object.keys(cleanup).length > 0) entry.cleanup = cleanup;
+    return entry;
+  });
 
-  const next = stringifyYaml(nextConfig, { lineWidth: 0 });
+  const yaml = stringifyYaml(nextConfig, { lineWidth: 0 });
   return {
-    yaml: next.endsWith('\n') ? next : `${next}\n`,
+    yaml: yaml.endsWith('\n') ? yaml : `${yaml}\n`,
     rawConfig: nextConfig
   };
 }

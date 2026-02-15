@@ -32,4 +32,4 @@
 | 0020 parent保持 vs rule matching 優先順位の仕様化 | P2 | 0002,0018 | 要確認 | `groupingPriority`（inheritFirst/ruleFirst）を追加し、planner評価順を切替可能化。`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0021 Chrome/Edge 色整合とフォールバック設計 | P2 | 0016 | 要確認 | 色定義共通化と色適用失敗時フォールバックを実装。`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0022 Chakra UI 再評価（ADR更新） | P2 | 0010 | 完了 | ADR-2を追加し、当面は現行維持（shadcn系 + Radix）を継続する方針を確定 |
-| 0023 YAML v2再定義（Group中心・dynamic name閉塞） | P1 | 0017,0018,0020,0021 | 進行中 | `version: 2` で `groups[].rules[]` へ統一し、fallback/priority/dynamic展開を廃止する破壊的変更を実施中 |
+| 0023 YAML v2再定義（Group中心・dynamic name閉塞） | P1 | 0017,0018,0020,0021 | 要確認 | `version: 2` へ移行し、`groups[].rules[]`・`groupingStrategy`・dynamic閉塞・fallback/priority廃止を実装。`pnpm test`/`pnpm build`通過、手動確認待ち |

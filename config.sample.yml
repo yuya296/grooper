@@ -1,6 +1,8 @@
-version: 1
+version: 2
 applyMode: manual
-rules:
-  - pattern: 'example\\.com'
-    group: 'Example'
-    color: 'blue'
+groupingStrategy: inheritFirst
+groups:
+  - name: Example
+    color: blue
+    rules:
+      - pattern: '*example.com*'

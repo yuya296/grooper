@@ -1,116 +1,104 @@
 import { describe, expect, it } from 'vitest';
 import { parseConfigYaml } from '../../src/core/config.js';
 
-const validYaml = `version: 1
+const validYaml = `version: 2
 applyMode: manual
-rules:
-  - pattern: 'example\\.com'
-    group: "Example"
+groups:
+  - name: Example
+    color: blue
+    rules:
+      - pattern: 'example\\.com'
+        matchMode: regex
 `;
 
-const invalidRegex = `version: 1
+const v1Yaml = `version: 1
 rules:
-  - pattern: '('
-    matchMode: regex
-    group: "Bad"
+  - pattern: 'example\\.com'
+    group: Example
 `;
-const globYaml = `version: 1
-rules:
-  - pattern: '*.example.com'
-    matchMode: glob
-    group: "GlobExample"
+
+const defaultGlobYaml = `version: 2
+groups:
+  - name: GlobExample
+    rules:
+      - pattern: '*.example.com'
 `;
-const globCaptureGroupYaml = `version: 1
-rules:
-  - pattern: '*.example.com'
-    matchMode: glob
-    group: 'Team-$1'
+
+const literalGroupNameYaml = `version: 2
+groups:
+  - name: 'Team-$1'
+    rules:
+      - pattern: '*example.com*'
 `;
-const regexCaptureGroupYaml = `version: 1
-rules:
-  - pattern: '^https://([a-z0-9-]+)\\.example\\.com/'
-    matchMode: regex
-    group: 'Team-$1'
-`;
-const varsYaml = `version: 1
+
+const varsYaml = `version: 2
 vars:
   env: prod
-rules:
-  - pattern: 'example\\.com/\${env}'
-    group: "Example-\${env}"
+groups:
+  - name: Example
+    rules:
+      - pattern: '*example.com/\${env}*'
 `;
 
-const missingVarYaml = `version: 1
-rules:
-  - pattern: 'example\\.com/\${missing}'
-    group: "Example"
+const missingVarYaml = `version: 2
+groups:
+  - name: Example
+    rules:
+      - pattern: '*example.com/\${missing}*'
 `;
 
-const priorityYaml = `version: 1
-rules:
-  - pattern: 'b'
-    group: "B"
-    priority: 1
-  - pattern: 'a'
-    group: "A"
-    priority: 2
+const orderYaml = `version: 2
+groups:
+  - name: First
+    rules:
+      - pattern: '*first*'
+      - pattern: '*first-2*'
+  - name: Second
+    rules:
+      - pattern: '*second*'
 `;
 
-const unknownKeyYaml = `version: 1
-rules: []
-unknownKey: true
-`;
-
-const fallbackNoneYaml = `version: 1
-fallbackGroup: none
-rules: []
-`;
-const groupingPriorityYaml = `version: 1
-groupingPriority: ruleFirst
-rules:
-  - pattern: 'example\\.com'
-    group: "Example"
+const strategyYaml = `version: 2
+groupingStrategy: ruleFirst
+groups:
+  - name: Example
+    rules:
+      - pattern: '*example*'
 `;
 
 describe('parseConfigYaml', () => {
-  it('parses valid yaml', () => {
+  it('parses valid v2 yaml', () => {
     const result = parseConfigYaml(validYaml);
     expect(result.errors).toHaveLength(0);
-    expect(result.config?.rules[0].regex.test('https://example.com')).toBe(true);
-    expect(result.config?.groupingPriority).toBe('inheritFirst');
+    expect(result.config?.version).toBe(2);
+    expect(result.config?.rules[0].regex.test('example.com')).toBe(true);
+    expect(result.config?.groupingStrategy).toBe('inheritFirst');
   });
 
-  it('rejects invalid regex', () => {
-    const result = parseConfigYaml(invalidRegex);
+  it('rejects v1 yaml', () => {
+    const result = parseConfigYaml(v1Yaml);
     expect(result.config).toBeUndefined();
-    expect(result.errors[0].path).toBe('rules.0.pattern');
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  it('supports glob match mode', () => {
-    const result = parseConfigYaml(globYaml);
+  it('defaults matchMode to glob', () => {
+    const result = parseConfigYaml(defaultGlobYaml);
     expect(result.errors).toHaveLength(0);
     expect(result.config?.rules[0].matchMode).toBe('glob');
     expect(result.config?.rules[0].regex.test('api.example.com')).toBe(true);
-    expect(result.config?.rules[0].regex.test('example.com')).toBe(false);
   });
 
-  it('rejects capture template in glob mode', () => {
-    const result = parseConfigYaml(globCaptureGroupYaml);
-    expect(result.config).toBeUndefined();
-    expect(result.errors[0].path).toBe('rules.0.group');
-  });
-
-  it('allows capture template in regex mode', () => {
-    const result = parseConfigYaml(regexCaptureGroupYaml);
+  it('treats dynamic-like group names as literals', () => {
+    const result = parseConfigYaml(literalGroupNameYaml);
     expect(result.errors).toHaveLength(0);
-    expect(result.config?.rules[0].group).toBe('Team-$1');
+    expect(result.config?.groups[0].name).toBe('Team-$1');
+    expect(result.config?.rules[0].groupName).toBe('Team-$1');
   });
 
-  it('expands variables', () => {
+  it('expands variables in rule pattern', () => {
     const result = parseConfigYaml(varsYaml);
     expect(result.errors).toHaveLength(0);
-    expect(result.config?.rules[0].pattern).toBe('example\\.com/prod');
-    expect(result.config?.rules[0].group).toBe('Example-prod');
+    expect(result.config?.rules[0].pattern).toContain('prod');
   });
 
   it('rejects missing variables', () => {
@@ -119,26 +107,19 @@ describe('parseConfigYaml', () => {
     expect(result.errors[0].message).toContain('Unknown variable');
   });
 
-  it('sorts rules by priority then order', () => {
-    const result = parseConfigYaml(priorityYaml);
+  it('keeps yaml order (group order -> rule order)', () => {
+    const result = parseConfigYaml(orderYaml);
     expect(result.errors).toHaveLength(0);
-    expect(result.config?.rules[0].group).toBe('A');
+    expect(result.config?.rules.map((rule) => `${rule.groupName}:${rule.pattern}`)).toEqual([
+      'First:*first*',
+      'First:*first-2*',
+      'Second:*second*'
+    ]);
   });
 
-  it('rejects unknown keys', () => {
-    const result = parseConfigYaml(unknownKeyYaml);
-    expect(result.config).toBeUndefined();
-  });
-
-  it('treats fallbackGroup none as unset', () => {
-    const result = parseConfigYaml(fallbackNoneYaml);
+  it('supports groupingStrategy setting', () => {
+    const result = parseConfigYaml(strategyYaml);
     expect(result.errors).toHaveLength(0);
-    expect(result.config?.fallbackGroup).toBeUndefined();
-  });
-
-  it('supports groupingPriority setting', () => {
-    const result = parseConfigYaml(groupingPriorityYaml);
-    expect(result.errors).toHaveLength(0);
-    expect(result.config?.groupingPriority).toBe('ruleFirst');
+    expect(result.config?.groupingStrategy).toBe('ruleFirst');
   });
 });

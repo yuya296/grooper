@@ -1,25 +1,25 @@
 # 全体設計
 
 ## 目的
-- YAMLを唯一の正（SSOT）として、タブ整理の振る舞いを一貫させる。
+- YAML を唯一の正（SSOT）として、タブ整理の振る舞いを一貫させる。
 - 自動/手動の操作を同じコアロジックで処理し、テスト容易性を最大化する。
 
 ## コンポーネント
 - Config
-  - YAML → スキーマ検証 → compiled config。
+  - YAML（v2）→ スキーマ検証 → compiled config。
 - State Snapshot
   - tabs/groups/lastActiveAt などの状態取得。
 - Planner（pure）
-  - 入力: (state, config, event, clock)
-  - 出力: plan（操作の順序付きリスト）
+  - 入力: `(state, config, options)`
+  - 出力: `plan`（操作の順序付きリスト）
 - Executor（Chrome API）
-  - plan を chrome.tabs / chrome.tabGroups で実行。
+  - `plan` を `chrome.tabs` / `chrome.tabGroups` で実行。
 - Diagnostics
   - `__diag__` 名前空間のメッセージAPI（開発/CI限定）。
 - UI
-  - Options（YAML編集/検証/プレビュー/履歴）、Popup（手動実行）。
+  - Options（UI編集 + Source YAML編集）、Popup（手動実行）。
 - CLI
-  - plan/apply/snapshot/verify を提供。
+  - `plan/apply/snapshot/verify` を提供。
 
 ## データフロー
 ```
@@ -30,25 +30,31 @@
                     [logs]
 ```
 
-## plan の最小操作（例）
-- createGroup(title, color)
-- moveTab(tabId, groupId)
-- closeTab(tabId)
-- ungroup(tabId)
+## plan の最小操作
+- `ensureGroup(group, color, windowId)`
+- `moveTab(tabId, group, windowId)`
+- `closeTab(tabId, reason)`
 
 ## 適用モード
-- manual/newTabs/always をYAMLで切替。
-- always はイベント駆動 + 低頻度の再スキャンを併用可能。
+- `manual / newTabs / always` を YAML で切替。
+- `always` はイベント駆動 + 低頻度再スキャンを併用。
 
-## Planner評価順（仕様）
-- 1) `groupingPriority` に従い、`inheritFirst` なら親追従→ルール、`ruleFirst` ならルール→親追従の順で評価
-- 2) ルール評価: `rules[]` を `priority` 降順、同値はYAML順で評価
-- 3) fallback: 非一致時に `fallbackGroup` を適用
+## Planner評価順（v2）
+- `groupingStrategy=inheritFirst`: 親継承 → ルール一致
+- `groupingStrategy=ruleFirst`: ルール一致 → 親継承
+- `groupingStrategy=ruleOnly`: ルール一致のみ
 
-補足:
-- Options UI のルール並び替えは、保存時に `priority` を再採番して評価順と同期する。
-- `matchMode` は parser既定=`regex`、UI新規作成時既定=`glob` を採用している。
+ルール一致は `groups` の定義順、次に各 `group.rules` の定義順で評価する。
+
+## ルールとグループの関係
+- ドメインモデルは `Group 1 - n Rule`。
+- Rule は `pattern/matchMode` のみを持ち、所属Groupの `name/color/cleanup` を継承する。
+- `dynamic group name` 展開（`$1`, `$<name>`, `$$`）は現行仕様では無効化し、文字列リテラルとして扱う。
+
+## クリーンアップ
+- `groups[].cleanup` を利用して TTL / maxTabs / LRU を適用する。
+- cleanup は既存タブグループ名と `Group.name` を照合して実行する。
 
 ## 状態/ログ
-- スナップショットとplanはJSONで保存可能。
+- スナップショットと plan は JSON で保存可能。
 - 失敗時に復旧しやすい形式を維持する。

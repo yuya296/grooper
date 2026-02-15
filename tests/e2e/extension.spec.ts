@@ -129,9 +129,9 @@ async function runScenario(
   }
 }
 
-test('pattern match and fallback', async ({}, testInfo) => {
+test('pattern match without fallback', async ({}, testInfo) => {
   await runScenario(testInfo, async ({ context, worker }) => {
-    const yaml = `version: 1\napplyMode: manual\nparentFollow: true\nfallbackGroup: "Fallback"\nrules:\n  - pattern: 'example\\.com'\n    group: "Example"\n`;
+    const yaml = `version: 2\napplyMode: manual\ngroupingStrategy: inheritFirst\ngroups:\n  - name: Example\n    rules:\n      - pattern: 'example\\.com'\n        matchMode: regex\n`;
     await setConfig(worker, yaml);
 
     const tab1 = await context.newPage();
@@ -142,17 +142,16 @@ test('pattern match and fallback', async ({}, testInfo) => {
     await diag(worker, { command: 'runOnce', payload: { dryRun: false } });
     const state = await diag<any>(worker, { command: 'getState' });
     const exampleTab = state.state.tabs.find((tab: any) => tab.url?.includes('example.com'));
-    const fallbackTab = state.state.tabs.find((tab: any) => tab.url?.includes('example.org'));
+    const unmatchedTab = state.state.tabs.find((tab: any) => tab.url?.includes('example.org'));
     const exampleGroup = state.state.groups.find((g: any) => g.id === exampleTab.groupId);
-    const fallbackGroup = state.state.groups.find((g: any) => g.id === fallbackTab.groupId);
     expect(exampleGroup?.title).toBe('Example');
-    expect(fallbackGroup?.title).toBe('Fallback');
+    expect(unmatchedTab.groupId === -1 || unmatchedTab.groupId == null).toBe(true);
   });
 });
 
 test('parent follow', async ({}, testInfo) => {
   await runScenario(testInfo, async ({ context, worker }) => {
-    const yaml = `version: 1\napplyMode: manual\nparentFollow: true\nfallbackGroup: "Fallback"\nrules:\n  - pattern: 'example\\.com/parent'\n    group: "ParentGroup"\n`;
+    const yaml = `version: 2\napplyMode: manual\ngroupingStrategy: inheritFirst\ngroups:\n  - name: ParentGroup\n    rules:\n      - pattern: 'example\\.com/parent'\n        matchMode: regex\n`;
     await setConfig(worker, yaml);
 
     const parent = await context.newPage();
@@ -175,7 +174,7 @@ test('parent follow', async ({}, testInfo) => {
 
 test('apply modes', async ({}, testInfo) => {
   await runScenario(testInfo, async ({ context, worker }) => {
-    const yaml = `version: 1\napplyMode: newTabs\nrules:\n  - pattern: 'example\\.com'\n    group: "Example"\n`;
+    const yaml = `version: 2\napplyMode: newTabs\ngroups:\n  - name: Example\n    rules:\n      - pattern: 'example\\.com'\n        matchMode: regex\n`;
     await setConfig(worker, yaml);
 
     const tab = await context.newPage();
@@ -188,7 +187,7 @@ test('apply modes', async ({}, testInfo) => {
     );
     expect(exampleGrouped).toBe(true);
 
-    const yamlAlways = `version: 1\napplyMode: always\nrules:\n  - pattern: 'example\\.com'\n    group: "Example"\n`;
+    const yamlAlways = `version: 2\napplyMode: always\ngroups:\n  - name: Example\n    rules:\n      - pattern: 'example\\.com'\n        matchMode: regex\n`;
     await setConfig(worker, yamlAlways);
 
     const tab2 = await context.newPage();
@@ -206,7 +205,7 @@ test('apply modes', async ({}, testInfo) => {
 
 test('auto cleanup TTL and maxTabs', async ({}, testInfo) => {
   await runScenario(testInfo, async ({ context, worker }) => {
-    const yaml = `version: 1\napplyMode: manual\nrules:\n  - pattern: 'example\\.com'\n    group: "Example"\n    color: "blue"\ngroups:\n  Example:\n    ttlMinutes: 1\n    maxTabs: 1\n    lru: true\n`;
+    const yaml = `version: 2\napplyMode: manual\ngroups:\n  - name: Example\n    color: blue\n    cleanup:\n      ttlMinutes: 1\n      maxTabs: 1\n      lru: true\n    rules:\n      - pattern: 'example\\.com'\n        matchMode: regex\n`;
     await setConfig(worker, yaml);
 
     const tab1 = await context.newPage();

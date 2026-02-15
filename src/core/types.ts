@@ -1,20 +1,23 @@
 export type ApplyMode = 'manual' | 'newTabs' | 'always';
 export type MatchMode = 'regex' | 'glob';
-export type GroupingPriority = 'inheritFirst' | 'ruleFirst';
+export type GroupingStrategy = 'inheritFirst' | 'ruleFirst' | 'ruleOnly';
 
 export interface Rule {
   pattern: string;
-  group: string;
   matchMode?: MatchMode;
-  color?: string;
-  priority?: number;
 }
 
-export interface GroupPolicy {
-  color?: string;
+export interface GroupCleanup {
   ttlMinutes?: number;
   maxTabs?: number;
   lru?: boolean;
+}
+
+export interface Group {
+  name: string;
+  color?: string;
+  cleanup?: GroupCleanup;
+  rules: Rule[];
 }
 
 export interface ShortcutsConfig {
@@ -22,32 +25,37 @@ export interface ShortcutsConfig {
 }
 
 export interface Config {
-  version: 1;
+  version: 2;
   applyMode?: ApplyMode;
   vars?: Record<string, string>;
-  fallbackGroup?: string;
-  parentFollow?: boolean;
-  groupingPriority?: GroupingPriority;
-  groups?: Record<string, GroupPolicy>;
+  groupingStrategy?: GroupingStrategy;
   shortcuts?: ShortcutsConfig;
-  rules: Rule[];
+  groups: Group[];
 }
 
-export interface CompiledRule extends Rule {
+export interface CompiledRule {
+  pattern: string;
   matchMode: MatchMode;
   regex: RegExp;
   index: number;
-  priority: number;
+  groupName: string;
+  groupColor?: string;
+}
+
+export interface CompiledGroup {
+  name: string;
+  color?: string;
+  cleanup: GroupCleanup;
+  rules: CompiledRule[];
 }
 
 export interface CompiledConfig {
-  version: 1;
+  version: 2;
   applyMode: ApplyMode;
   vars: Record<string, string>;
-  fallbackGroup?: string;
-  parentFollow: boolean;
-  groupingPriority: GroupingPriority;
-  groups: Record<string, GroupPolicy>;
+  groupingStrategy: GroupingStrategy;
+  groups: CompiledGroup[];
+  groupsByName: Record<string, CompiledGroup>;
   shortcuts?: ShortcutsConfig;
   rules: CompiledRule[];
 }

@@ -2,100 +2,46 @@ const CONFIG_KEY = 'configYaml';
 const LOGS_KEY = 'logs';
 const LAST_ACTIVE_KEY = 'lastActiveAt';
 
-export const DEFAULT_CONFIG_YAML = `version: 1
+export const DEFAULT_CONFIG_YAML = `version: 2
 applyMode: newTabs
-parentFollow: false
+groupingStrategy: inheritFirst
 shortcuts:
   slots:
     - "Work"
     - "Search"
     - "Personal"
-rules:
-  # 開発・業務系
-  - pattern: '*github.com*'
-    matchMode: glob
-    group: 'Work'
-    color: 'blue'
-    priority: 100
-  - pattern: '*gitlab.com*'
-    matchMode: glob
-    group: 'Work'
-    color: 'blue'
-    priority: 100
-  - pattern: '*bitbucket.org*'
-    matchMode: glob
-    group: 'Work'
-    color: 'blue'
-    priority: 100
-  - pattern: '*atlassian.net*'
-    matchMode: glob
-    group: 'Work'
-    color: 'blue'
-    priority: 95
-  - pattern: '*linear.app*'
-    matchMode: glob
-    group: 'Work'
-    color: 'blue'
-    priority: 95
-  # ドキュメント・ナレッジ
-  - pattern: '*docs.google.com*'
-    matchMode: glob
-    group: 'Docs'
-    color: 'green'
-    priority: 90
-  - pattern: '*notion.so*'
-    matchMode: glob
-    group: 'Docs'
-    color: 'green'
-    priority: 90
-  - pattern: '*qiita.com*'
-    matchMode: glob
-    group: 'Docs'
-    color: 'green'
-    priority: 85
-  - pattern: '*zenn.dev*'
-    matchMode: glob
-    group: 'Docs'
-    color: 'green'
-    priority: 85
-  # 検索
-  - pattern: '*google.*/search*'
-    matchMode: glob
-    group: 'Search'
-    color: 'red'
-    priority: 80
-  - pattern: '*bing.com/search*'
-    matchMode: glob
-    group: 'Search'
-    color: 'red'
-    priority: 80
-  - pattern: '*duckduckgo.com/*'
-    matchMode: glob
-    group: 'Search'
-    color: 'red'
-    priority: 80
-  # メディア
-  - pattern: '*youtube.com*'
-    matchMode: glob
-    group: 'Media'
-    color: 'purple'
-    priority: 70
-  - pattern: '*netflix.com*'
-    matchMode: glob
-    group: 'Media'
-    color: 'purple'
-    priority: 70
-  # SNS
-  - pattern: '*x.com*'
-    matchMode: glob
-    group: 'Social'
-    color: 'orange'
-    priority: 60
-  - pattern: '*twitter.com*'
-    matchMode: glob
-    group: 'Social'
-    color: 'orange'
-    priority: 60
+groups:
+  - name: Work
+    color: blue
+    rules:
+      - pattern: '*github.com*'
+      - pattern: '*gitlab.com*'
+      - pattern: '*bitbucket.org*'
+      - pattern: '*atlassian.net*'
+      - pattern: '*linear.app*'
+  - name: Docs
+    color: green
+    rules:
+      - pattern: '*docs.google.com*'
+      - pattern: '*notion.so*'
+      - pattern: '*qiita.com*'
+      - pattern: '*zenn.dev*'
+  - name: Search
+    color: red
+    rules:
+      - pattern: '*google.*/search*'
+      - pattern: '*bing.com/search*'
+      - pattern: '*duckduckgo.com/*'
+  - name: Media
+    color: purple
+    rules:
+      - pattern: '*youtube.com*'
+      - pattern: '*netflix.com*'
+  - name: Social
+    color: orange
+    rules:
+      - pattern: '*x.com*'
+      - pattern: '*twitter.com*'
 `;
 
 export async function getConfigYaml(): Promise<string> {

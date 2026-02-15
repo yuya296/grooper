@@ -1,19 +1,34 @@
 import { describe, expect, it } from 'vitest';
 import { createPlan } from '../../src/core/planner.js';
-import type { CompiledConfig, StateSnapshot } from '../../src/core/types.js';
+import type { CompiledConfig, CompiledGroup, CompiledRule, StateSnapshot } from '../../src/core/types.js';
 
-const config: CompiledConfig = {
-  version: 1,
-  applyMode: 'manual',
-  vars: {},
-  fallbackGroup: undefined,
-  parentFollow: true,
-  groupingPriority: 'inheritFirst',
-  groups: {},
-  rules: [
-    { pattern: 'example\\.com', group: 'Example', matchMode: 'regex', regex: /example\.com/, index: 0, priority: 0 }
-  ]
-};
+function buildConfig(rule?: Partial<CompiledRule>, strategy: CompiledConfig['groupingStrategy'] = 'inheritFirst'): CompiledConfig {
+  const baseRule: CompiledRule = {
+    pattern: 'example\\.com',
+    groupName: 'Example',
+    groupColor: 'blue',
+    matchMode: 'regex',
+    regex: /example\.com/,
+    index: 0
+  };
+  const mergedRule: CompiledRule = { ...baseRule, ...rule };
+  const group: CompiledGroup = {
+    name: mergedRule.groupName,
+    color: mergedRule.groupColor,
+    cleanup: {},
+    rules: [mergedRule]
+  };
+  return {
+    version: 2,
+    applyMode: 'manual',
+    vars: {},
+    groupingStrategy: strategy,
+    groups: [group],
+    groupsByName: { [group.name]: group },
+    shortcuts: undefined,
+    rules: [mergedRule]
+  };
+}
 
 const state: StateSnapshot = {
   tabs: [
@@ -25,135 +40,95 @@ const state: StateSnapshot = {
 
 describe('createPlan', () => {
   it('creates move plan for matching tabs', () => {
-    const plan = createPlan(state, config);
+    const plan = createPlan(state, buildConfig());
     const move = plan.actions.find((a) => a.type === 'moveTab');
     expect(move).toMatchObject({ tabId: 1, group: 'Example', windowId: 1 });
   });
 
-  it('follows parent group when enabled', () => {
+  it('uses inheritFirst by default (parent group wins)', () => {
     const plan = createPlan(
       {
         tabs: [
           { id: 1, url: 'https://parent.com', windowId: 1, groupId: 9 },
-          { id: 2, url: 'https://child.com', windowId: 1, openerTabId: 1 }
+          { id: 2, url: 'https://example.com', windowId: 1, openerTabId: 1 }
         ],
         groups: [{ id: 9, title: 'ParentGroup', windowId: 1 }]
       },
-      config
+      buildConfig()
     );
     const move = plan.actions.find((a) => a.type === 'moveTab' && a.tabId === 2);
     expect(move).toMatchObject({ group: 'ParentGroup' });
   });
 
-  it('can prioritize rule match over parent group when configured', () => {
-    const customConfig: CompiledConfig = {
-      ...config,
-      parentFollow: true,
-      groupingPriority: 'ruleFirst',
-      rules: [
-        {
-          pattern: 'child\\.com',
-          group: 'RuleGroup',
-          matchMode: 'regex',
-          regex: /child\.com/,
-          index: 0,
-          priority: 0
-        }
-      ]
-    };
+  it('can prioritize rule match over parent group when ruleFirst', () => {
     const plan = createPlan(
       {
         tabs: [
           { id: 1, url: 'https://parent.com', windowId: 1, groupId: 9 },
-          { id: 2, url: 'https://child.com', windowId: 1, openerTabId: 1 }
+          { id: 2, url: 'https://example.com', windowId: 1, openerTabId: 1 }
         ],
         groups: [{ id: 9, title: 'ParentGroup', windowId: 1 }]
       },
-      customConfig
+      buildConfig(undefined, 'ruleFirst')
     );
     const move = plan.actions.find((a) => a.type === 'moveTab' && a.tabId === 2);
-    expect(move).toMatchObject({ group: 'RuleGroup' });
+    expect(move).toMatchObject({ group: 'Example' });
   });
 
-  it('applies fallback when no match', () => {
-    const fallbackConfig: CompiledConfig = { ...config, fallbackGroup: 'Fallback' };
+  it('ignores parent group when ruleOnly', () => {
+    const plan = createPlan(
+      {
+        tabs: [
+          { id: 1, url: 'https://parent.com', windowId: 1, groupId: 9 },
+          { id: 2, url: 'https://no-match.com', windowId: 1, openerTabId: 1 }
+        ],
+        groups: [{ id: 9, title: 'ParentGroup', windowId: 1 }]
+      },
+      buildConfig(undefined, 'ruleOnly')
+    );
+    const move = plan.actions.find((a) => a.type === 'moveTab' && a.tabId === 2);
+    expect(move).toBeUndefined();
+  });
+
+  it('does not move unmatched tabs (fallback removed)', () => {
     const plan = createPlan(
       {
         tabs: [{ id: 3, url: 'https://none.com', windowId: 1 }],
         groups: []
       },
-      fallbackConfig
+      buildConfig()
     );
     const move = plan.actions.find((a) => a.type === 'moveTab' && a.tabId === 3);
-    expect(move).toMatchObject({ group: 'Fallback' });
+    expect(move).toBeUndefined();
   });
 
-  it('uses groups color when rule color is omitted', () => {
-    const colorConfig: CompiledConfig = {
-      ...config,
-      groups: { Example: { color: 'blue' } },
-      rules: [
-        { pattern: 'example\\.com', group: 'Example', matchMode: 'regex', regex: /example\.com/, index: 0, priority: 0 }
-      ]
-    };
-    const plan = createPlan(state, colorConfig);
+  it('uses group color from parent group definition', () => {
+    const plan = createPlan(state, buildConfig());
     const ensure = plan.actions.find((a) => a.type === 'ensureGroup');
     expect(ensure).toMatchObject({ group: 'Example', color: 'blue' });
   });
 
   it('respects scope tab ids', () => {
-    const scoped = createPlan(state, config, { scopeTabIds: new Set([2]) });
+    const scoped = createPlan(state, buildConfig(), { scopeTabIds: new Set([2]) });
     const move = scoped.actions.find((a) => a.type === 'moveTab');
     expect(move).toBeUndefined();
   });
 
-  it('expands regex captures into group template', () => {
-    const captureConfig: CompiledConfig = {
-      ...config,
-      rules: [
-        {
-          pattern: '^https://([a-z0-9-]+)\\.example\\.com/',
-          group: 'Team-$1',
-          matchMode: 'regex',
-          regex: /^https:\/\/([a-z0-9-]+)\.example\.com\//,
-          index: 0,
-          priority: 0
-        }
-      ]
-    };
+  it('keeps group name literal (no capture expansion)', () => {
     const plan = createPlan(
       {
         tabs: [{ id: 11, url: 'https://dev.example.com/home', windowId: 1 }],
         groups: []
       },
-      captureConfig
+      buildConfig({
+        pattern: '^https://([a-z0-9-]+)\\.example\\.com/',
+        matchMode: 'regex',
+        regex: /^https:\/\/([a-z0-9-]+)\.example\.com\//,
+        groupName: 'Team-$1',
+        groupColor: 'cyan'
+      })
     );
     const move = plan.actions.find((a) => a.type === 'moveTab' && a.tabId === 11);
-    expect(move).toMatchObject({ group: 'Team-dev' });
-  });
-
-  it('expands named capture into group template', () => {
-    const namedCaptureConfig: CompiledConfig = {
-      ...config,
-      rules: [
-        {
-          pattern: '^https?://example\\.com/(?<env>[^/]+)(?:/.*)?$',
-          group: 'Example:$<env>',
-          matchMode: 'regex',
-          regex: /^https?:\/\/example\.com\/(?<env>[^/]+)(?:\/.*)?$/,
-          index: 0,
-          priority: 0
-        }
-      ]
-    };
-    const plan = createPlan(
-      {
-        tabs: [{ id: 12, url: 'https://example.com/fuga/aaa', windowId: 1 }],
-        groups: []
-      },
-      namedCaptureConfig
-    );
-    const move = plan.actions.find((a) => a.type === 'moveTab' && a.tabId === 12);
-    expect(move).toMatchObject({ group: 'Example:fuga' });
+    expect(move).toMatchObject({ group: 'Team-$1' });
   });
 });

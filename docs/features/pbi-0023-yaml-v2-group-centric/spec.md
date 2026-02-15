@@ -21,11 +21,11 @@
 
 # Acceptance Criteria
 
-- [ ] AC1: v2 YAML（`groups[].rules[]`）を parse/compile できる。
-- [ ] AC2: planner が `groupingStrategy`（`inheritFirst | ruleFirst | ruleOnly`）で期待通り分岐する。
-- [ ] AC3: dynamic group name 記法は展開されず、リテラルとして扱われる。
-- [ ] AC4: Options UI で Group（name/color/cleanup）と Group 内 Rule の編集/保存/再読込ができる。
-- [ ] AC5: `pnpm test` / `pnpm build` が通る。
+- [x] AC1: v2 YAML（`groups[].rules[]`）を parse/compile できる。
+- [x] AC2: planner が `groupingStrategy`（`inheritFirst | ruleFirst | ruleOnly`）で期待通り分岐する。
+- [x] AC3: dynamic group name 記法は展開されず、リテラルとして扱われる。
+- [x] AC4: Options UI で Group（name/color/cleanup）と Group 内 Rule の編集/保存/再読込ができる。
+- [x] AC5: `pnpm test` / `pnpm build` が通る。
 
 # Notes
 

@@ -5,16 +5,20 @@ import type { CompiledConfig, StateSnapshot } from '../../src/core/types.js';
 
 const clock = fixedClock(1_000_000);
 
+const exampleGroup = {
+  name: 'Example',
+  color: 'blue',
+  cleanup: { ttlMinutes: 10, maxTabs: 1, lru: true },
+  rules: []
+};
+
 const config: CompiledConfig = {
-  version: 1,
+  version: 2,
   applyMode: 'manual',
   vars: {},
-  fallbackGroup: undefined,
-  parentFollow: true,
-  groupingPriority: 'inheritFirst',
-  groups: {
-    Example: { ttlMinutes: 10, maxTabs: 1, lru: true }
-  },
+  groupingStrategy: 'inheritFirst',
+  groups: [exampleGroup],
+  groupsByName: { Example: exampleGroup },
   rules: []
 };
 
