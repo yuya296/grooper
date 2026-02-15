@@ -36,11 +36,18 @@ export function createPlan(
 
   for (const tab of targetTabs) {
     let matched = null;
-    if (config.parentFollow) {
-      matched = resolveParentGroup(state, tab);
-    }
-    if (!matched) {
+    if (config.groupingPriority === 'ruleFirst') {
       matched = matchRule(config, tab);
+      if (!matched && config.parentFollow) {
+        matched = resolveParentGroup(state, tab);
+      }
+    } else {
+      if (config.parentFollow) {
+        matched = resolveParentGroup(state, tab);
+      }
+      if (!matched) {
+        matched = matchRule(config, tab);
+      }
     }
     if (!matched && config.fallbackGroup) {
       matched = { group: config.fallbackGroup };

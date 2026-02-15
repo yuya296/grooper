@@ -8,6 +8,7 @@ const config: CompiledConfig = {
   vars: {},
   fallbackGroup: undefined,
   parentFollow: true,
+  groupingPriority: 'inheritFirst',
   groups: {},
   rules: [
     { pattern: 'example\\.com', group: 'Example', matchMode: 'regex', regex: /example\.com/, index: 0, priority: 0 }
@@ -42,6 +43,36 @@ describe('createPlan', () => {
     );
     const move = plan.actions.find((a) => a.type === 'moveTab' && a.tabId === 2);
     expect(move).toMatchObject({ group: 'ParentGroup' });
+  });
+
+  it('can prioritize rule match over parent group when configured', () => {
+    const customConfig: CompiledConfig = {
+      ...config,
+      parentFollow: true,
+      groupingPriority: 'ruleFirst',
+      rules: [
+        {
+          pattern: 'child\\.com',
+          group: 'RuleGroup',
+          matchMode: 'regex',
+          regex: /child\.com/,
+          index: 0,
+          priority: 0
+        }
+      ]
+    };
+    const plan = createPlan(
+      {
+        tabs: [
+          { id: 1, url: 'https://parent.com', windowId: 1, groupId: 9 },
+          { id: 2, url: 'https://child.com', windowId: 1, openerTabId: 1 }
+        ],
+        groups: [{ id: 9, title: 'ParentGroup', windowId: 1 }]
+      },
+      customConfig
+    );
+    const move = plan.actions.find((a) => a.type === 'moveTab' && a.tabId === 2);
+    expect(move).toMatchObject({ group: 'RuleGroup' });
   });
 
   it('applies fallback when no match', () => {

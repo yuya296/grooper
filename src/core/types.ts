@@ -1,5 +1,6 @@
 export type ApplyMode = 'manual' | 'newTabs' | 'always';
 export type MatchMode = 'regex' | 'glob';
+export type GroupingPriority = 'inheritFirst' | 'ruleFirst';
 
 export interface Rule {
   pattern: string;
@@ -26,6 +27,7 @@ export interface Config {
   vars?: Record<string, string>;
   fallbackGroup?: string;
   parentFollow?: boolean;
+  groupingPriority?: GroupingPriority;
   groups?: Record<string, GroupPolicy>;
   shortcuts?: ShortcutsConfig;
   rules: Rule[];
@@ -44,6 +46,7 @@ export interface CompiledConfig {
   vars: Record<string, string>;
   fallbackGroup?: string;
   parentFollow: boolean;
+  groupingPriority: GroupingPriority;
   groups: Record<string, GroupPolicy>;
   shortcuts?: ShortcutsConfig;
   rules: CompiledRule[];

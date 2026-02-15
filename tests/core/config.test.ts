@@ -65,12 +65,19 @@ const fallbackNoneYaml = `version: 1
 fallbackGroup: none
 rules: []
 `;
+const groupingPriorityYaml = `version: 1
+groupingPriority: ruleFirst
+rules:
+  - pattern: 'example\\.com'
+    group: "Example"
+`;
 
 describe('parseConfigYaml', () => {
   it('parses valid yaml', () => {
     const result = parseConfigYaml(validYaml);
     expect(result.errors).toHaveLength(0);
     expect(result.config?.rules[0].regex.test('https://example.com')).toBe(true);
+    expect(result.config?.groupingPriority).toBe('inheritFirst');
   });
 
   it('rejects invalid regex', () => {
@@ -127,5 +134,11 @@ describe('parseConfigYaml', () => {
     const result = parseConfigYaml(fallbackNoneYaml);
     expect(result.errors).toHaveLength(0);
     expect(result.config?.fallbackGroup).toBeUndefined();
+  });
+
+  it('supports groupingPriority setting', () => {
+    const result = parseConfigYaml(groupingPriorityYaml);
+    expect(result.errors).toHaveLength(0);
+    expect(result.config?.groupingPriority).toBe('ruleFirst');
   });
 });

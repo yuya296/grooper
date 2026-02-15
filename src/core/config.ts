@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { parse } from 'yaml';
-import type { ApplyMode, CompiledConfig, CompiledRule, Config, MatchMode } from './types.js';
+import type { ApplyMode, CompiledConfig, CompiledRule, Config, GroupingPriority, MatchMode } from './types.js';
 import { validateGroupTemplateForMatchMode } from './rule-template.js';
 
 export interface ConfigError {
@@ -25,6 +25,7 @@ const configSchema = z
     vars: z.record(z.string()).optional(),
     fallbackGroup: z.string().optional(),
     parentFollow: z.boolean().optional(),
+    groupingPriority: z.enum(['inheritFirst', 'ruleFirst']).optional(),
     groups: z
       .record(
         z
@@ -48,6 +49,7 @@ const configSchema = z
   .strict();
 
 const DEFAULT_APPLY_MODE: ApplyMode = 'manual';
+const DEFAULT_GROUPING_PRIORITY: GroupingPriority = 'inheritFirst';
 
 function globToRegexPattern(glob: string): string {
   let pattern = '^';
@@ -161,6 +163,7 @@ export function parseConfigYaml(yamlText: string): { config?: CompiledConfig; er
       vars,
       fallbackGroup: normalizedFallback,
       parentFollow: config.parentFollow ?? true,
+      groupingPriority: config.groupingPriority ?? DEFAULT_GROUPING_PRIORITY,
       groups: config.groups ?? {},
       shortcuts: config.shortcuts,
       rules: sortedRules

@@ -32,6 +32,7 @@ rules:
 | `parentFollow` | `boolean` | no | `false` | 親タブ追従 |
 | `fallbackGroup` | `string` | no | unset | 非一致タブの移動先 |
 | `shortcuts` | `object` | no | unset | ショートカット設定 |
+| `groupingPriority` | `inheritFirst \| ruleFirst` | no | `inheritFirst` | 親追従とルール一致のどちらを先に評価するか |
 | `rules` | `array` | yes | `[]` | ルール一覧 |
 | `groups` | `object` | no | unset | グループ別の詳細設定 |
 
@@ -89,8 +90,8 @@ groups:
 
 ## 評価順と優先順位
 
-1. `parentFollow` が有効かつ親タブがグループ所属の場合、親グループを優先する。
-2. 親追従が成立しない場合、`rules[]` を評価する。
+1. `groupingPriority=inheritFirst` の場合、`parentFollow` が有効かつ親タブがグループ所属なら親グループを先に評価する。
+2. `groupingPriority=ruleFirst` の場合、`rules[]` を先に評価する（親追従は後段）。
 3. ルール競合時は `priority` の降順で決定し、同値は YAML 定義順で決定する。
 4. いずれにも一致しない場合、`fallbackGroup` が設定されていれば適用する。
 

@@ -11,6 +11,7 @@ const config: CompiledConfig = {
   vars: {},
   fallbackGroup: undefined,
   parentFollow: true,
+  groupingPriority: 'inheritFirst',
   groups: {
     Example: { ttlMinutes: 10, maxTabs: 1, lru: true }
   },

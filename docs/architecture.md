@@ -41,7 +41,7 @@
 - always はイベント駆動 + 低頻度の再スキャンを併用可能。
 
 ## Planner評価順（仕様）
-- 1) `parentFollow`: 親タブのグループ継承を最初に評価
+- 1) `groupingPriority` に従い、`inheritFirst` なら親追従→ルール、`ruleFirst` ならルール→親追従の順で評価
 - 2) ルール評価: `rules[]` を `priority` 降順、同値はYAML順で評価
 - 3) fallback: 非一致時に `fallbackGroup` を適用
 
