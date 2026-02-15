@@ -12,7 +12,8 @@ describe('tab order', () => {
     ]);
 
     expect(result.startIndex).toBe(1);
-    expect(result.tabIds).toEqual([3, 5, 2, 4]);
+    expect(result.groupedIds).toEqual([3, 5]);
+    expect(result.ungroupedIds).toEqual([2, 4]);
   });
 
   it('keeps relative order within grouped and ungrouped subsets', () => {
@@ -23,6 +24,7 @@ describe('tab order', () => {
       { id: 13, index: 8, groupId: -1 }
     ]);
 
-    expect(result.tabIds).toEqual([10, 11, 12, 13]);
+    expect(result.groupedIds).toEqual([10, 11]);
+    expect(result.ungroupedIds).toEqual([12, 13]);
   });
 });

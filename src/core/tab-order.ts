@@ -5,13 +5,19 @@ export interface TabOrderInput {
   pinned?: boolean;
 }
 
+export interface GroupedFirstPlan {
+  startIndex: number;
+  groupedIds: number[];
+  ungroupedIds: number[];
+}
+
 function byIndexAsc(a: TabOrderInput, b: TabOrderInput): number {
   const ai = a.index ?? Number.MAX_SAFE_INTEGER;
   const bi = b.index ?? Number.MAX_SAFE_INTEGER;
   return ai - bi;
 }
 
-export function buildGroupedFirstUnpinnedOrder(tabs: TabOrderInput[]): { startIndex: number; tabIds: number[] } {
+export function buildGroupedFirstUnpinnedOrder(tabs: TabOrderInput[]): GroupedFirstPlan {
   const ordered = [...tabs].sort(byIndexAsc);
   const unpinned = ordered.filter((tab) => tab.pinned !== true);
   const grouped = unpinned.filter((tab) => tab.groupId != null && tab.groupId >= 0);
@@ -25,6 +31,7 @@ export function buildGroupedFirstUnpinnedOrder(tabs: TabOrderInput[]): { startIn
 
   return {
     startIndex,
-    tabIds: [...grouped, ...ungrouped].map((tab) => tab.id)
+    groupedIds: grouped.map((tab) => tab.id),
+    ungroupedIds: ungrouped.map((tab) => tab.id)
   };
 }

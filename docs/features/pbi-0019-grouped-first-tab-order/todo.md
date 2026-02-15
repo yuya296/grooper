@@ -13,3 +13,4 @@
 - 2026-02-15: `core/tab-order.ts` と `tests/core/tab-order.test.ts` を追加。
 - 2026-02-15: `executePlan` 後とコマンド操作後に grouped-first 整列を適用。
 - 2026-02-15: `pnpm test` / `pnpm build` 通過。手動確認待ち。
+- 2026-02-15: groupedタブ自体を個別移動するとグループ破壊の可能性があるため、ungroupedブロックのみ後方へ移動する方式に修正。
