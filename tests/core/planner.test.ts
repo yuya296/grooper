@@ -88,6 +88,19 @@ describe('createPlan', () => {
     expect(move).toMatchObject({ group: 'Fallback' });
   });
 
+  it('uses groups color when rule color is omitted', () => {
+    const colorConfig: CompiledConfig = {
+      ...config,
+      groups: { Example: { color: 'blue' } },
+      rules: [
+        { pattern: 'example\\.com', group: 'Example', matchMode: 'regex', regex: /example\.com/, index: 0, priority: 0 }
+      ]
+    };
+    const plan = createPlan(state, colorConfig);
+    const ensure = plan.actions.find((a) => a.type === 'ensureGroup');
+    expect(ensure).toMatchObject({ group: 'Example', color: 'blue' });
+  });
+
   it('respects scope tab ids', () => {
     const scoped = createPlan(state, config, { scopeTabIds: new Set([2]) });
     const move = scoped.actions.find((a) => a.type === 'moveTab');

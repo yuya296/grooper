@@ -9,7 +9,9 @@ function matchRule(config: CompiledConfig, tab: TabState): { group: string; colo
   for (const rule of config.rules) {
     const match = tab.url.match(rule.regex);
     if (match) {
-      return { group: expandGroupCaptures(rule.group, match), color: rule.color };
+      const group = expandGroupCaptures(rule.group, match);
+      const groupPolicyColor = config.groups[group]?.color;
+      return { group, color: rule.color ?? groupPolicyColor };
     }
   }
   return null;
@@ -50,7 +52,7 @@ export function createPlan(
       }
     }
     if (!matched && config.fallbackGroup) {
-      matched = { group: config.fallbackGroup };
+      matched = { group: config.fallbackGroup, color: config.groups[config.fallbackGroup]?.color };
     }
     if (!matched) continue;
     groupAssignments.set(tab.id, { ...matched, windowId: tab.windowId });
