@@ -6,7 +6,7 @@ function findMatchedGroup(url: string): string | undefined {
   const result = parseConfigYaml(DEFAULT_CONFIG_YAML);
   if (result.errors.length > 0 || !result.config) return undefined;
   for (const rule of result.config.rules) {
-    if (rule.regex.test(url)) return rule.group;
+    if (rule.regex.test(url)) return rule.groupName;
   }
   return undefined;
 }
@@ -16,7 +16,7 @@ describe('default config preset', () => {
     const result = parseConfigYaml(DEFAULT_CONFIG_YAML);
     expect(result.errors).toHaveLength(0);
     expect(result.config?.applyMode).toBe('newTabs');
-    expect(result.config?.fallbackGroup).toBeUndefined();
+    expect(result.config?.groupingStrategy).toBe('inheritFirst');
     expect(result.config?.rules.length).toBeGreaterThanOrEqual(10);
   });
 

@@ -1,31 +1,18 @@
 import '../chrome-polyfill.js';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as Select from '@radix-ui/react-select';
-import * as Switch from '@radix-ui/react-switch';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as Toast from '@radix-ui/react-toast';
 import { basicSetup } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { yaml } from '@codemirror/lang-yaml';
-import {
-  DndContext,
-  DragOverlay,
-  type DragEndEvent,
-  type DragOverEvent,
-  type DragStartEvent,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors
-} from '@dnd-kit/core';
-import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { parseConfigYaml } from '../../core/config.js';
-import { validateGroupTemplateForMatchMode } from '../../core/rule-template.js';
-import type { MatchMode } from '../../core/types.js';
-import { buildYamlFromUi, parseYamlForUi, type RuleForm, type UiState } from './uiState.js';
+import { validateRulePattern } from '../../core/rule-template.js';
+import { TAB_GROUP_COLORS } from '../../core/tab-group-colors.js';
+import type { GroupingStrategy, MatchMode } from '../../core/types.js';
+import { buildYamlFromUi, parseYamlForUi, type GroupForm, type RuleForm, type UiState } from './uiState.js';
 import { LANGUAGE_KEY, loadLocale, saveLocale, t, type Locale } from '../i18n.js';
 import { DEFAULT_CONFIG_YAML } from '../storage.js';
 import {
@@ -37,21 +24,10 @@ import {
 } from '../theme.js';
 
 const NONE_COLOR = '__none__';
-const GROUP_COLORS = [
-  { value: 'grey', label: 'Grey', hex: '#9ca3af' },
-  { value: 'blue', label: 'Blue', hex: '#3b82f6' },
-  { value: 'red', label: 'Red', hex: '#ef4444' },
-  { value: 'yellow', label: 'Yellow', hex: '#eab308' },
-  { value: 'green', label: 'Green', hex: '#22c55e' },
-  { value: 'pink', label: 'Pink', hex: '#ec4899' },
-  { value: 'purple', label: 'Purple', hex: '#a855f7' },
-  { value: 'cyan', label: 'Cyan', hex: '#06b6d4' },
-  { value: 'orange', label: 'Orange', hex: '#f97316' }
-] as const;
 
 function findColorHex(color?: string) {
   if (!color) return undefined;
-  return GROUP_COLORS.find((entry) => entry.value === color)?.hex;
+  return TAB_GROUP_COLORS.find((entry) => entry.value === color)?.hex;
 }
 
 function ColorSelect({
@@ -81,7 +57,7 @@ function ColorSelect({
             <Select.Item className="select-item" value={NONE_COLOR}>
               <Select.ItemText>{t(locale, 'options.color.none')}</Select.ItemText>
             </Select.Item>
-            {GROUP_COLORS.map((color) => (
+            {TAB_GROUP_COLORS.map((color) => (
               <Select.Item key={color.value} className="select-item" value={color.value}>
                 <span className="inline">
                   <span className="color-dot" style={{ backgroundColor: color.hex }} />
@@ -131,6 +107,41 @@ function AppModeSelect({
   );
 }
 
+function GroupingStrategySelect({
+  locale,
+  value,
+  onChange
+}: {
+  locale: Locale;
+  value: GroupingStrategy;
+  onChange: (next: GroupingStrategy) => void;
+}) {
+  const labels: Record<GroupingStrategy, string> = {
+    inheritFirst: t(locale, 'options.groupingStrategy.inheritFirst'),
+    ruleFirst: t(locale, 'options.groupingStrategy.ruleFirst'),
+    ruleOnly: t(locale, 'options.groupingStrategy.ruleOnly')
+  };
+  return (
+    <Select.Root value={value} onValueChange={(next) => onChange(next as GroupingStrategy)}>
+      <Select.Trigger className="select-trigger" aria-label="groupingStrategy">
+        <Select.Value>{labels[value]}</Select.Value>
+        <Select.Icon className="select-icon">▾</Select.Icon>
+      </Select.Trigger>
+      <Select.Portal>
+        <Select.Content className="select-content" position="popper" sideOffset={6}>
+          <Select.Viewport className="select-viewport">
+            {(['inheritFirst', 'ruleFirst', 'ruleOnly'] as const).map((strategy) => (
+              <Select.Item key={strategy} className="select-item" value={strategy}>
+                <Select.ItemText>{labels[strategy]}</Select.ItemText>
+              </Select.Item>
+            ))}
+          </Select.Viewport>
+        </Select.Content>
+      </Select.Portal>
+    </Select.Root>
+  );
+}
+
 function MatchModeSelect({
   locale,
   value,
@@ -153,11 +164,11 @@ function MatchModeSelect({
       <Select.Portal>
         <Select.Content className="select-content" position="popper" sideOffset={6}>
           <Select.Viewport className="select-viewport">
-            <Select.Item className="select-item" value="regex">
-              <Select.ItemText>{modeLabels.regex}</Select.ItemText>
-            </Select.Item>
             <Select.Item className="select-item" value="glob">
               <Select.ItemText>{modeLabels.glob}</Select.ItemText>
+            </Select.Item>
+            <Select.Item className="select-item" value="regex">
+              <Select.ItemText>{modeLabels.regex}</Select.ItemText>
             </Select.Item>
           </Select.Viewport>
         </Select.Content>
@@ -197,25 +208,12 @@ function LanguageSelect({
   );
 }
 
-interface RuleRow extends RuleForm {
-  rowId: string;
-}
-
-function applyPriorityFromOrder(rules: RuleForm[]): RuleForm[] {
-  const size = rules.length;
-  return rules.map((rule, index) => ({
-    ...rule,
-    priority: size - index
-  }));
-}
-
-function SortHandle({ rowId, ariaLabel }: { rowId: string; ariaLabel: string }) {
-  const { attributes, listeners, setNodeRef } = useSortable({ id: rowId });
-  return (
-    <button ref={setNodeRef} type="button" className="handle" {...attributes} {...listeners} aria-label={ariaLabel}>
-      ⋮⋮
-    </button>
-  );
+function parsePositiveIntInput(value: string): number | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const parsed = Number.parseInt(trimmed, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return undefined;
+  return parsed;
 }
 
 function SourceEditor({
@@ -266,23 +264,20 @@ function SourceEditor({
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'source' | 'ui'>('source');
+  const [activeTab, setActiveTab] = useState<'source' | 'ui'>('ui');
   const [yamlText, setYamlText] = useState('');
   const [savedYamlText, setSavedYamlText] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
-  const [uiState, setUiState] = useState<UiState>({ applyMode: 'manual', fallbackGroup: undefined, rules: [] });
+  const [uiState, setUiState] = useState<UiState>({
+    applyMode: 'manual',
+    groupingStrategy: 'inheritFirst',
+    groups: []
+  });
   const [rawConfig, setRawConfig] = useState<Record<string, unknown> | null>(null);
-  const [drawerRuleIndex, setDrawerRuleIndex] = useState<number | null>(null);
-  const [drawerDraft, setDrawerDraft] = useState<RuleForm | null>(null);
-  const [drawerErrors, setDrawerErrors] = useState<string[]>([]);
-  const [activeDragId, setActiveDragId] = useState<string | null>(null);
-  const [overDragId, setOverDragId] = useState<string | null>(null);
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [themeMode, setThemeMode] = useState<ThemeMode>(DEFAULT_THEME_MODE);
   const [locale, setLocale] = useState<Locale>('ja');
-
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   useEffect(() => {
     void (async () => {
@@ -290,6 +285,14 @@ function App() {
       const loadedYaml = (configResult.configYaml as string) ?? '';
       setYamlText(loadedYaml);
       setSavedYamlText(loadedYaml);
+      const parsed = parseYamlForUi(loadedYaml);
+      if (parsed.ok) {
+        setRawConfig(parsed.rawConfig);
+        setUiState(parsed.uiState);
+        setErrors([]);
+      } else {
+        setErrors(parsed.errors);
+      }
       const loadedTheme = await loadThemeMode();
       setThemeMode(loadedTheme);
       applyTheme(loadedTheme, document, window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -358,22 +361,11 @@ function App() {
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [hasUnsavedChanges]);
 
-  const ruleRows = useMemo<RuleRow[]>(
-    () =>
-      uiState.rules.map((rule, index) => ({
-        ...rule,
-        rowId: String(index)
-      })),
-    [uiState.rules]
-  );
-
   function syncFromUi(nextUiState: UiState, baseRawConfig = rawConfig) {
-    const normalizedRules = applyPriorityFromOrder(nextUiState.rules);
-    const normalizedState: UiState = { ...nextUiState, rules: normalizedRules };
-    const normalizedResult = buildYamlFromUi(baseRawConfig, normalizedState);
-    setUiState(normalizedState);
-    setRawConfig(normalizedResult.rawConfig);
-    setYamlText(normalizedResult.yaml);
+    const nextResult = buildYamlFromUi(baseRawConfig, nextUiState);
+    setUiState(nextUiState);
+    setRawConfig(nextResult.rawConfig);
+    setYamlText(nextResult.yaml);
   }
 
   function switchTab(nextTab: 'source' | 'ui') {
@@ -390,85 +382,54 @@ function App() {
     setActiveTab(nextTab);
   }
 
-  function openCreateRuleDrawer() {
-    setDrawerRuleIndex(null);
-    setDrawerDraft({ pattern: '', group: '', matchMode: 'regex', color: undefined, priority: undefined });
-    setDrawerErrors([]);
+  function updateGroup(index: number, nextGroup: GroupForm) {
+    const nextGroups = uiState.groups.map((group, i) => (i === index ? nextGroup : group));
+    syncFromUi({ ...uiState, groups: nextGroups });
   }
 
-  function openEditRuleDrawer(index: number) {
-    const rule = uiState.rules[index];
-    if (!rule) return;
-    setDrawerRuleIndex(index);
-    setDrawerDraft({ ...rule });
-    setDrawerErrors([]);
+  function removeGroup(index: number) {
+    const nextGroups = uiState.groups.filter((_, i) => i !== index);
+    syncFromUi({ ...uiState, groups: nextGroups });
   }
 
-  function closeDrawer() {
-    setDrawerRuleIndex(null);
-    setDrawerDraft(null);
-    setDrawerErrors([]);
+  function addGroup() {
+    syncFromUi({
+      ...uiState,
+      groups: [...uiState.groups, { name: '', color: undefined, ttlMinutes: undefined, maxTabs: undefined, lru: undefined, rules: [] }]
+    });
   }
 
-  function validateRuleDraft(rule: RuleForm) {
-    const nextErrors: string[] = [];
-    if (!rule.group.trim()) nextErrors.push(t(locale, 'options.validation.groupRequired'));
-    const groupTemplateError = validateGroupTemplateForMatchMode(rule.group, rule.matchMode);
-    if (groupTemplateError) nextErrors.push(groupTemplateError);
-    if (!rule.pattern.trim()) nextErrors.push(t(locale, 'options.validation.patternRequired'));
-    const patternRegexError = getPatternRegexError(rule.pattern, rule.matchMode);
-    if (patternRegexError) nextErrors.push(patternRegexError);
-    return nextErrors;
+  function addRule(groupIndex: number) {
+    const nextGroups = uiState.groups.map((group, i) =>
+      i === groupIndex ? { ...group, rules: [...group.rules, { pattern: '', matchMode: 'glob' }] } : group
+    );
+    syncFromUi({ ...uiState, groups: nextGroups });
+  }
+
+  function updateRule(groupIndex: number, ruleIndex: number, nextRule: RuleForm) {
+    const nextGroups = uiState.groups.map((group, i) => {
+      if (i !== groupIndex) return group;
+      const nextRules = group.rules.map((rule, j) => (j === ruleIndex ? nextRule : rule));
+      return { ...group, rules: nextRules };
+    });
+    syncFromUi({ ...uiState, groups: nextGroups });
+  }
+
+  function removeRule(groupIndex: number, ruleIndex: number) {
+    const nextGroups = uiState.groups.map((group, i) => {
+      if (i !== groupIndex) return group;
+      return { ...group, rules: group.rules.filter((_, j) => j !== ruleIndex) };
+    });
+    syncFromUi({ ...uiState, groups: nextGroups });
   }
 
   function getPatternRegexError(pattern: string, matchMode: MatchMode) {
     if (matchMode !== 'regex') return null;
     const trimmed = pattern.trim();
     if (!trimmed) return null;
-    try {
-      // Runtimeで使う正規表現として事前に妥当性を検証する。
-      new RegExp(trimmed);
-      return null;
-    } catch (err) {
-      return t(locale, 'options.validation.regexInvalid', {
-        message: err instanceof Error ? err.message : 'Invalid regex'
-      });
-    }
-  }
-
-  function saveDrawerRule() {
-    if (!drawerDraft) return;
-    const nextErrors = validateRuleDraft(drawerDraft);
-    if (nextErrors.length > 0) {
-      setDrawerErrors(nextErrors);
-      return;
-    }
-    const normalizedRule: RuleForm = {
-      group: drawerDraft.group.trim(),
-      pattern: drawerDraft.pattern.trim(),
-      matchMode: drawerDraft.matchMode,
-      color: drawerDraft.color,
-      priority: undefined
-    };
-    if (drawerRuleIndex == null) {
-      syncFromUi({ ...uiState, rules: [...uiState.rules, normalizedRule] });
-    } else {
-      const nextRules = uiState.rules.map((rule, index) => (index === drawerRuleIndex ? normalizedRule : rule));
-      syncFromUi({ ...uiState, rules: nextRules });
-    }
-    closeDrawer();
-  }
-
-  function removeRule(index: number) {
-    const nextRules = uiState.rules.filter((_, i) => i !== index);
-    syncFromUi({ ...uiState, rules: nextRules });
-    if (drawerRuleIndex === index) {
-      closeDrawer();
-      return;
-    }
-    if (drawerRuleIndex != null && drawerRuleIndex > index) {
-      setDrawerRuleIndex(drawerRuleIndex - 1);
-    }
+    const error = validateRulePattern(trimmed, matchMode);
+    if (!error) return null;
+    return t(locale, 'options.validation.regexInvalid', { message: error });
   }
 
   function validateYaml() {
@@ -504,122 +465,6 @@ function App() {
     setToastMessage(t(locale, 'options.toast.resetLoaded'));
     setToastOpen(true);
   }
-
-  function onDragStart(event: DragStartEvent) {
-    setActiveDragId(String(event.active.id));
-    setOverDragId(String(event.active.id));
-  }
-
-  function onDragOver(event: DragOverEvent) {
-    setOverDragId(event.over ? String(event.over.id) : null);
-  }
-
-  function onDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    setActiveDragId(null);
-    setOverDragId(null);
-    if (!over || active.id === over.id) return;
-    const fromIndex = Number(active.id);
-    const toIndex = Number(over.id);
-    if (!Number.isFinite(fromIndex) || !Number.isFinite(toIndex)) return;
-    const nextRules = arrayMove(uiState.rules, fromIndex, toIndex);
-    syncFromUi({ ...uiState, rules: nextRules });
-    if (drawerRuleIndex != null) {
-      if (drawerRuleIndex === fromIndex) {
-        setDrawerRuleIndex(toIndex);
-      } else if (fromIndex < drawerRuleIndex && drawerRuleIndex <= toIndex) {
-        setDrawerRuleIndex(drawerRuleIndex - 1);
-      } else if (toIndex <= drawerRuleIndex && drawerRuleIndex < fromIndex) {
-        setDrawerRuleIndex(drawerRuleIndex + 1);
-      }
-    }
-  }
-
-  function onDragCancel() {
-    setActiveDragId(null);
-    setOverDragId(null);
-  }
-
-  const columnHelper = createColumnHelper<RuleRow>();
-  const columns = useMemo(
-    () => [
-      columnHelper.display({
-        id: 'drag',
-        header: '',
-        size: 50,
-        cell: ({ row }) => <SortHandle rowId={row.original.rowId} ariaLabel={t(locale, 'options.sort')} />
-      }),
-      columnHelper.accessor('group', {
-        header: t(locale, 'options.table.group'),
-        cell: ({ row }) => (
-          <button type="button" className="row-title" onClick={() => openEditRuleDrawer(row.index)}>
-            {row.original.group || t(locale, 'options.table.groupFallback', { index: row.index + 1 })}
-          </button>
-        )
-      }),
-      columnHelper.accessor('matchMode', {
-        header: t(locale, 'options.table.matchMode'),
-        cell: (ctx) => <span className="badge">{ctx.getValue() === 'glob' ? t(locale, 'options.matchMode.glob') : t(locale, 'options.matchMode.regex')}</span>
-      }),
-      columnHelper.accessor('pattern', {
-        header: t(locale, 'options.table.pattern'),
-        cell: (ctx) => <span className="badge">{ctx.getValue() || t(locale, 'options.table.empty')}</span>
-      }),
-      columnHelper.accessor('color', {
-        header: t(locale, 'options.table.color'),
-        cell: (ctx) => {
-          const color = ctx.getValue();
-          const hex = findColorHex(color);
-          return (
-            <span className="badge">
-              <span className="color-dot" style={{ backgroundColor: hex ?? '#cbd5e1' }} />
-              {color || t(locale, 'options.color.none')}
-            </span>
-          );
-        }
-      }),
-      columnHelper.display({
-        id: 'actions',
-        header: '',
-        cell: ({ row }) => (
-          <button
-            type="button"
-            className="row-action-btn"
-            aria-label={t(locale, 'options.drawer.deleteRule')}
-            onClick={() => removeRule(row.index)}
-          >
-            🗑
-          </button>
-        )
-      })
-    ],
-    [columnHelper, locale]
-  );
-
-  const table = useReactTable({
-    data: ruleRows,
-    columns,
-    getCoreRowModel: getCoreRowModel()
-  });
-
-  const isDrawerOpen = drawerDraft != null;
-  const drawerPatternRegexError = drawerDraft ? getPatternRegexError(drawerDraft.pattern, drawerDraft.matchMode) : null;
-  const isDrawerSaveDisabled =
-    !drawerDraft ||
-    drawerDraft.group.trim().length === 0 ||
-    drawerDraft.pattern.trim().length === 0 ||
-    drawerPatternRegexError != null;
-  const drawerTitle = drawerRuleIndex == null ? t(locale, 'options.drawer.add') : t(locale, 'options.drawer.edit');
-  const activeDragRow = activeDragId != null ? ruleRows.find((row) => row.rowId === activeDragId) : undefined;
-
-  useEffect(() => {
-    if (!isDrawerOpen) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') closeDrawer();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isDrawerOpen]);
 
   return (
     <Toast.Provider swipeDirection="right">
@@ -669,11 +514,11 @@ function App() {
 
         <Tabs.Root value={activeTab} onValueChange={(next) => switchTab(next as 'source' | 'ui')}>
           <Tabs.List className="tabs">
-            <Tabs.Trigger className="tab-trigger" value="source">
-              {t(locale, 'common.source')}
-            </Tabs.Trigger>
             <Tabs.Trigger className="tab-trigger" value="ui">
               {t(locale, 'common.ui')}
+            </Tabs.Trigger>
+            <Tabs.Trigger className="tab-trigger" value="source">
+              {t(locale, 'common.source')}
             </Tabs.Trigger>
           </Tabs.List>
 
@@ -703,229 +548,175 @@ function App() {
                   />
                 </div>
                 <div className="field-block">
-                  <label className="label" htmlFor="fallbackEnabled">
-                    <span className="label-inline">
-                      {t(locale, 'options.fallbackGroup')}
-                      <span className="info-tip" aria-label={t(locale, 'options.fallbackGroup')}>
-                        ⓘ
-                        <span className="tooltip">
-                          {t(locale, 'options.fallbackHelp')}
-                        </span>
-                      </span>
-                    </span>
+                  <label className="label" htmlFor="groupingStrategy">
+                    {t(locale, 'options.groupingStrategy')}
                   </label>
-                  <div className="fallback-controls">
-                    <label className="fallback-toggle" htmlFor="fallbackEnabled">
-                      <Switch.Root
-                        id="fallbackEnabled"
-                        className="switch-root"
-                        checked={uiState.fallbackGroup !== undefined}
-                        onCheckedChange={(checked) =>
-                          syncFromUi({
-                            ...uiState,
-                            fallbackGroup: checked ? uiState.fallbackGroup ?? '' : undefined
-                          })
-                        }
-                      >
-                        <Switch.Thumb className="switch-thumb" />
-                      </Switch.Root>
-                      <span className="muted">{t(locale, 'options.fallbackDisabled')}</span>
-                    </label>
-                    {uiState.fallbackGroup !== undefined && (
-                      <input
-                        id="fallbackGroup"
-                        className="input fallback-input"
-                        placeholder={t(locale, 'options.fallbackPlaceholder')}
-                        value={uiState.fallbackGroup}
-                        onChange={(e) => syncFromUi({ ...uiState, fallbackGroup: e.currentTarget.value })}
-                      />
-                    )}
-                  </div>
+                  <GroupingStrategySelect
+                    locale={locale}
+                    value={uiState.groupingStrategy}
+                    onChange={(next) => syncFromUi({ ...uiState, groupingStrategy: next })}
+                  />
                 </div>
               </div>
+
               <div className="rules-head">
-                <h3 className="section-title">{t(locale, 'options.rules')}</h3>
+                <h3 className="section-title">{t(locale, 'options.groups')}</h3>
                 <div className="add-rule-wrap">
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={openCreateRuleDrawer}
-                  >
-                    ＋ {t(locale, 'options.addRule')}
+                  <button type="button" className="btn btn-primary" onClick={addGroup}>
+                    ＋ {t(locale, 'options.addGroup')}
                   </button>
                 </div>
               </div>
-              <div className="grid">
+
+              {uiState.groups.length === 0 ? (
                 <div className="table-wrap">
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragStart={onDragStart}
-                    onDragOver={onDragOver}
-                    onDragEnd={onDragEnd}
-                    onDragCancel={onDragCancel}
-                  >
-                    {ruleRows.length === 0 ? (
-                      <div className="empty-state">
-                        <div className="empty-state-icon">📋</div>
-                        <div className="empty-state-text">{t(locale, 'options.emptyRules')}</div>
-                      </div>
-                    ) : (
-                      <table>
-                        <thead>
-                          {table.getHeaderGroups().map((headerGroup) => (
-                            <tr key={headerGroup.id}>
-                              {headerGroup.headers.map((header) => (
-                                <th key={header.id}>
-                                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                                </th>
-                              ))}
-                            </tr>
-                          ))}
-                        </thead>
-                        <tbody>
-                          <SortableContext items={ruleRows.map((row) => row.rowId)} strategy={verticalListSortingStrategy}>
-                            {table.getRowModel().rows.map((row) => (
-                              <tr
-                                key={row.id}
-                                className={[
-                                  activeDragId === row.original.rowId ? 'drag-source' : '',
-                                  overDragId === row.original.rowId && activeDragId !== row.original.rowId ? 'drop-target' : ''
-                                ]
-                                  .join(' ')
-                                  .trim()}
-                              >
-                                {row.getVisibleCells().map((cell) => (
-                                  <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-                                ))}
-                              </tr>
-                            ))}
-                          </SortableContext>
-                        </tbody>
-                      </table>
-                    )}
-                    <DragOverlay>
-                      {activeDragRow ? (
-                        <div className="drag-overlay">
-                          <div className="drag-overlay-title">
-                            {activeDragRow.group ||
-                              t(locale, 'options.table.groupFallback', { index: Number(activeDragRow.rowId) + 1 })}
-                          </div>
-                          <div className="drag-overlay-sub">
-                            {t(locale, 'options.table.patternPrefix')}: {activeDragRow.pattern || t(locale, 'options.table.empty')}
-                          </div>
-                        </div>
-                      ) : null}
-                    </DragOverlay>
-                  </DndContext>
+                  <div className="empty-state">
+                    <div className="empty-state-icon">🧩</div>
+                    <div className="empty-state-text">{t(locale, 'options.emptyGroups')}</div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                uiState.groups.map((group, groupIndex) => (
+                  <div className="table-wrap" key={`group-${groupIndex}`}>
+                    <div className="rules-head" style={{ padding: '12px 14px' }}>
+                      <h4 className="section-title">{t(locale, 'options.groupTitle', { index: groupIndex + 1 })}</h4>
+                      <button type="button" className="btn btn-danger" onClick={() => removeGroup(groupIndex)}>
+                        {t(locale, 'options.group.remove')}
+                      </button>
+                    </div>
+
+                    <div style={{ padding: '0 14px 14px' }} className="stack">
+                      <div className="settings-row">
+                        <div className="field-block">
+                          <label className="label">{t(locale, 'options.group.name')}</label>
+                          <input
+                            className="input"
+                            value={group.name}
+                            placeholder={t(locale, 'options.group.namePlaceholder')}
+                            onChange={(e) => updateGroup(groupIndex, { ...group, name: e.currentTarget.value })}
+                          />
+                        </div>
+                        <div className="field-block">
+                          <label className="label">{t(locale, 'options.group.color')}</label>
+                          <ColorSelect
+                            locale={locale}
+                            value={group.color}
+                            onChange={(next) => updateGroup(groupIndex, { ...group, color: next })}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="settings-row">
+                        <div className="field-block">
+                          <label className="label">{t(locale, 'options.group.ttlMinutes')}</label>
+                          <input
+                            className="input"
+                            inputMode="numeric"
+                            placeholder="30"
+                            value={group.ttlMinutes != null ? String(group.ttlMinutes) : ''}
+                            onChange={(e) =>
+                              updateGroup(groupIndex, {
+                                ...group,
+                                ttlMinutes: parsePositiveIntInput(e.currentTarget.value)
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="field-block">
+                          <label className="label">{t(locale, 'options.group.maxTabs')}</label>
+                          <input
+                            className="input"
+                            inputMode="numeric"
+                            placeholder="10"
+                            value={group.maxTabs != null ? String(group.maxTabs) : ''}
+                            onChange={(e) =>
+                              updateGroup(groupIndex, {
+                                ...group,
+                                maxTabs: parsePositiveIntInput(e.currentTarget.value)
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+
+                      <div className="inline">
+                        <label className="label" style={{ marginBottom: 0 }}>
+                          {t(locale, 'options.group.lru')}
+                        </label>
+                        <input
+                          type="checkbox"
+                          checked={group.lru === true}
+                          onChange={(e) => updateGroup(groupIndex, { ...group, lru: e.currentTarget.checked ? true : undefined })}
+                        />
+                      </div>
+
+                      <div className="rules-head">
+                        <h4 className="section-title">{t(locale, 'options.group.rules')}</h4>
+                        <button type="button" className="btn" onClick={() => addRule(groupIndex)}>
+                          ＋ {t(locale, 'options.group.addRule')}
+                        </button>
+                      </div>
+
+                      {group.rules.length === 0 ? (
+                        <div className="empty-state">
+                          <div className="empty-state-text">{t(locale, 'options.emptyRules')}</div>
+                        </div>
+                      ) : (
+                        <table>
+                          <thead>
+                            <tr>
+                              <th>{t(locale, 'options.rule.pattern')}</th>
+                              <th>{t(locale, 'options.rule.matchMode')}</th>
+                              <th>{t(locale, 'options.rule.actions')}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {group.rules.map((rule, ruleIndex) => {
+                              const patternError = getPatternRegexError(rule.pattern, rule.matchMode);
+                              return (
+                                <tr key={`group-${groupIndex}-rule-${ruleIndex}`}>
+                                  <td>
+                                    <input
+                                      className="input"
+                                      value={rule.pattern}
+                                      onChange={(e) =>
+                                        updateRule(groupIndex, ruleIndex, { ...rule, pattern: e.currentTarget.value })
+                                      }
+                                    />
+                                    {patternError && <div className="field-error">{patternError}</div>}
+                                  </td>
+                                  <td style={{ minWidth: 190 }}>
+                                    <MatchModeSelect
+                                      locale={locale}
+                                      value={rule.matchMode}
+                                      onChange={(next) => updateRule(groupIndex, ruleIndex, { ...rule, matchMode: next })}
+                                    />
+                                  </td>
+                                  <td style={{ width: 96 }}>
+                                    <button
+                                      type="button"
+                                      className="row-action-btn"
+                                      aria-label={t(locale, 'options.rule.remove')}
+                                      onClick={() => removeRule(groupIndex, ruleIndex)}
+                                      style={{ opacity: 1, pointerEvents: 'auto' }}
+                                    >
+                                      🗑
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </Tabs.Content>
         </Tabs.Root>
 
-        <div
-          className={`drawer-backdrop ${isDrawerOpen ? 'open' : ''}`}
-          onClick={closeDrawer}
-          aria-hidden={!isDrawerOpen}
-        />
-        <aside className={`drawer ${isDrawerOpen ? 'open' : ''}`} aria-hidden={!isDrawerOpen}>
-          <div className="drawer-head">
-            <h3 className="side-title">{drawerTitle}</h3>
-            <button type="button" className="icon-btn" onClick={closeDrawer} aria-label={t(locale, 'common.close')}>
-              ×
-            </button>
-          </div>
-          <div className="drawer-body">
-            {drawerDraft && (
-              <div className="stack">
-                <div>
-                  <label className="label">
-                    <span className="label-inline">
-                      {t(locale, 'options.drawer.group')}
-                      <span className="info-tip" aria-label={t(locale, 'options.drawer.group')}>
-                        ⓘ
-                        <span className="tooltip">{t(locale, 'options.drawer.groupHelp')}</span>
-                      </span>
-                    </span>
-                  </label>
-                  <input
-                    className="input"
-                    value={drawerDraft.group}
-                    onChange={(e) => {
-                      setDrawerDraft({ ...drawerDraft, group: e.currentTarget.value });
-                      setDrawerErrors([]);
-                    }}
-                  />
-                </div>
-                <div>
-                  <label className="label">
-                    <span className="label-inline">
-                      {t(locale, 'options.drawer.matchMode')}
-                      <span className="info-tip" aria-label={t(locale, 'options.drawer.matchMode')}>
-                        ⓘ
-                        <span className="tooltip">{t(locale, 'options.drawer.matchModeHelp')}</span>
-                      </span>
-                    </span>
-                  </label>
-                  <MatchModeSelect
-                    locale={locale}
-                    value={drawerDraft.matchMode}
-                    onChange={(next) => {
-                      setDrawerDraft({ ...drawerDraft, matchMode: next });
-                      setDrawerErrors([]);
-                    }}
-                  />
-                </div>
-                <div>
-                  <label className="label">
-                    <span className="label-inline">
-                      {t(locale, 'options.drawer.pattern')}
-                      <span className="info-tip" aria-label={t(locale, 'options.drawer.pattern')}>
-                        ⓘ
-                        <span className="tooltip">{t(locale, 'options.drawer.patternHelp')}</span>
-                      </span>
-                    </span>
-                  </label>
-                  <input
-                    className="input"
-                    value={drawerDraft.pattern}
-                    onChange={(e) => {
-                      setDrawerDraft({ ...drawerDraft, pattern: e.currentTarget.value });
-                      setDrawerErrors([]);
-                    }}
-                  />
-                  {drawerPatternRegexError && <div className="field-error">{drawerPatternRegexError}</div>}
-                </div>
-                <div>
-                  <label className="label">
-                    <span className="label-inline">
-                      {t(locale, 'options.drawer.color')}
-                      <span className="info-tip" aria-label={t(locale, 'options.drawer.color')}>
-                        ⓘ
-                        <span className="tooltip">{t(locale, 'options.drawer.colorHelp')}</span>
-                      </span>
-                    </span>
-                  </label>
-                  <ColorSelect
-                    locale={locale}
-                    value={drawerDraft.color}
-                    onChange={(next) => setDrawerDraft({ ...drawerDraft, color: next })}
-                  />
-                </div>
-                {drawerErrors.length > 0 && <div className="field-error">{drawerErrors.join('\n')}</div>}
-                <div className="drawer-actions">
-                  <button type="button" className="btn btn-primary" onClick={saveDrawerRule} disabled={isDrawerSaveDisabled}>
-                    {t(locale, 'common.save')}
-                  </button>
-                  <button type="button" className="btn" onClick={closeDrawer}>
-                    {t(locale, 'common.close')}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </aside>
         <Toast.Root className="toast-root" open={toastOpen} onOpenChange={setToastOpen} duration={2200}>
           <Toast.Title className="toast-title">{toastMessage}</Toast.Title>
         </Toast.Root>

@@ -1,7 +1,7 @@
 import { parseConfigYaml } from '../core/config.js';
 import { createPlan } from '../core/planner.js';
 import type { CompiledConfig, StateSnapshot } from '../core/types.js';
-import { executePlan, moveTabToGroup } from './executor.js';
+import { executePlan, moveTabToGroup, reorderGroupedTabsFirst } from './executor.js';
 import { getAdjacentGroup, orderGroupsByTabIndex } from '../core/shortcuts.js';
 import { handleDiag } from './diagnostics.js';
 import {
@@ -213,6 +213,7 @@ chrome.commands.onCommand.addListener((command) => {
 
     if (command === 'ungroup') {
       await chrome.tabs.ungroup(activeTab.id);
+      await reorderGroupedTabsFirst(windowId);
       return;
     }
 
@@ -221,6 +222,7 @@ chrome.commands.onCommand.addListener((command) => {
       const target = getAdjacentGroup(orderedGroups, activeTab.groupId, command === 'move-next-group' ? 'next' : 'prev');
       if (!target) return;
       await chrome.tabs.group({ tabIds: [activeTab.id], groupId: target.id });
+      await reorderGroupedTabsFirst(windowId);
       return;
     }
 
@@ -230,8 +232,9 @@ chrome.commands.onCommand.addListener((command) => {
       const slotIndex = Number(command.replace('move-to-group-', '')) - 1;
       const groupName = config.shortcuts?.slots?.[slotIndex];
       if (!groupName) return;
-      const color = config.groups[groupName]?.color;
+      const color = config.groupsByName[groupName]?.color;
       await moveTabToGroup(activeTab.id, windowId, groupName, color);
+      await reorderGroupedTabsFirst(windowId);
     }
   })();
 });

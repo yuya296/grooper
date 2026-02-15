@@ -6,108 +6,81 @@
 ## 1. Default preset（初期状態）
 
 ```yaml
-version: 1
+version: 2
 applyMode: newTabs
-parentFollow: false
-rules:
-  - pattern: '*github.com*'
-    matchMode: glob
-    group: "Work"
-    color: "blue"
-    priority: 100
-  - pattern: '*docs.google.com*'
-    matchMode: glob
-    group: "Docs"
-    color: "green"
-    priority: 90
-  - pattern: '*google.*/search*'
-    matchMode: glob
-    group: "Search"
-    color: "red"
-    priority: 80
-  - pattern: '*youtube.com*'
-    matchMode: glob
-    group: "Media"
-    color: "purple"
-    priority: 70
-```
-
-すぐ試せるURL:
-- `https://github.com/`
-- `https://docs.google.com/`
-- `https://www.google.com/search?q=grooper`
-- `https://www.youtube.com/`
-
-## 2. example.com の1階層目でグルーピング（regexキャプチャ）
-
-```yaml
-version: 1
-applyMode: manual
-parentFollow: false
-rules:
-  - pattern: '^https?://example\.com/(?<env>[^/]+)(?:/.*)?$'
-    matchMode: regex
-    group: 'Example:$<env>'
-    color: "blue"
-    priority: 10
-```
-
-動作イメージ:
-- `https://example.com/hoge/` -> `Example:hoge`
-- `https://example.com/hoge/foo` -> `Example:hoge`
-- `https://example.com/fuga/aaa` -> `Example:fuga`
-
-## 3. シンプルなglobマッチ（固定グループ）
-
-```yaml
-version: 1
-applyMode: manual
-rules:
-  - pattern: '*google.com/search*'
-    matchMode: glob
-    group: "Search"
-    color: "red"
-    priority: 5
-  - pattern: '*example.org*'
-    matchMode: glob
-    group: "ExampleOrg"
-    priority: 1
-```
-
-## 4. fallbackGroup を使う
-
-```yaml
-version: 1
-applyMode: newTabs
-fallbackGroup: "Fallback"
-rules:
-  - pattern: '*docs.google.com*'
-    matchMode: glob
-    group: "Docs"
-    color: "green"
-```
-
-一致しないURLは `Fallback` にまとめられます。
-
-## 5. always + groupsで自動整理強化
-
-```yaml
-version: 1
-applyMode: always
-rules:
-  - pattern: '*github.com*'
-    matchMode: glob
-    group: "Dev"
-    color: "blue"
+groupingStrategy: inheritFirst
 groups:
-  Dev:
-    ttlMinutes: 120
-    maxTabs: 20
-    lru: true
+  - name: Work
+    color: blue
+    rules:
+      - pattern: '*github.com*'
+  - name: Docs
+    color: green
+    rules:
+      - pattern: '*docs.google.com*'
+  - name: Search
+    color: red
+    rules:
+      - pattern: '*google.*/search*'
 ```
 
-## メモ
+## 2. 親継承を使わずルールのみ適用
 
-- `matchMode: regex` のとき、`group` で `$1` / `$<name>` / `$$` が使えます。
-- `matchMode: glob` のとき、`group` でキャプチャ参照（`$1`, `$<name>`）は使えません。
-- `${var}` は `vars` の固定値展開です（キャプチャ参照とは別）。
+```yaml
+version: 2
+applyMode: manual
+groupingStrategy: ruleOnly
+groups:
+  - name: Search
+    color: red
+    rules:
+      - pattern: '*google.com/search*'
+      - pattern: '*duckduckgo.com/*'
+```
+
+## 3. regexを使う例（グループ名は固定）
+
+```yaml
+version: 2
+applyMode: manual
+groups:
+  - name: ExampleEnv
+    color: cyan
+    rules:
+      - pattern: '^https?://example\.com/(?<env>[^/]+)(?:/.*)?$'
+        matchMode: regex
+```
+
+メモ: `dynamic group name` は閉塞中のため、`$1` / `$<name>` は展開されません。
+
+## 4. cleanup を使う
+
+```yaml
+version: 2
+applyMode: always
+groupingStrategy: inheritFirst
+groups:
+  - name: Dev
+    color: blue
+    cleanup:
+      ttlMinutes: 120
+      maxTabs: 20
+      lru: true
+    rules:
+      - pattern: '*github.com*'
+      - pattern: '*gitlab.com*'
+```
+
+## 5. `$1` を含む名前をリテラルで使う
+
+```yaml
+version: 2
+applyMode: manual
+groups:
+  - name: 'Team-$1'
+    color: yellow
+    rules:
+      - pattern: '*example.com*'
+```
+
+この場合、実際のグループ名は `Team-$1` のままです。

@@ -1,7 +1,16 @@
 import { z } from 'zod';
 import { parse } from 'yaml';
-import type { ApplyMode, CompiledConfig, CompiledRule, Config, MatchMode } from './types.js';
-import { validateGroupTemplateForMatchMode } from './rule-template.js';
+import type {
+  ApplyMode,
+  CompiledConfig,
+  CompiledGroup,
+  CompiledRule,
+  Config,
+  GroupCleanup,
+  GroupingStrategy,
+  MatchMode
+} from './types.js';
+import { compileRulePattern } from './rule-template.js';
 
 export interface ConfigError {
   path: string;
@@ -11,35 +20,19 @@ export interface ConfigError {
 const ruleSchema = z
   .object({
     pattern: z.string().min(1),
-    group: z.string().min(1),
-    matchMode: z.enum(['regex', 'glob']).optional(),
-    color: z.string().optional(),
-    priority: z.number().int().optional()
+    matchMode: z.enum(['regex', 'glob']).optional()
   })
   .strict();
 
-const configSchema = z
+const groupSchema = z
   .object({
-    version: z.literal(1),
-    applyMode: z.enum(['manual', 'newTabs', 'always']).optional(),
-    vars: z.record(z.string()).optional(),
-    fallbackGroup: z.string().optional(),
-    parentFollow: z.boolean().optional(),
-    groups: z
-      .record(
-        z
-          .object({
-            color: z.string().optional(),
-            ttlMinutes: z.number().positive().optional(),
-            maxTabs: z.number().int().positive().optional(),
-            lru: z.boolean().optional()
-          })
-          .strict()
-      )
-      .optional(),
-    shortcuts: z
+    name: z.string().min(1),
+    color: z.string().optional(),
+    cleanup: z
       .object({
-        slots: z.array(z.string().min(1)).optional()
+        ttlMinutes: z.number().positive().optional(),
+        maxTabs: z.number().int().positive().optional(),
+        lru: z.boolean().optional()
       })
       .strict()
       .optional(),
@@ -47,32 +40,33 @@ const configSchema = z
   })
   .strict();
 
-const DEFAULT_APPLY_MODE: ApplyMode = 'manual';
+const configSchema = z
+  .object({
+    version: z.literal(2),
+    applyMode: z.enum(['manual', 'newTabs', 'always']).optional(),
+    vars: z.record(z.string()).optional(),
+    groupingStrategy: z.enum(['inheritFirst', 'ruleFirst', 'ruleOnly']).optional(),
+    shortcuts: z
+      .object({
+        slots: z.array(z.string().min(1)).optional()
+      })
+      .strict()
+      .optional(),
+    groups: z.array(groupSchema)
+  })
+  .strict();
 
-function globToRegexPattern(glob: string): string {
-  let pattern = '^';
-  for (let i = 0; i < glob.length; i += 1) {
-    const ch = glob[i];
-    if (ch === '*') {
-      pattern += '.*';
-      continue;
-    }
-    if (ch === '?') {
-      pattern += '.';
-      continue;
-    }
-    if (ch === '\\') {
-      const next = glob[i + 1];
-      if (next) {
-        pattern += next.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        i += 1;
-        continue;
-      }
-    }
-    pattern += ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  }
-  pattern += '$';
-  return pattern;
+const DEFAULT_APPLY_MODE: ApplyMode = 'manual';
+const DEFAULT_GROUPING_STRATEGY: GroupingStrategy = 'inheritFirst';
+const DEFAULT_MATCH_MODE: MatchMode = 'glob';
+
+function normalizeCleanup(cleanup: Config['groups'][number]['cleanup']): GroupCleanup {
+  if (!cleanup) return {};
+  return {
+    ttlMinutes: cleanup.ttlMinutes,
+    maxTabs: cleanup.maxTabs,
+    lru: cleanup.lru
+  };
 }
 
 export function parseConfigYaml(yamlText: string): { config?: CompiledConfig; errors: ConfigError[] } {
@@ -114,56 +108,74 @@ export function parseConfigYaml(yamlText: string): { config?: CompiledConfig; er
     });
   };
 
-  const rules: CompiledRule[] = config.rules.map((rule, index) => {
-    const matchMode: MatchMode = rule.matchMode ?? 'regex';
-    try {
-      const pattern = expandVars(rule.pattern, `rules.${index}.pattern`);
-      const group = expandVars(rule.group, `rules.${index}.group`);
-      const groupTemplateError = validateGroupTemplateForMatchMode(group, matchMode);
-      if (groupTemplateError) {
-        errors.push({
-          path: `rules.${index}.group`,
-          message: groupTemplateError
-        });
-      }
-      const regex = new RegExp(matchMode === 'glob' ? globToRegexPattern(pattern) : pattern);
-      return { ...rule, pattern, group, matchMode, regex, index, priority: rule.priority ?? 0 };
-    } catch (err) {
-      errors.push({
-        path: `rules.${index}.pattern`,
-        message: err instanceof Error ? err.message : 'Invalid regex'
-      });
-      return { ...rule, matchMode, regex: /.^/, index, priority: rule.priority ?? 0 };
+  const groups: CompiledGroup[] = [];
+  const groupsByName: Record<string, CompiledGroup> = {};
+  const rules: CompiledRule[] = [];
+  let ruleIndex = 0;
+
+  for (let groupIndex = 0; groupIndex < config.groups.length; groupIndex += 1) {
+    const group = config.groups[groupIndex];
+    const name = group.name.trim();
+    if (!name) {
+      errors.push({ path: `groups.${groupIndex}.name`, message: 'Group name must not be empty' });
+      continue;
     }
-  });
+    if (groupsByName[name]) {
+      errors.push({ path: `groups.${groupIndex}.name`, message: `Duplicate group name: ${name}` });
+      continue;
+    }
+
+    const compiledGroupRules: CompiledRule[] = [];
+    for (let i = 0; i < group.rules.length; i += 1) {
+      const rule = group.rules[i];
+      const matchMode: MatchMode = rule.matchMode ?? DEFAULT_MATCH_MODE;
+      const pattern = expandVars(rule.pattern, `groups.${groupIndex}.rules.${i}.pattern`);
+      try {
+        const regex = compileRulePattern(pattern, matchMode);
+        const compiledRule: CompiledRule = {
+          pattern,
+          matchMode,
+          regex,
+          index: ruleIndex,
+          groupName: name,
+          groupColor: group.color
+        };
+        compiledGroupRules.push(compiledRule);
+        rules.push(compiledRule);
+      } catch (err) {
+        errors.push({
+          path: `groups.${groupIndex}.rules.${i}.pattern`,
+          message: err instanceof Error ? err.message : 'Invalid regex'
+        });
+      } finally {
+        ruleIndex += 1;
+      }
+    }
+
+    const compiledGroup: CompiledGroup = {
+      name,
+      color: group.color,
+      cleanup: normalizeCleanup(group.cleanup),
+      rules: compiledGroupRules
+    };
+    groups.push(compiledGroup);
+    groupsByName[name] = compiledGroup;
+  }
 
   if (errors.length > 0) {
     return { errors };
   }
 
-  const sortedRules = [...rules].sort((a, b) => {
-    if (b.priority !== a.priority) return b.priority - a.priority;
-    return a.index - b.index;
-  });
-
-  const normalizedFallback = (() => {
-    if (config.fallbackGroup == null) return undefined;
-    const trimmed = config.fallbackGroup.trim();
-    if (trimmed.length === 0) return undefined;
-    if (trimmed.toLowerCase() === 'none') return undefined;
-    return trimmed;
-  })();
-
   return {
     config: {
-      version: 1,
+      version: 2,
       applyMode: config.applyMode ?? DEFAULT_APPLY_MODE,
       vars,
-      fallbackGroup: normalizedFallback,
-      parentFollow: config.parentFollow ?? true,
-      groups: config.groups ?? {},
+      groupingStrategy: config.groupingStrategy ?? DEFAULT_GROUPING_STRATEGY,
       shortcuts: config.shortcuts,
-      rules: sortedRules
+      groups,
+      groupsByName,
+      rules
     },
     errors: []
   };

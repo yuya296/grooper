@@ -20,9 +20,17 @@
 | 0013 | i18n (ja/en) | 要確認 | `language`（ja/en）設定、Popup/Options文言キー化、初回言語解決ロジックを実装済み。`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0014 | Regex capture group expansion | 完了 | regexキャプチャ（`$1`, `$<name>`, `$$`）のgroup展開、globモード禁止バリデーション、設定例整備まで実装済み。`pnpm test`/`pnpm build`通過 |
 | 0015 | Chrome Web Store公開準備 | 完了 | `main` へのマージ（`2949211`）まで完了。公開向けmanifest/ライセンス/公開手順と利用者向けdocs導線の整備を反映済み |
+| 0016 | Settings IA改善（UI先頭・fallbackGroup UI閉塞・matchMode=glob初期値） | 要確認 | Optionsのタブ順/初期表示をUI中心へ変更、fallbackGroup UI閉塞、新規ruleのmatchMode初期glob化を実装。`pnpm test`/`pnpm build`通過、手動確認待ち |
+| 0017 | Groups policy UI編集（ttlMinutes/maxTabs/lru） | 要確認 | Group policies UI（group/color/ttl/maxTabs/lru）とYAML同期を実装。`pnpm test`/`pnpm build`通過、手動確認待ち |
+| 0018 | 並び順/priority/適用優先度の仕様統一 | 要確認 | `docs/configuration.md` と `docs/architecture.md` に評価順（parentFollow→rules→fallback）と優先度規則、default方針（parser=regex/UI新規=glob）を明文化 |
+| 0019 | タブ並びを grouped > ungrouped に整理 | 要確認 | grouped-first 並び替え（非pinned領域）を実装。`executePlan` 後とコマンド操作後に適用し、`pnpm test`/`pnpm build`通過、手動確認待ち |
+| 0020 | parent保持 vs rule matching 優先順位の仕様化 | 要確認 | `groupingPriority`（inheritFirst/ruleFirst）を追加し、`parentFollow` との組み合わせで評価順を制御可能化。`pnpm test`/`pnpm build`通過、手動確認待ち |
+| 0021 | Chrome/Edge 色整合とフォールバック設計 | 要確認 | 色定義を共通化し、`tabGroups.update` の色適用失敗時は色なし更新へフォールバックする安全処理を実装。`pnpm test`/`pnpm build`通過、手動確認待ち |
+| 0022 | Chakra UI 再評価（ADR更新） | 完了 | `docs/adr/ADR-2-keep-shadcn-radix-and-defer-chakra-migration.md` を追加し、当面は現行維持（shadcn系 + Radix）方針を確定 |
+| 0023 | YAML v2再定義（Group中心・dynamic name閉塞） | 要確認 | `version: 2` への破壊的移行（groups中心・groupingStrategy・dynamic閉塞・fallback/priority廃止）を実装。`pnpm test`/`pnpm build`通過、手動確認待ち |
 
 ## 現在のフォーカス
-- PBI-0012の最終確認: light/dark/system の切替・保存・再読込反映を実拡張で手動確認する。
+- PBI-0023の最終確認: Options UIで groups/rules 編集、groupingStrategy 切替、保存/再読込が想定どおり動くことを実拡張で確認する。
 
 ## 進捗更新ルール
 - 1コミットごとに、該当PBIの状態変化をこのファイルに反映する。

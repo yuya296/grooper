@@ -19,7 +19,7 @@ export function buildCleanupActions(
   const closeSet = new Set<number>();
 
   for (const group of state.groups) {
-    const policy = config.groups[group.title];
+    const policy = config.groupsByName[group.title]?.cleanup;
     if (!policy) continue;
     const tabs = state.tabs.filter((tab) => tab.groupId === group.id);
 

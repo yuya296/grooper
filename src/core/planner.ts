@@ -2,15 +2,12 @@ import type { CompiledConfig, Plan, StateSnapshot, TabState } from './types.js';
 import type { Clock } from './clock.js';
 import { systemClock } from './clock.js';
 import { buildCleanupActions } from './cleanup.js';
-import { expandGroupCaptures } from './rule-template.js';
 
 function matchRule(config: CompiledConfig, tab: TabState): { group: string; color?: string } | null {
   if (!tab.url) return null;
   for (const rule of config.rules) {
-    const match = tab.url.match(rule.regex);
-    if (match) {
-      return { group: expandGroupCaptures(rule.group, match), color: rule.color };
-    }
+    if (!rule.regex.test(tab.url)) continue;
+    return { group: rule.groupName, color: rule.groupColor };
   }
   return null;
 }
@@ -36,14 +33,18 @@ export function createPlan(
 
   for (const tab of targetTabs) {
     let matched = null;
-    if (config.parentFollow) {
-      matched = resolveParentGroup(state, tab);
-    }
-    if (!matched) {
+    if (config.groupingStrategy === 'ruleFirst') {
       matched = matchRule(config, tab);
-    }
-    if (!matched && config.fallbackGroup) {
-      matched = { group: config.fallbackGroup };
+      if (!matched) {
+        matched = resolveParentGroup(state, tab);
+      }
+    } else if (config.groupingStrategy === 'ruleOnly') {
+      matched = matchRule(config, tab);
+    } else {
+      matched = resolveParentGroup(state, tab);
+      if (!matched) {
+        matched = matchRule(config, tab);
+      }
     }
     if (!matched) continue;
     groupAssignments.set(tab.id, { ...matched, windowId: tab.windowId });
