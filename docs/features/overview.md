@@ -28,7 +28,7 @@
 | 0016 Settings IA改善（UI先頭・fallbackGroup UI閉塞・matchMode=glob初期値） | P2 | 0010,0011 | 要確認 | Optionsのタブ順/初期表示をUI中心へ変更、fallbackGroup UI閉塞、新規ruleのmatchMode初期glob化まで実装。`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0017 Groups policy UI編集（ttlMinutes/maxTabs/lru） | P2 | 0016,0004 | 要確認 | Group policies UI（group/color/ttl/maxTabs/lru）とYAML同期を実装済み。`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0018 並び順/priority/適用優先度の仕様統一 | P2 | 0011,0016 | 要確認 | `configuration/architecture` に評価順とdefault方針を明文化済み。運用観点の最終レビュー待ち |
-| 0019 タブ並びを grouped > ungrouped に整理 | P2 | 0018 | 未着手 | Issue #8 起票。グループ済みタブ優先の視認性改善を実装予定 |
+| 0019 タブ並びを grouped > ungrouped に整理 | P2 | 0018 | 要確認 | grouped-first 並び替えを `executePlan` 後とコマンド操作後に適用。`pnpm test`/`pnpm build` 通過、手動確認待ち |
 | 0020 parent保持 vs rule matching 優先順位の仕様化 | P2 | 0002,0018 | 未着手 | Issue #9 起票。`parentFollow` とルール一致の競合解決を仕様化予定 |
 | 0021 Chrome/Edge 色整合とフォールバック設計 | P2 | 0016 | 未着手 | Issue #10 起票。ブラウザ差異を吸収する色適用戦略を実装予定 |
 | 0022 Chakra UI 再評価（ADR更新） | P2 | 0010 | 未着手 | Issue #11 起票。UIライブラリ方針を再評価しADR更新予定 |

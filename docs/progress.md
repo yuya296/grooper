@@ -23,7 +23,7 @@
 | 0016 | Settings IA改善（UI先頭・fallbackGroup UI閉塞・matchMode=glob初期値） | 要確認 | Optionsのタブ順/初期表示をUI中心へ変更、fallbackGroup UI閉塞、新規ruleのmatchMode初期glob化を実装。`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0017 | Groups policy UI編集（ttlMinutes/maxTabs/lru） | 要確認 | Group policies UI（group/color/ttl/maxTabs/lru）とYAML同期を実装。`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0018 | 並び順/priority/適用優先度の仕様統一 | 要確認 | `docs/configuration.md` と `docs/architecture.md` に評価順（parentFollow→rules→fallback）と優先度規則、default方針（parser=regex/UI新規=glob）を明文化 |
-| 0019 | タブ並びを grouped > ungrouped に整理 | 未着手 | Issue #8 を起票。着手前（設計分割のみ完了） |
+| 0019 | タブ並びを grouped > ungrouped に整理 | 要確認 | grouped-first 並び替え（非pinned領域）を実装。`executePlan` 後とコマンド操作後に適用し、`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0020 | parent保持 vs rule matching 優先順位の仕様化 | 未着手 | Issue #9 を起票。着手前（設計分割のみ完了） |
 | 0021 | Chrome/Edge 色整合とフォールバック設計 | 未着手 | Issue #10 を起票。着手前（設計分割のみ完了） |
 | 0022 | Chakra UI 再評価（ADR更新） | 未着手 | Issue #11 を起票。着手前（設計分割のみ完了） |

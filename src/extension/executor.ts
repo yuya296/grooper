@@ -1,4 +1,5 @@
 import type { Plan, PlanAction } from '../core/types.js';
+import { buildGroupedFirstUnpinnedOrder } from '../core/tab-order.js';
 
 export async function findGroupByTitle(windowId: number, title: string) {
   const groups = await chrome.tabGroups.query({ windowId });
@@ -28,8 +29,35 @@ export async function moveTabToGroup(tabId: number, windowId: number, title: str
 }
 
 export async function executePlan(plan: Plan) {
+  const reorderWindowIds = new Set<number>();
   for (const action of plan.actions) {
+    if (action.type === 'moveTab') {
+      reorderWindowIds.add(action.windowId);
+    }
     await executeAction(action);
+  }
+  for (const windowId of reorderWindowIds) {
+    await reorderGroupedTabsFirst(windowId);
+  }
+}
+
+export async function reorderGroupedTabsFirst(windowId: number) {
+  const tabs = await chrome.tabs.query({ windowId });
+  const orderedByIndex = [...tabs].sort((a, b) => a.index - b.index);
+  const currentUnpinnedIds = orderedByIndex.filter((tab) => !tab.pinned).map((tab) => tab.id!);
+  const { startIndex, tabIds } = buildGroupedFirstUnpinnedOrder(
+    orderedByIndex.map((tab) => ({
+      id: tab.id!,
+      index: tab.index,
+      groupId: tab.groupId,
+      pinned: tab.pinned
+    }))
+  );
+  if (currentUnpinnedIds.length !== tabIds.length) return;
+  const changed = currentUnpinnedIds.some((id, index) => id !== tabIds[index]);
+  if (!changed) return;
+  for (let offset = 0; offset < tabIds.length; offset += 1) {
+    await chrome.tabs.move(tabIds[offset], { index: startIndex + offset });
   }
 }
 
