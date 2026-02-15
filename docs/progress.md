@@ -20,6 +20,13 @@
 | 0013 | i18n (ja/en) | 要確認 | `language`（ja/en）設定、Popup/Options文言キー化、初回言語解決ロジックを実装済み。`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0014 | Regex capture group expansion | 完了 | regexキャプチャ（`$1`, `$<name>`, `$$`）のgroup展開、globモード禁止バリデーション、設定例整備まで実装済み。`pnpm test`/`pnpm build`通過 |
 | 0015 | Chrome Web Store公開準備 | 完了 | `main` へのマージ（`2949211`）まで完了。公開向けmanifest/ライセンス/公開手順と利用者向けdocs導線の整備を反映済み |
+| 0016 | Settings IA改善（UI先頭・fallbackGroup UI閉塞・matchMode=glob初期値） | 未着手 | Issue #5 を起票。着手前（設計分割のみ完了） |
+| 0017 | Groups policy UI編集（ttlMinutes/maxTabs/lru） | 未着手 | Issue #6 を起票。着手前（設計分割のみ完了） |
+| 0018 | 並び順/priority/適用優先度の仕様統一 | 未着手 | Issue #7 を起票。着手前（設計分割のみ完了） |
+| 0019 | タブ並びを grouped > ungrouped に整理 | 未着手 | Issue #8 を起票。着手前（設計分割のみ完了） |
+| 0020 | parent保持 vs rule matching 優先順位の仕様化 | 未着手 | Issue #9 を起票。着手前（設計分割のみ完了） |
+| 0021 | Chrome/Edge 色整合とフォールバック設計 | 未着手 | Issue #10 を起票。着手前（設計分割のみ完了） |
+| 0022 | Chakra UI 再評価（ADR更新） | 未着手 | Issue #11 を起票。着手前（設計分割のみ完了） |
 
 ## 現在のフォーカス
 - PBI-0012の最終確認: light/dark/system の切替・保存・再読込反映を実拡張で手動確認する。
