@@ -1,6 +1,6 @@
 # 進捗管理
 
-最終更新日: 2026-02-07
+最終更新日: 2026-02-08
 
 ## PBIステータス
 | PBI | タイトル | 状態 | 根拠 |
@@ -19,6 +19,7 @@
 | 0012 | Dark mode | 要確認 | themeMode（system/light/dark）の永続化、Optionsテーマ選択UI、Popup/Optionsのダーク配色対応を実装済み。`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0013 | i18n (ja/en) | 要確認 | `language`（ja/en）設定、Popup/Options文言キー化、初回言語解決ロジックを実装済み。`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0014 | Regex capture group expansion | 完了 | regexキャプチャ（`$1`, `$<name>`, `$$`）のgroup展開、globモード禁止バリデーション、設定例整備まで実装済み。`pnpm test`/`pnpm build`通過 |
+| 0015 | Chrome Web Store公開準備 | 要確認 | `manifest` 公開向け項目追加、`LICENSE`（MIT）追加、`docs/chrome-web-store-release.md` 整備に加え、`getting-started/configuration/examples/maintenance` を追加してdocs導線を再編済み。Dashboard入力の手動確認待ち |
 
 ## 現在のフォーカス
 - PBI-0012の最終確認: light/dark/system の切替・保存・再読込反映を実拡張で手動確認する。

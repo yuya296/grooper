@@ -1,31 +1,98 @@
 version: 1
-applyMode: manual
+applyMode: newTabs
 parentFollow: false
 shortcuts:
   slots:
-    - "GroupA"
-    - "GroupB"
-    - "GroupC"
+    - "Work"
+    - "Search"
+    - "Personal"
 rules:
-  # regexの命名キャプチャでURLの1階層目を抽出してグループ名へ反映
-  # 例: https://example.com/hoge/foo -> Example:hoge
-  - pattern: '^https?://example\.com/(?<env>[^/]+)(?:/.*)?$'
-    matchMode: regex
-    group: 'Example:$<env>'
+  # 開発・業務系
+  - pattern: '*github.com*'
+    matchMode: glob
+    group: "Work"
     color: "blue"
-    priority: 10
-  - pattern: '*google.com/search*'
+    priority: 100
+  - pattern: '*gitlab.com*'
+    matchMode: glob
+    group: "Work"
+    color: "blue"
+    priority: 100
+  - pattern: '*bitbucket.org*'
+    matchMode: glob
+    group: "Work"
+    color: "blue"
+    priority: 100
+  - pattern: '*atlassian.net*'
+    matchMode: glob
+    group: "Work"
+    color: "blue"
+    priority: 95
+  - pattern: '*linear.app*'
+    matchMode: glob
+    group: "Work"
+    color: "blue"
+    priority: 95
+
+  # ドキュメント・ナレッジ
+  - pattern: '*docs.google.com*'
+    matchMode: glob
+    group: "Docs"
+    color: "green"
+    priority: 90
+  - pattern: '*notion.so*'
+    matchMode: glob
+    group: "Docs"
+    color: "green"
+    priority: 90
+  - pattern: '*qiita.com*'
+    matchMode: glob
+    group: "Docs"
+    color: "green"
+    priority: 85
+  - pattern: '*zenn.dev*'
+    matchMode: glob
+    group: "Docs"
+    color: "green"
+    priority: 85
+
+  # 検索
+  - pattern: '*google.*/search*'
     matchMode: glob
     group: "Search"
     color: "red"
-    priority: 5
-  - pattern: '*example.org*'
+    priority: 80
+  - pattern: '*bing.com/search*'
     matchMode: glob
-    group: "ExampleOrg"
-    priority: 1
+    group: "Search"
+    color: "red"
+    priority: 80
+  - pattern: '*duckduckgo.com/*'
+    matchMode: glob
+    group: "Search"
+    color: "red"
+    priority: 80
 
-groups:
-  Search:
-    ttlMinutes: 30
-    maxTabs: 10
-    lru: true
+  # メディア
+  - pattern: '*youtube.com*'
+    matchMode: glob
+    group: "Media"
+    color: "purple"
+    priority: 70
+  - pattern: '*netflix.com*'
+    matchMode: glob
+    group: "Media"
+    color: "purple"
+    priority: 70
+
+  # SNS
+  - pattern: '*x.com*'
+    matchMode: glob
+    group: "Social"
+    color: "orange"
+    priority: 60
+  - pattern: '*twitter.com*'
+    matchMode: glob
+    group: "Social"
+    color: "orange"
+    priority: 60
