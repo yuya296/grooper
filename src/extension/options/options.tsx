@@ -24,7 +24,7 @@ import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '
 import { parseConfigYaml } from '../../core/config.js';
 import { validateGroupTemplateForMatchMode } from '../../core/rule-template.js';
 import type { MatchMode } from '../../core/types.js';
-import { buildYamlFromUi, parseYamlForUi, type RuleForm, type UiState } from './uiState.js';
+import { buildYamlFromUi, parseYamlForUi, type GroupPolicyForm, type RuleForm, type UiState } from './uiState.js';
 import { LANGUAGE_KEY, loadLocale, saveLocale, t, type Locale } from '../i18n.js';
 import { DEFAULT_CONFIG_YAML } from '../storage.js';
 import {
@@ -208,6 +208,14 @@ function applyPriorityFromOrder(rules: RuleForm[]): RuleForm[] {
   }));
 }
 
+function parsePositiveIntInput(value: string): number | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const parsed = Number.parseInt(trimmed, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return undefined;
+  return parsed;
+}
+
 function SortHandle({ rowId, ariaLabel }: { rowId: string; ariaLabel: string }) {
   const { attributes, listeners, setNodeRef } = useSortable({ id: rowId });
   return (
@@ -269,7 +277,12 @@ function App() {
   const [yamlText, setYamlText] = useState('');
   const [savedYamlText, setSavedYamlText] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
-  const [uiState, setUiState] = useState<UiState>({ applyMode: 'manual', fallbackGroup: undefined, rules: [] });
+  const [uiState, setUiState] = useState<UiState>({
+    applyMode: 'manual',
+    fallbackGroup: undefined,
+    rules: [],
+    groups: []
+  });
   const [rawConfig, setRawConfig] = useState<Record<string, unknown> | null>(null);
   const [drawerRuleIndex, setDrawerRuleIndex] = useState<number | null>(null);
   const [drawerDraft, setDrawerDraft] = useState<RuleForm | null>(null);
@@ -476,6 +489,23 @@ function App() {
     if (drawerRuleIndex != null && drawerRuleIndex > index) {
       setDrawerRuleIndex(drawerRuleIndex - 1);
     }
+  }
+
+  function addGroupPolicy() {
+    syncFromUi({
+      ...uiState,
+      groups: [...uiState.groups, { name: '', color: undefined, ttlMinutes: undefined, maxTabs: undefined, lru: undefined }]
+    });
+  }
+
+  function updateGroupPolicy(index: number, nextPolicy: GroupPolicyForm) {
+    const nextGroups = uiState.groups.map((group, i) => (i === index ? nextPolicy : group));
+    syncFromUi({ ...uiState, groups: nextGroups });
+  }
+
+  function removeGroupPolicy(index: number) {
+    const nextGroups = uiState.groups.filter((_, i) => i !== index);
+    syncFromUi({ ...uiState, groups: nextGroups });
   }
 
   function validateYaml() {
@@ -708,6 +738,103 @@ function App() {
                     value={uiState.applyMode}
                     onChange={(next) => syncFromUi({ ...uiState, applyMode: next })}
                   />
+                </div>
+              </div>
+              <div className="rules-head">
+                <h3 className="section-title">{t(locale, 'options.groupPolicies')}</h3>
+                <div className="add-rule-wrap">
+                  <button type="button" className="btn" onClick={addGroupPolicy}>
+                    ＋ {t(locale, 'options.addGroupPolicy')}
+                  </button>
+                </div>
+              </div>
+              <div className="grid">
+                <div className="table-wrap">
+                  {uiState.groups.length === 0 ? (
+                    <div className="empty-state">
+                      <div className="empty-state-icon">🧩</div>
+                      <div className="empty-state-text">{t(locale, 'options.emptyGroupPolicies')}</div>
+                    </div>
+                  ) : (
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>{t(locale, 'options.groupPolicy.group')}</th>
+                          <th>{t(locale, 'options.groupPolicy.color')}</th>
+                          <th>{t(locale, 'options.groupPolicy.ttlMinutes')}</th>
+                          <th>{t(locale, 'options.groupPolicy.maxTabs')}</th>
+                          <th>{t(locale, 'options.groupPolicy.lru')}</th>
+                          <th />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {uiState.groups.map((policy, index) => (
+                          <tr key={`group-policy-${index}`}>
+                            <td>
+                              <input
+                                className="input"
+                                value={policy.name}
+                                placeholder={t(locale, 'options.groupPolicy.groupPlaceholder')}
+                                onChange={(e) => updateGroupPolicy(index, { ...policy, name: e.currentTarget.value })}
+                              />
+                            </td>
+                            <td>
+                              <ColorSelect
+                                locale={locale}
+                                value={policy.color}
+                                onChange={(next) => updateGroupPolicy(index, { ...policy, color: next })}
+                              />
+                            </td>
+                            <td>
+                              <input
+                                className="input"
+                                inputMode="numeric"
+                                placeholder="30"
+                                value={policy.ttlMinutes != null ? String(policy.ttlMinutes) : ''}
+                                onChange={(e) =>
+                                  updateGroupPolicy(index, {
+                                    ...policy,
+                                    ttlMinutes: parsePositiveIntInput(e.currentTarget.value)
+                                  })
+                                }
+                              />
+                            </td>
+                            <td>
+                              <input
+                                className="input"
+                                inputMode="numeric"
+                                placeholder="10"
+                                value={policy.maxTabs != null ? String(policy.maxTabs) : ''}
+                                onChange={(e) =>
+                                  updateGroupPolicy(index, {
+                                    ...policy,
+                                    maxTabs: parsePositiveIntInput(e.currentTarget.value)
+                                  })
+                                }
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="checkbox"
+                                checked={policy.lru === true}
+                                onChange={(e) => updateGroupPolicy(index, { ...policy, lru: e.currentTarget.checked ? true : undefined })}
+                              />
+                            </td>
+                            <td>
+                              <button
+                                type="button"
+                                className="row-action-btn"
+                                aria-label={t(locale, 'options.groupPolicy.remove')}
+                                onClick={() => removeGroupPolicy(index)}
+                              >
+                                🗑
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
               </div>
               <div className="rules-head">

@@ -20,6 +20,7 @@ rules:
     expect(result.uiState.rules).toHaveLength(1);
     expect(result.uiState.rules[0].pattern).toBe('example\\.com');
     expect(result.uiState.rules[0].matchMode).toBe('regex');
+    expect(result.uiState.groups).toHaveLength(0);
     expect(result.rawConfig.fallbackGroup).toBe('Fallback');
   });
 
@@ -35,6 +36,7 @@ rules:
     const uiState = {
       applyMode: 'always' as const,
       fallbackGroup: 'Fallback',
+      groups: [{ name: 'Example', color: 'red', ttlMinutes: 15, maxTabs: 5, lru: true }],
       rules: [{ pattern: 'example\\.com', group: 'Example', matchMode: 'glob' as const, color: 'blue', priority: 2 }]
     };
     const result = buildYamlFromUi(rawConfig, uiState);
@@ -42,7 +44,10 @@ rules:
     expect(parsed.applyMode).toBe('always');
     expect(parsed.fallbackGroup).toBe('Fallback');
     expect(parsed.vars.env).toBe('prod');
-    expect(parsed.groups.Example.maxTabs).toBe(3);
+    expect(parsed.groups.Example.color).toBe('red');
+    expect(parsed.groups.Example.ttlMinutes).toBe(15);
+    expect(parsed.groups.Example.maxTabs).toBe(5);
+    expect(parsed.groups.Example.lru).toBe(true);
     expect(parsed.rules).toHaveLength(1);
     expect(parsed.rules[0].group).toBe('Example');
     expect(parsed.rules[0].matchMode).toBe('glob');
@@ -58,5 +63,6 @@ rules: []
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.uiState.fallbackGroup).toBeUndefined();
+    expect(result.uiState.groups).toHaveLength(0);
   });
 });
