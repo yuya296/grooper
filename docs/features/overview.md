@@ -31,4 +31,4 @@
 | 0019 タブ並びを grouped > ungrouped に整理 | P2 | 0018 | 要確認 | grouped-first 並び替えを `executePlan` 後とコマンド操作後に適用。`pnpm test`/`pnpm build` 通過、手動確認待ち |
 | 0020 parent保持 vs rule matching 優先順位の仕様化 | P2 | 0002,0018 | 要確認 | `groupingPriority`（inheritFirst/ruleFirst）を追加し、planner評価順を切替可能化。`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0021 Chrome/Edge 色整合とフォールバック設計 | P2 | 0016 | 要確認 | 色定義共通化と色適用失敗時フォールバックを実装。`pnpm test`/`pnpm build`通過、手動確認待ち |
-| 0022 Chakra UI 再評価（ADR更新） | P2 | 0010 | 未着手 | Issue #11 起票。UIライブラリ方針を再評価しADR更新予定 |
+| 0022 Chakra UI 再評価（ADR更新） | P2 | 0010 | 完了 | ADR-2を追加し、当面は現行維持（shadcn系 + Radix）を継続する方針を確定 |

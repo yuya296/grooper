@@ -26,7 +26,7 @@
 | 0019 | タブ並びを grouped > ungrouped に整理 | 要確認 | grouped-first 並び替え（非pinned領域）を実装。`executePlan` 後とコマンド操作後に適用し、`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0020 | parent保持 vs rule matching 優先順位の仕様化 | 要確認 | `groupingPriority`（inheritFirst/ruleFirst）を追加し、`parentFollow` との組み合わせで評価順を制御可能化。`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0021 | Chrome/Edge 色整合とフォールバック設計 | 要確認 | 色定義を共通化し、`tabGroups.update` の色適用失敗時は色なし更新へフォールバックする安全処理を実装。`pnpm test`/`pnpm build`通過、手動確認待ち |
-| 0022 | Chakra UI 再評価（ADR更新） | 未着手 | Issue #11 を起票。着手前（設計分割のみ完了） |
+| 0022 | Chakra UI 再評価（ADR更新） | 完了 | `docs/adr/ADR-2-keep-shadcn-radix-and-defer-chakra-migration.md` を追加し、当面は現行維持（shadcn系 + Radix）方針を確定 |
 
 ## 現在のフォーカス
 - PBI-0012の最終確認: light/dark/system の切替・保存・再読込反映を実拡張で手動確認する。
