@@ -40,6 +40,15 @@
 - manual/newTabs/always をYAMLで切替。
 - always はイベント駆動 + 低頻度の再スキャンを併用可能。
 
+## Planner評価順（仕様）
+- 1) `parentFollow`: 親タブのグループ継承を最初に評価
+- 2) ルール評価: `rules[]` を `priority` 降順、同値はYAML順で評価
+- 3) fallback: 非一致時に `fallbackGroup` を適用
+
+補足:
+- Options UI のルール並び替えは、保存時に `priority` を再採番して評価順と同期する。
+- `matchMode` は parser既定=`regex`、UI新規作成時既定=`glob` を採用している。
+
 ## 状態/ログ
 - スナップショットとplanはJSONで保存可能。
 - 失敗時に復旧しやすい形式を維持する。

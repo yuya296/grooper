@@ -55,7 +55,12 @@ rules:
 | `matchMode` | `regex \| glob` | no | `regex` | マッチ方式 |
 | `group` | `string` | yes | - | 振り分け先グループ名 |
 | `color` | `grey \| blue \| red \| yellow \| green \| pink \| purple \| cyan \| orange` | no | unset | Chromeのグループ色 |
-| `priority` | `number` | no | YAML順で補完 | 競合時に高い値を優先 |
+| `priority` | `number` | no | `0` | 競合時に高い値を優先（同値はYAML順） |
+
+補足:
+- parser の `matchMode` 既定値は `regex`（`matchMode` 省略時）。
+- Options UI で「新規ルール追加」したときの初期選択は `glob`。
+- `fallbackGroup` は YAML では利用可能だが、Options UI では編集導線を非表示にしている。
 
 ## regex / glob の違い
 
@@ -81,6 +86,19 @@ groups:
 | `ttlMinutes` | `number` | 指定時間経過で自動クリーンアップ対象 |
 | `maxTabs` | `number` | 上限超過時にクリーンアップ |
 | `lru` | `boolean` | 古いタブから優先して整理 |
+
+## 評価順と優先順位
+
+1. `parentFollow` が有効かつ親タブがグループ所属の場合、親グループを優先する。
+2. 親追従が成立しない場合、`rules[]` を評価する。
+3. ルール競合時は `priority` の降順で決定し、同値は YAML 定義順で決定する。
+4. いずれにも一致しない場合、`fallbackGroup` が設定されていれば適用する。
+
+## UI並び順とpriorityの関係
+
+- Options UI でルールを並び替えて保存した場合、UI順に合わせて `priority` を自動再採番する。
+- Source で直接編集した場合は、書かれた `priority` と YAML順がそのまま評価順に使われる。
+- 「見た目の並び順」と「実際の評価順」がずれないよう、UI編集後は保存を推奨する。
 
 ## よくあるハマりどころ
 
