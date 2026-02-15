@@ -25,7 +25,7 @@
 | 0018 | 並び順/priority/適用優先度の仕様統一 | 要確認 | `docs/configuration.md` と `docs/architecture.md` に評価順（parentFollow→rules→fallback）と優先度規則、default方針（parser=regex/UI新規=glob）を明文化 |
 | 0019 | タブ並びを grouped > ungrouped に整理 | 要確認 | grouped-first 並び替え（非pinned領域）を実装。`executePlan` 後とコマンド操作後に適用し、`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0020 | parent保持 vs rule matching 優先順位の仕様化 | 要確認 | `groupingPriority`（inheritFirst/ruleFirst）を追加し、`parentFollow` との組み合わせで評価順を制御可能化。`pnpm test`/`pnpm build`通過、手動確認待ち |
-| 0021 | Chrome/Edge 色整合とフォールバック設計 | 未着手 | Issue #10 を起票。着手前（設計分割のみ完了） |
+| 0021 | Chrome/Edge 色整合とフォールバック設計 | 要確認 | 色定義を共通化し、`tabGroups.update` の色適用失敗時は色なし更新へフォールバックする安全処理を実装。`pnpm test`/`pnpm build`通過、手動確認待ち |
 | 0022 | Chakra UI 再評価（ADR更新） | 未着手 | Issue #11 を起票。着手前（設計分割のみ完了） |
 
 ## 現在のフォーカス

@@ -1,5 +1,27 @@
 import type { Plan, PlanAction } from '../core/types.js';
 import { buildGroupedFirstUnpinnedOrder } from '../core/tab-order.js';
+import { isTabGroupColor } from '../core/tab-group-colors.js';
+
+function toGroupColor(color?: string): chrome.tabGroups.ColorEnum | undefined {
+  if (!isTabGroupColor(color)) return undefined;
+  return color as chrome.tabGroups.ColorEnum;
+}
+
+async function updateGroupSafely(
+  groupId: number,
+  props: { title?: string; color?: chrome.tabGroups.ColorEnum }
+) {
+  try {
+    await chrome.tabGroups.update(groupId, props);
+  } catch (err) {
+    if (props.color) {
+      await chrome.tabGroups.update(groupId, { title: props.title });
+      console.warn(`[tabgrouper] tabGroups.update color fallback: ${String(err)}`);
+      return;
+    }
+    throw err;
+  }
+}
 
 export async function findGroupByTitle(windowId: number, title: string) {
   const groups = await chrome.tabGroups.query({ windowId });
@@ -9,22 +31,24 @@ export async function findGroupByTitle(windowId: number, title: string) {
 export async function ensureGroup(windowId: number, title: string, color?: string) {
   const group = await findGroupByTitle(windowId, title);
   if (!group) return undefined;
-  if (group.title !== title || (color && group.color !== color)) {
-    await chrome.tabGroups.update(group.id, { title, color: color as chrome.tabGroups.ColorEnum | undefined });
+  const normalizedColor = toGroupColor(color);
+  if (group.title !== title || (normalizedColor && group.color !== normalizedColor)) {
+    await updateGroupSafely(group.id, { title, color: normalizedColor });
   }
   return group.id;
 }
 
 export async function moveTabToGroup(tabId: number, windowId: number, title: string, color?: string) {
+  const normalizedColor = toGroupColor(color);
   let group = await findGroupByTitle(windowId, title);
   if (!group) {
     const groupId = await chrome.tabs.group({ tabIds: [tabId], createProperties: { windowId } });
-    await chrome.tabGroups.update(groupId, { title, color: color as chrome.tabGroups.ColorEnum | undefined });
+    await updateGroupSafely(groupId, { title, color: normalizedColor });
     return;
   }
   await chrome.tabs.group({ tabIds: [tabId], groupId: group.id });
-  if (color && group.color !== color) {
-    await chrome.tabGroups.update(group.id, { color: color as chrome.tabGroups.ColorEnum });
+  if (normalizedColor && group.color !== normalizedColor) {
+    await updateGroupSafely(group.id, { color: normalizedColor });
   }
 }
 

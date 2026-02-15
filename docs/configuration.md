@@ -55,13 +55,14 @@ rules:
 | `pattern` | `string` | yes | - | マッチ対象 |
 | `matchMode` | `regex \| glob` | no | `regex` | マッチ方式 |
 | `group` | `string` | yes | - | 振り分け先グループ名 |
-| `color` | `grey \| blue \| red \| yellow \| green \| pink \| purple \| cyan \| orange` | no | unset | Chromeのグループ色 |
+| `color` | `grey \| blue \| red \| yellow \| green \| pink \| purple \| cyan \| orange` | no | unset | Chrome/Edge のグループ色 |
 | `priority` | `number` | no | `0` | 競合時に高い値を優先（同値はYAML順） |
 
 補足:
 - parser の `matchMode` 既定値は `regex`（`matchMode` 省略時）。
 - Options UI で「新規ルール追加」したときの初期選択は `glob`。
 - `fallbackGroup` は YAML では利用可能だが、Options UI では編集導線を非表示にしている。
+- color 適用に失敗した場合でも、グループ移動処理自体は継続する（色なしフォールバック）。
 
 ## regex / glob の違い
 

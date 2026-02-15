@@ -23,6 +23,7 @@ import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } 
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { parseConfigYaml } from '../../core/config.js';
 import { validateGroupTemplateForMatchMode } from '../../core/rule-template.js';
+import { TAB_GROUP_COLORS } from '../../core/tab-group-colors.js';
 import type { MatchMode } from '../../core/types.js';
 import { buildYamlFromUi, parseYamlForUi, type GroupPolicyForm, type RuleForm, type UiState } from './uiState.js';
 import { LANGUAGE_KEY, loadLocale, saveLocale, t, type Locale } from '../i18n.js';
@@ -36,21 +37,10 @@ import {
 } from '../theme.js';
 
 const NONE_COLOR = '__none__';
-const GROUP_COLORS = [
-  { value: 'grey', label: 'Grey', hex: '#9ca3af' },
-  { value: 'blue', label: 'Blue', hex: '#3b82f6' },
-  { value: 'red', label: 'Red', hex: '#ef4444' },
-  { value: 'yellow', label: 'Yellow', hex: '#eab308' },
-  { value: 'green', label: 'Green', hex: '#22c55e' },
-  { value: 'pink', label: 'Pink', hex: '#ec4899' },
-  { value: 'purple', label: 'Purple', hex: '#a855f7' },
-  { value: 'cyan', label: 'Cyan', hex: '#06b6d4' },
-  { value: 'orange', label: 'Orange', hex: '#f97316' }
-] as const;
 
 function findColorHex(color?: string) {
   if (!color) return undefined;
-  return GROUP_COLORS.find((entry) => entry.value === color)?.hex;
+  return TAB_GROUP_COLORS.find((entry) => entry.value === color)?.hex;
 }
 
 function ColorSelect({
@@ -80,7 +70,7 @@ function ColorSelect({
             <Select.Item className="select-item" value={NONE_COLOR}>
               <Select.ItemText>{t(locale, 'options.color.none')}</Select.ItemText>
             </Select.Item>
-            {GROUP_COLORS.map((color) => (
+            {TAB_GROUP_COLORS.map((color) => (
               <Select.Item key={color.value} className="select-item" value={color.value}>
                 <span className="inline">
                   <span className="color-dot" style={{ backgroundColor: color.hex }} />
